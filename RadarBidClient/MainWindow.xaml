@@ -22,8 +22,9 @@
         <Button x:Name="button4" Content="关闭IE然后打开竞拍页面" Canvas.Left="261" Canvas.Top="362" Width="152" Click="button4_Click" Height="17"/>
         <TextBox x:Name="processTitle" Height="23" Canvas.Left="94" TextWrapping="Wrap" Text="客车" Canvas.Top="411" Width="120"/>
         <TextBox x:Name="processClassName" Height="23" Canvas.Left="94" TextWrapping="Wrap" Canvas.Top="362" Width="120" TextChanged="processClassName_TextChanged" Text="IEFrame"/>
-        <Button x:Name="button5" Content="初始页面查找confirm按钮" Canvas.Left="481" Canvas.Top="362" Width="148" Height="17" Click="button5_Click"/>
+        <Button x:Name="button5" Content="开始模拟" Canvas.Left="481" Canvas.Top="362" Width="148" Height="17" Click="button5_Click"/>
         <Button x:Name="button6" Content="识别图片中的文字" Canvas.Left="261" Canvas.Top="411" Width="136" Height="23" Click="button6_Click"/>
         <Button x:Name="button7" Content="设置字典" Canvas.Left="446" Canvas.Top="411" Width="75" Click="button7_Click"/>
+        <Button x:Name="mockLogin" Content="模仿登录" Canvas.Left="685" Canvas.Top="362" Width="75" Click="mockLogin_Click"/>
     </Canvas>
 </Window>

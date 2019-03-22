@@ -114,7 +114,7 @@ namespace RadarBidClient.dm
         // 识别屏幕范围(x1,y1,x2,y2)内符合color_format的字符串,并且相似度为sim,sim取值范围(0.1-1.0),
         // 返回识别到的字符串 格式如  "识别到的信息|x0,y0|…|xn,yn"
         [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
-        public static extern string OcrEx(IntPtr dm, int x1, int y1, int x2, int y2, string colorFormat, double sim);
+        public static extern IntPtr OcrEx(IntPtr dm, int x1, int y1, int x2, int y2, string colorFormat, double sim);
 
         // 识别位图中区域(x1,y1,x2,y2)的文字
         [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
@@ -324,7 +324,7 @@ namespace RadarBidClient.dm
         // 
         public string OcrEx(int x1, int y1, int x2, int y2, string colorFormat, double sim)
         {
-            return OcrEx(_dm, x1, y1, x2, y2, colorFormat, sim);
+            return Marshal.PtrToStringUni(OcrEx(_dm, x1, y1, x2, y2, colorFormat, sim));
         }
 
         // 识别位图中区域(x1,y1,x2,y2)的文字
