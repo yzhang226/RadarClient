@@ -1,23 +1,9 @@
 ﻿using log4net;
-using log4net.Config;
 using RadarBidClient.model;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Security.Principal;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace RadarBidClient
 {
@@ -31,16 +17,11 @@ namespace RadarBidClient
 
         private SmartRobot robot;
 
-        private SocketClient socketClient;
-
-        private int x1 = 200;
-        private int y1 = 100;
-
-        private int w1 = 1800;
-
-        private int h1 = 1900;
-
         private BidderMocker biderMocker;
+
+        private BiddingSetting setting;
+
+        private Dictionary<int, BiddingStrategy> strategyMap = new Dictionary<int, BiddingStrategy>();
 
         public MainWindow()
         {
@@ -55,158 +36,151 @@ namespace RadarBidClient
             MessageDispatcher.dispatcher.register(loginResponseProcessor);
             MessageDispatcher.dispatcher.register(commandExecutor);
 
-            // robot.SetPath("D:\\work\\bid\\大漠插件\\雷达字库");
-            robot.SetDict(0, "dict2003-02.txt");
+            //robot.SetDict(0, "dict2003-02.txt");
+            robot.SetDict(0, "dictwin7-01.txt");
+
+            // TODO: load biddig-setting 
 
             logger.InfoFormat("launch bid client {0}", DateTime.Now);
 
-            //socketClient = new SocketClient("192.168.31.182", 9966);
-            //socketClient = new SocketClient("119.3.64.205", 9966);
-            //socketClient.StartClient();
+            // 需要一个线程 收集页面信息 - 价格时间, 从11:29:00开始
+            Thread collectorThread = new Thread(loopDetectPriceAndTimeInScreen);
+            collectorThread.Start();
 
-            // try to login
-            //string mcode = robot.GetMachineCode();
-            //string ip = KK.GetLocalIPAddress();
-            //string data = "" + mcode + "||" + ip + "";
-            
-            //RawMessage raw = RawMessages.from(10010, 333333, data);
-            //socketClient.Send(raw);
+            //  
+
 
             this.Topmost = true;
+        }
+
+        // private bool 
+        
+
+        private void loopDetectPriceAndTimeInScreen()
+        {
+            logger.InfoFormat("begin loopDetectPriceAndTimeInScreen");
+            while (true)
+            {
+                try
+                {
+                    PagePrice pp = biderMocker.detectPriceAndTimeInScreen();
+                    if (pp != null)
+                    {
+                        afterDetect(pp);
+                    }
+
+                    KK.Sleep(100);
+                }
+                catch (Exception e)
+                {
+                    logger.Error("detect price and time error", e);
+                }
+            }
+
+            logger.InfoFormat("end loopDetectPriceAndTimeInScreen ");
+        }
+
+        private void afterDetect(PagePrice pp)
+        {
+            int sec = pp.occur.Second;
+            int minute = pp.occur.Minute;
+            foreach (var item in strategyMap)
+
+            {
+                int fixSec = item.Key;
+                
+                BiddingStrategy stra = item.Value;
+                int fixMinute = stra.minute > 0 ? stra.minute : 29;
+
+                if (fixMinute != minute)
+                {
+                    continue;
+                }
+
+                if (sec == fixSec)
+                {
+                    stra.basePrice = pp.basePrice;
+                    logger.InfoFormat("set detected base-price {0}, {1}", sec, pp.basePrice);
+                }
+
+                if (sec >= fixSec && !stra.done)
+                {
+                    int targetPrice = pp.basePrice + stra.deltaPrice;
+                    if (pp.high >= targetPrice)
+                    {
+                        logger.InfoFormat("find target price {0}, {1}", sec, stra.deltaPrice, targetPrice);
+                        biderMocker.MockPhase022(targetPrice);
+                        stra.done = true;
+                    }
+                }
+
+            }
 
         }
 
-        private void saveSetting(object sender, RoutedEventArgs e)
+        private void detectPhase022()
+        {
+            logger.InfoFormat("start detectPhase022");
+            biderMocker.awaitPrice(this.setting.deltaPrice022, 29, this.setting.timing022);
+            logger.InfoFormat("end detectPhase022");
+        }
+
+        public void ReopenBiddingPage(object sender, RoutedEventArgs e)
         {
 
         }
 
-        //private void textBox_TextChanged(object sender, TextChangedEventArgs e)
-        //{
+        public void saveSetting(object sender, RoutedEventArgs e)
+        {
+            // TODO: 
+            this.setting = buildBiddingSetting();
+            BiddingStrategy s1 = new BiddingStrategy();
+            s1.second = setting.timing021;
+            s1.deltaPrice = setting.deltaPrice021;
+            s1.delayMills = setting.delayMills021;
 
-        //}
+            strategyMap[setting.timing021] = s1;
 
-        //private void textBox_TextChanged_1(object sender, TextChangedEventArgs e)
-        //{
+            BiddingStrategy s2 = new BiddingStrategy();
+            s2.second = setting.timing022;
+            s2.deltaPrice = setting.deltaPrice022;
+            s2.delayMills = setting.delayMills022;
 
-        //}
+            strategyMap[setting.timing021] = s2;
+        }
 
-        //private void button_Click(object sender, RoutedEventArgs e)
-        //{
-        //    var msg = this.x1 + "," + this.y1;
-        //    int ret = robot.MoveTo(x1, y1);
-        //    // MessageBox.Show(msg + ", " + ret);
-        //    logger.InfoFormat("msg is {0}", ret);
-        //}
+        private BiddingSetting buildBiddingSetting()
+        {
+            BiddingSetting setting = new BiddingSetting();
+            setting.timing021 = int.Parse(this.timing021.Text);
+            setting.deltaPrice021 = int.Parse(this.deltaPrice021.Text);
+            setting.delayMills021 = int.Parse(this.delayMills021.Text);
 
-        //private void button1_Click(object sender, RoutedEventArgs e)
-        //{
-        //    var msg = this.x1 + "," + this.y1;
-        //    var tarText = this.targetText.Text;
-        //    msg += ". " + tarText;
-        //    int ret = robot.MoveTo(x1, y1);
-        //    ret = robot.LeftClick();
-        //    ret = robot.KeyPressString(tarText);
+            setting.timing022 = int.Parse(this.timing022.Text);
+            setting.deltaPrice022 = int.Parse(this.deltaPrice022.Text);
+            setting.delayMills022 = int.Parse(this.delayMills022.Text);
 
-        //    //MessageBox.Show(msg + ", " + ret);
-        //    logger.InfoFormat("msg is {0}", ret);
-        //}
-
-        //private void button2_Click(object sender, RoutedEventArgs e)
-        //{
-        //    int x2 = x1 + w1;
-        //    int y2 = y1 + h1;
-
-        //    int ret = robot.Capture(x1, y1, x2, y2, "test2.bmp");
-
-        //    //MessageBox.Show(" capture jpg result is " + ret + ", " + x1 + ", " + y1 + ", " + x2 + ", " + y2);
-
-        //    logger.InfoFormat(" capture jpg result is " + ret + ", " + x1 + ", " + y1 + ", " + x2 + ", " + y2);
-
-        //}
-
-        //private void h1_TextChanged(object sender, TextChangedEventArgs e)
-        //{
-
-        //}
-
-        //private void w1_TextChanged(object sender, TextChangedEventArgs e)
-        //{
-
-        //}
-
-        //private void button3_Click(object sender, RoutedEventArgs e)
-        //{
-        //    string msg = robot.GetMachineCode();
-        //    logger.InfoFormat(" code is " + msg);
-        //}
-
-        //private void ReopenBidingPage(object sender, RoutedEventArgs e)
-        //{
-        //    biderMocker.ReopenNewBidWindow();
-        //}
-
-
-        //private void StartLoginAndPhase(object sender, RoutedEventArgs e)
-        //{
-        //    biderMocker.MockLoginAndPhase1();
-        //}
-
-        //private void StartPhase2(object sender, RoutedEventArgs e)
-        //{
-        //    biderMocker.MockPhase2();
-        //}
-
-        //private void button6_Click(object sender, RoutedEventArgs e)
-        //{
-        //    string ret = robot.OcrInFile(0, 0, 2000, 2000, "test2.bmp", "2e6e9e-2e6e9e", 0.8);
-
-        //    logger.InfoFormat(" ocr ret is " + ret);
-        //}
-
-        //private void button7_Click(object sender, RoutedEventArgs e)
-        //{
-        //    robot.SetPath("D:\\work\\bid\\大漠插件\\雷达字库");
-        //    robot.SetDict(0, "dict1.txt");
-        //}
-
-        //private void mockLogin_Click(object sender, RoutedEventArgs e)
-        //{
-
-        //}
-
-        //private void textBox_TextChanged_3(object sender, TextChangedEventArgs e)
-        //{
-
-        //}
-
-        //private void button_Click_1(object sender, RoutedEventArgs e)
-        //{
-
-        //}
-
-
-
-
-        //private void button_Click_SendMessage(object sender, RoutedEventArgs e)
-        //{
-
-        //    Func<RawMessage, String> func = x =>
-        //    {
-        //        this.serverMessage.Dispatcher.Invoke(new Action(
-        //            delegate
-        //            {
-        //                this.serverMessage.Text = x.getOccurMills() + " - " + x.getBodyText();
-        //            }
-        //            ));
-
-        //        return "";
-        //    };
-
-        //    string mm = this.clientMessage.Text;
-        //    socketClient.Send(mm);
-        //    socketClient.setAnotherRecvCallback(func);
-
-        //}
+            return setting;
+        }
+        
     }
+    
+    public class BiddingSetting
+    {
+
+        public int timing021 { get; set; }
+
+        public int deltaPrice021 { get; set; }
+
+        public int delayMills021 { get; set; }
+
+
+        public int timing022 { get; set; }
+
+        public int deltaPrice022 { get; set; }
+
+        public int delayMills022 { get; set; }
+
+    }
+
 }

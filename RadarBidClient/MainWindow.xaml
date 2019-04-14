@@ -7,51 +7,36 @@
         mc:Ignorable="d"
         Title="雷达竞拍" Height="883.96" Width="493.752" Left="50" Top="60" Icon="icon-radar2.ico">
     <Canvas HorizontalAlignment="Left" Height="806" Margin="19,10,0,0" VerticalAlignment="Top" Width="431">
-        <!--<Button x:Name="button1" Content="测试输入文本" Canvas.Left="208" Canvas.Top="23" Width="152" Height="23" Click="button1_Click"/>
-        <TextBox x:Name="targetText" Height="23" Canvas.Left="28" TextWrapping="Wrap" Text="Test-English-Text" Canvas.Top="23" Width="120"/>
-        <Button x:Name="button2" Content="测试截图" Canvas.Left="28" Canvas.Top="69" Width="75" Click="button2_Click"/>
-        <Button x:Name="button3" Content="获取机器码" Canvas.Left="208" Canvas.Top="69" Width="75" Click="button3_Click"/>-->
-        
-        <!--<Button x:Name="mockStart" Content="模拟首页-登录-第一阶段" Canvas.Left="208" Canvas.Top="113" Width="152" Height="24" Click="StartLoginAndPhase"/>
-        <Button x:Name="button6" Content="识别图片中的文字" Canvas.Top="154" Width="152" Height="23" Click="button6_Click" Canvas.Left="208"/>-->
-        <!--<Button x:Name="mockLogin" Content="模拟第二阶段" Canvas.Left="28" Canvas.Top="154" Width="86" Click="StartPhase2" Height="23"/>-->
-
-        
-
-        <!--<Button x:Name="mockLogin" Content="模拟第二阶段" Canvas.Left="28" Canvas.Top="241" Width="86" Click="StartPhase2" Height="23"/>-->
-
+       
         <Button x:Name="reopenBiddingIE" Content="重新打开竞拍页面" Canvas.Left="28" Canvas.Top="35" Width="151" Click="ReopenBiddingPage" Height="26"/>
         
         <Label x:Name="label" Content="出价第二阶段设置：" Canvas.Left="28" Canvas.Top="85"/>
         <!-- -->
         <Label x:Name="label1" Content="第一次" Canvas.Left="28" Canvas.Top="127"/>
-        
-        <TextBlock x:Name="timing021" Canvas.Left="89" TextWrapping="Wrap" Text="40" Canvas.Top="132" Height="20" Width="25"/>
+
+        <TextBox x:Name="timing021" Canvas.Left="89" TextWrapping="Wrap" Text="40" Canvas.Top="132" Height="20" Width="25"/>
         <Label x:Name="label4" Content="秒" Canvas.Left="119" Canvas.Top="127"/>
 
         <Label x:Name="label3" Content="加价" Canvas.Left="170" Canvas.Top="127" RenderTransformOrigin="0.059,0.12"/>
-        <TextBlock x:Name="deltaPrice021" Canvas.Left="221" TextWrapping="Wrap" Canvas.Top="132" Text="0" Height="20" Width="50"/>
+        <TextBox x:Name="deltaPrice021" Canvas.Left="221" TextWrapping="Wrap" Canvas.Top="132" Text="0" Height="20" Width="50"/>
         
         <Label x:Name="label2" Content="延迟毫秒" Canvas.Left="268" Canvas.Top="127"/>
-        <TextBlock x:Name="delayMills021" Canvas.Left="350" TextWrapping="Wrap" Text="0" Canvas.Top="132" Height="20" Width="50"/>
+        <TextBox x:Name="delayMills021" Canvas.Left="350" TextWrapping="Wrap" Text="0" Canvas.Top="132" Height="20" Width="50"/>
         
         <!--  -->
         <Label x:Name="label1_Copy" Content="第二次" Canvas.Left="28" Canvas.Top="173"/>
 
-        <TextBlock x:Name="timing022" Canvas.Left="89" TextWrapping="Wrap" Text="59" Canvas.Top="178" Height="20" Width="25"/>
+        <TextBox x:Name="timing022" Canvas.Left="89" TextWrapping="Wrap" Text="59" Canvas.Top="178" Height="20" Width="25"/>
         <Label x:Name="label4_Copy" Content="秒" Canvas.Left="119" Canvas.Top="173"/>
 
         <Label x:Name="label3_Copy" Content="加价" Canvas.Left="170" Canvas.Top="173" RenderTransformOrigin="0.059,0.12"/>
-        <TextBlock x:Name="deltaPrice022" Canvas.Left="221" TextWrapping="Wrap" Canvas.Top="178" Text="0" Height="20" Width="50"/>
+        <TextBox x:Name="deltaPrice022" Canvas.Left="221" TextWrapping="Wrap" Canvas.Top="178" Text="0" Height="20" Width="50"/>
 
-        <TextBlock x:Name="textBlock1_Copy" Canvas.Left="350" TextWrapping="Wrap" Text="0" Canvas.Top="178" Height="20" Width="50"/>
-        <Label x:Name="delayMills022" Content="延迟毫秒" Canvas.Left="268" Canvas.Top="173"/>
+        <Label x:Name="label2_Copy" Content="延迟毫秒" Canvas.Left="268" Canvas.Top="173"/>
+        <TextBox x:Name="delayMills022" Canvas.Left="350" TextWrapping="Wrap" Text="0" Canvas.Top="178" Height="20" Width="50"/>
+        
 
-        <Button x:Name="saveSetting" Content="保存设置" Canvas.Left="28" Canvas.Top="226" Width="86" Click="saveSetting" Height="26"/>
+        <Button x:Name="saveSettingBtn" Content="保存设置" Canvas.Left="28" Canvas.Top="226" Width="86" Click="saveSetting" Height="26"/>
 
-
-        <!--<TextBox x:Name="clientMessage" Height="72" Canvas.Left="28" TextWrapping="Wrap" Text="move(200,200)" Canvas.Top="234" Width="133" />-->
-        <!--<Button x:Name="sendMessage" Content="测试发送消息" Canvas.Left="28" Canvas.Top="332" Width="75" Click="button_Click_SendMessage"/>-->
-        <!--<TextBox x:Name="serverMessage" Height="72" Canvas.Left="208" TextWrapping="Wrap" Text="等待接收服务端消息。。。" Canvas.Top="234" Width="152"/>-->
     </Canvas>
 </Window>

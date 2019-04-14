@@ -39,7 +39,7 @@ namespace RadarBidClient
 
         public void register(MessageProcessor processor)
         {
-            processors.Add(processor.messageType(), processor);
+            processors[processor.messageType()] = processor;
             logger.InfoFormat("register message-type#{0} with processor#{1}", processor.messageType(), processor);
         }
 

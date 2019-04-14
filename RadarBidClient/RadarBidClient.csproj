@@ -198,6 +198,9 @@
     <Content Include="dict2003-02.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="dictwin7-01.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="dm.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

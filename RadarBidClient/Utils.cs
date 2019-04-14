@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Principal;
 using System.Text;
+using System.Threading;
 
 namespace RadarBidClient
 {
@@ -32,6 +33,42 @@ namespace RadarBidClient
             return "127.0.0.1";
         }
 
+        public static void Sleep(long mills)
+        {
+            Thread.Sleep(2000);
+        }
+
+        public static string uuid()
+        {
+            return Guid.NewGuid().ToString("N");
+        }
+
+        //public static TValue GetIfPresent<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue)
+        //{
+        //    if (dictionary.ContainsKey(key))
+        //    {
+        //        return dictionary[key];
+        //    }
+
+        //    return defaultValue;
+        //}
+
+        public static int timeToInt(DateTime dt)
+        {
+            string nowTime = dt.ToString("HHmmss");
+            return int.Parse(nowTime);
+        }
+
+        public static DateTime intToTime(int intValue)
+        {
+            // 999999,  99999
+            string text = intValue.ToString();
+            if (intValue <100000)
+            {
+                text = "0" + text;
+            }
+            return DateTime.Parse("HHmmss");
+        }
 
         public static bool IsUserAdministrator()
         {

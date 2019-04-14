@@ -221,6 +221,11 @@ namespace RadarBidClient
             return _robot.OcrEx(x1, y1, x2, y2, colorFormat, sim);
         }
 
+        public string Ocr(int x1, int y1, int x2, int y2, string colorFormat, double sim)
+        {
+            return _robot.Ocr(x1, y1, x2, y2, colorFormat, sim);
+        }
+
         public string OcrInFile(int x1, int y1, int x2, int y2, string picName, string colorFormat, double sim)
         {
             return _robot.OcrInFile(x1, y1, x2, y2, picName, colorFormat, sim);
@@ -263,6 +268,38 @@ namespace RadarBidClient
         {
             string ret = this.OcrEx(0, 0, 2000, 2000, colorForamt, 0.8);
             logger.InfoFormat(" 2000 OCR 识别的内容是 {0}", ret);
+
+            SimplePoint point = new SimplePoint();
+
+            if (ret == null || ret.Length == 0)
+            {
+                return point;
+            }
+
+            int idx = ret.IndexOf(target);
+            if (idx < 0)
+            {
+                return point;
+            }
+
+            string[] arr = ret.Split('|');
+            int len = arr[0].Length;
+
+            string[] xy = arr[idx + 1].Split(',');
+            // TODO: 目前必须在全屏下才能成功正确找到 确定按钮
+            int x = Int32.Parse(xy[0]);
+            int y = Int32.Parse(xy[1]);
+
+            point.x = x;
+            point.y = y;
+
+            return point;
+        }
+
+        public SimplePoint searchTextCoordXYInFlashScreen(int x1, int y1, string colorForamt, string target)
+        {
+            string ret = this.OcrEx(x1, y1, x1+900, y1+700, colorForamt, 0.8);
+            logger.InfoFormat("900 OCR 识别的内容是 {0}, {1}. {2}", x1, y1, ret);
 
             SimplePoint point = new SimplePoint();
 

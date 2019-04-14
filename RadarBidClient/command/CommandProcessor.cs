@@ -28,7 +28,7 @@ namespace RadarBidClient.command
 
         public void register(BaseLocalCommand command)
         {
-            commands.Add(command.commandName(), command);
+            commands[command.commandName()] = command;
         }
 
         public LocalCommand<object> get(string commandName)
@@ -54,7 +54,7 @@ namespace RadarBidClient.command
 
         public BaseLocalCommand()
         {
-            logger.InfoFormat("create local command process#{}", this);
+            logger.InfoFormat("create local command process#{0}", this);
 
             LocalCommandExecutor.executor.register(this);
         }

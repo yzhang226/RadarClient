@@ -29,8 +29,16 @@ namespace RadarBidClient
 
         private string processTitle = "客车";
 
+        private bool debugMode = true;
+      
 
-        private string bidingWebsiteAddress = "http://119.3.64.205:8888/login.htm";
+
+        // private string bidingWebsiteAddress = "http://119.3.64.205:8888/login.htm";
+
+        private string bidingWebsiteAddress = "http://127.0.0.1:8888/bid.htm";
+
+        private Dictionary<DateTime, PagePrice> timePriceMap = new Dictionary<DateTime, PagePrice>();
+        private List<PagePrice> pagePrices = new List<PagePrice>();
 
         public BidderMocker(SmartRobot robot)
         {
@@ -74,6 +82,217 @@ namespace RadarBidClient
             {
                 proc.Kill(); // Close it down.
             }
+        }
+
+        public void awaitPrice(int targetPrice, int targetMinute, int targetSecond)
+        {
+            int ret = 0;
+            do
+            {
+                DateTime no = DateTime.Now;
+                if (no.Minute < targetMinute)
+                {
+
+                }
+                else if (no.Minute == targetMinute)
+                {
+                    if (no.Second <= targetSecond)
+                    {
+                        PagePrice pp = detectTimeOfPhase02(targetPrice);
+                        if (pp.status == 0)
+                        {
+                            this.MockPhase022(targetPrice);
+                        }
+                    }
+                    else if (no.Second > targetSecond)
+                    {
+                        // 直接提交
+                        this.MockPhase022(targetPrice);
+                    } 
+                    else
+                    {
+                        break;
+                    }
+                    
+                } else
+                {
+                    logger.InfoFormat("minute of time over");
+                    break;
+                }
+                KK.Sleep(100);
+            } while (ret < 0);
+        }
+
+        public void afterDetectPriceAndTime(int targetPrice, int targetMinute, int targetSecond)
+        {
+            if (pagePrices.Count == 0)
+            {
+                return;
+            }
+
+            PagePrice last = pagePrices.LastOrDefault();
+            if (last == null)
+            {
+                return;
+            }
+
+            if (targetPrice == last.basePrice)
+            {
+                this.MockPhase022(targetPrice);
+            }
+
+        }
+
+        public PagePrice detectPriceAndTimeInScreen()
+        {
+            long t1 = KK.currentTs();
+            string uuid = KK.uuid();
+            // PagePrice pp = new PagePrice();
+
+            if (this.bench == null)
+            {
+                setBenchPoint();
+            }
+
+            // 找到坐标 of 目前时间
+            //if (debugMode)
+            //{
+            //    robot.CaptureJpg(bench.x, bench.y, bench.x + 900, bench.y + 700, uuid + "-001.jpg", 80);
+            //} 目前价时目前价目前时间
+            var p = robot.searchTextCoordXYInFlashScreen(bench.x, bench.y, "0066cc-101010", "目前时间");
+
+            logger.InfoFormat("目前时间 - 坐标是 - {0}. {1}", p.ToString(), KK.currentTs() - t1);
+
+            if (p.x <= 0 || p.y <= 0)
+            {
+                return null;
+            }
+
+            // 11:29:57
+            int x1 = p.x + 55, y1 = p.y, x2 = p.x + 55 + 75, y2 = p.y + 18;
+            //if (debugMode)
+            //{
+            //    robot.CaptureJpg(x1, y1, x2, y2, "" + uuid + "-01.jpg", 80);
+            //}
+
+            // ff0000-ff0000  ff0000-101010
+            string ret1 = robot.Ocr(x1, y1, x2, y2, "ff0000-ff0000", 0.8);
+            logger.InfoFormat("目前时间 - OCR内容 {0}, {1}, {2}, {3}. {4}, {5}", x1, y1, x2, y2, ret1, uuid);
+
+            if (ret1 == null || ret1.Length == 0)
+            {
+                return null;
+            }
+
+            DateTime no = DateTime.Now;
+
+            char[] cs1 = ret1.ToCharArray();
+            string[] arr1 = new string[3] { "", "", "" };
+            int idx1 = 0;
+            foreach (char c in cs1)
+            {
+                if (c >= '0' && c <= '9')
+                {
+                    int mod = idx1 / 2;
+                    string st = arr1[mod] + c.ToString();
+                    arr1[mod] = st;
+                    idx1 += 1;
+                }
+            }
+
+            logger.InfoFormat(" datetime arr is {0}, {1}, {2}, {3}", arr1, arr1[0], arr1[1], arr1[2]);
+
+            DateTime dt = new DateTime(no.Year, no.Month, no.Day, int.Parse(arr1[0]), int.Parse(arr1[1]), int.Parse(arr1[2]));
+
+            // KK.timeToInt(dt)
+            // TODO: 检测是否已经拿到过该秒的数据，则可以忽略不检测价格了
+
+            logger.InfoFormat(" datetime parsed is {0}, arr is {1}", dt, arr1);
+
+            // 找到坐标 of 价格区间
+            var p2 = robot.searchTextCoordXYInFlashScreen(bench.x, bench.y, "0066cc-101010", "价格区间");
+            logger.InfoFormat("价格区间 - 坐标是 - {0}. {1}", p2.ToString(), KK.currentTs() - t1);
+
+            // 11:29:57
+            int x21 = p2.x + 55, y21 = p2.y, x22 = p2.x + 55 + 170, y22 = p2.y + 18;
+            if (debugMode)
+            {
+                robot.CaptureJpg(x21, y21, x22, y22, "" + uuid + "-02.jpg", 80);
+            }
+
+            // ff0000-101010 
+            string ret2 = robot.Ocr(x21, y21, x22, y22, "ff0000-ff0000", 0.8);
+
+            logger.InfoFormat("价格区间 - OCR内容 {0} {1} {2} {3}. {4}, {5}", x21, y21, x22, y22, ret2, uuid);
+
+            char[] cs2 = ret2.ToCharArray();
+            string[] arr2 = new string[2] { "", "" };
+            int idx2 = 0;
+            foreach (char c in cs2)
+            {
+                if (c >= '0' && c <= '9')
+                {
+                    int mod = idx2 / 5;
+                    string st = arr2[mod] + c;
+                    arr2[mod] = st;
+                    idx2 += 1;
+                }
+            }
+
+            int priceLow = int.Parse(arr2[0]);
+            int priceHigh = int.Parse(arr2[1]);
+
+            if (priceHigh < 70000 || priceHigh < 70000)
+            {
+                logger.WarnFormat("识别错误的 价格 - ", priceLow, priceHigh);
+                return null;
+            }
+
+            logger.InfoFormat("price parsed priceLow is {0}, pricHigh is {1}", priceLow, priceHigh);
+
+            int currentPrice = (priceLow + priceHigh) / 2;
+
+            var pp = new PagePrice(dt, currentPrice);
+            pp.status = 0;
+            pp.low = priceLow;
+            pp.high = priceHigh;
+
+            timePriceMap[dt] = pp;
+            
+            if (pagePrices.Contains(pp))
+            {
+                pagePrices.Remove(pp);
+            }
+            pagePrices.Add(pp);
+
+            return pp;
+        }
+
+        public PagePrice detectTimeOfPhase02(int targetPrice)
+        {
+            
+            
+            //pp.currentPrice = currentPrice;
+
+
+            //if (currentPrice == targetPrice)
+            //{
+            //    pp.status = 0;
+            //} else if (currentPrice > targetPrice)
+            //{
+            //    pp.status = 1;
+            //} else
+            //{
+            //    pp.status = -1;
+            //}
+
+            return null;
+        }
+
+        public void setBenchPoint()
+        {
+            bench = this.detectBenchPoint();
+
         }
 
         public void MockLoginAndPhase1()
@@ -142,6 +361,33 @@ namespace RadarBidClient
 
             this.inputCaptchAtPhase2(p43, "0282");
             this.clickConfirmCaptchaAtPhase2(p44);
+
+            // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
+            Thread.Sleep(2 * 1000);
+            var p36 = bench.AddDelta(661, 478);
+            this.clickConfirmBidOkAtPhase2(p36);
+        }
+
+        public void MockPhase022(int targetPrice)
+        {
+            logger.InfoFormat("第二阶段修改 - 使用基准点 {0}", bench);
+
+            // 第二阶段
+            var p41 = bench.AddDelta(676, 417);
+            var p42 = bench.AddDelta(800, 415);
+
+            this.inputPriceAtPhase2(p41, targetPrice);
+            KK.Sleep(20);
+            this.clickBidButtonAtPhase2(p42);
+            KK.Sleep(20);
+
+            var p43 = bench.AddDelta(734, 416);
+            var p44 = bench.AddDelta(553, 500);
+
+            // TODO: 检测 enter 键
+
+            // this.inputCaptchAtPhase2(p43, "0282");
+            // this.clickConfirmCaptchaAtPhase2(p44);
 
             // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
             Thread.Sleep(2 * 1000);
