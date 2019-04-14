@@ -85,7 +85,7 @@ namespace RadarBidClient.dm
 
         #region 系统相关
         [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
-        public static extern string GetMachineCode(IntPtr dm);
+        public static extern IntPtr GetMachineCode(IntPtr dm);
 
         [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
         public static extern int GetScreenDepth(IntPtr dm);
@@ -300,7 +300,7 @@ namespace RadarBidClient.dm
         #region 系统相关
         public string GetMachineCode()
         {
-            return GetMachineCode(_dm);
+            return Marshal.PtrToStringUni(GetMachineCode(_dm));
         }
 
 

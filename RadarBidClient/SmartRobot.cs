@@ -1,4 +1,6 @@
-﻿using RadarBidClient.dm;
+﻿using log4net;
+using RadarBidClient.dm;
+using RadarBidClient.model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +9,127 @@ using System.Threading.Tasks;
 
 namespace RadarBidClient
 {
+
+    public class CommandMessageProcessor : MessageProcessor
+    {
+
+        private static readonly ILog logger = LogManager.GetLogger(typeof(CommandMessageProcessor));
+
+
+
+        private BidderMocker biderMocker;
+
+        public CommandMessageProcessor(BidderMocker biderMocker)
+        {
+            this.biderMocker = biderMocker;
+        }
+
+        public int messageType()
+        {
+            return 10002;
+        }
+
+        public void ExecuteCommand(int messageType, string command)
+        {
+            
+            logger.InfoFormat("start execute command#{0}", command);
+
+            CommandRequest co = parse(command);
+
+            if (co.action == "MockLoginAndPhase1")
+            {
+                biderMocker.MockLoginAndPhase1();
+            } 
+            else if (co.action == "MockPhase2")
+            {
+                biderMocker.MockPhase2();
+            }
+            else if (co.action == "ReopenNewBidWindow")
+            {
+                biderMocker.ReopenNewBidWindow();
+            }
+
+            logger.InfoFormat("end execute command#{0}", command);
+        }
+
+        private CommandRequest parse(string command)
+        {
+            CommandRequest req = new CommandRequest();
+            string comm = command.Trim();
+            int len = comm.Length;
+
+            int idx = comm.IndexOf("(");
+            int idx2 = comm.IndexOf(")", idx + 1);
+
+            if (idx > -1 && idx2 > -1)
+            {
+                req.action = comm.Substring(0, idx);
+
+                if (idx2 > idx + 1)
+                {
+                    string[] arr = comm.Substring(idx + 1, idx2 - idx - 1).Split(',');
+                    
+                    List<string> lis = new List<string>();
+                    foreach (string a in arr)
+                    {
+                        string tr = a.Trim();
+                        if (tr.Length == 0)
+                        {
+                            continue;
+                        }
+                        lis.Add(tr);
+                    }
+
+                    req.args =  lis.ToArray();
+                } else
+                {
+                    req.args = new string[0];
+                }
+
+            }
+            else
+            {
+                req.action = comm;
+                req.args = new string[0];
+            }
+
+            return req;
+        }
+
+        public ProcessResult process(RawMessage message)
+        {
+            this.ExecuteCommand(message.getMessageType(), message.getBodyText());
+
+            return null;
+        }
+    }
+
+    public class LoginResponseProcessor : MessageProcessor
+    {
+
+        private static readonly ILog logger = LogManager.GetLogger(typeof(LoginResponseProcessor));
+
+        public int messageType()
+        {
+            return 10011;
+        }
+
+        public ProcessResult process(RawMessage message)
+        {
+            logger.InfoFormat("login result#{0}", message.getBodyText());
+
+            return null;
+        }
+    }
+
+    public class CommandRequest
+    {
+        public int messageType;
+
+        public string action;
+
+        public string[] args;
+    }
 
     /// <summary>
     /// 控制程序 - 基本
@@ -18,8 +141,10 @@ namespace RadarBidClient
     /// 6. 控制特定大小截取屏幕
     /// 7. 控制 - 延时点击
     /// </summary>
-    class SmartRobot
+    public class SmartRobot
     {
+
+        private static readonly ILog logger = LogManager.GetLogger(typeof(SmartRobot));
 
         private DMControl _robot;
 
@@ -131,6 +256,39 @@ namespace RadarBidClient
         public int ScreenToClient(int hwnd, ref object x, ref object y)
         {
             return _robot.ScreenToClient(hwnd, ref x, ref y);
+        }
+
+
+        public SimplePoint searchTextCoordXYInScreen(string colorForamt, string target)
+        {
+            string ret = this.OcrEx(0, 0, 2000, 2000, colorForamt, 0.8);
+            logger.InfoFormat(" 2000 OCR 识别的内容是 {0}", ret);
+
+            SimplePoint point = new SimplePoint();
+
+            if (ret == null || ret.Length == 0)
+            {
+                return point;
+            }
+
+            int idx = ret.IndexOf(target);
+            if (idx < 0)
+            {
+                return point;
+            }
+
+            string[] arr = ret.Split('|');
+            int len = arr[0].Length;
+
+            string[] xy = arr[idx + 1].Split(',');
+            // TODO: 目前必须在全屏下才能成功正确找到 确定按钮
+            int x = Int32.Parse(xy[0]);
+            int y = Int32.Parse(xy[1]);
+
+            point.x = x;
+            point.y = y;
+
+            return point;
         }
 
     }

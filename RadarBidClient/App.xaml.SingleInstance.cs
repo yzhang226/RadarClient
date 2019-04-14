@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -37,11 +36,6 @@ namespace RadarBidClient
                 SingleInstance<App>.Cleanup();
                 logger.InfoFormat("SingleInstance cleanup");
 
-            } else
-            {
-                //Process current = Process.GetCurrentProcess();
-
-                logger.InfoFormat("radar application already exist - {0}", "just");
             }
         }
 

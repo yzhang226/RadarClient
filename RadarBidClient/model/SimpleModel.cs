@@ -5,7 +5,7 @@ using System.Text;
 
 namespace RadarBidClient.model
 {
-    class SimplePoint
+    public class SimplePoint
     {
         public int x { get; set; }
 
