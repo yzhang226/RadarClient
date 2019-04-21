@@ -21,12 +21,14 @@ namespace RadarBidClient
 
         private const string Unique = "JX_RADAR_BID_Application";
 
+        private static App application;
+
         [STAThread]
         public static void Main()
         {
             if (SingleInstance<App>.InitializeAsFirstInstance(Unique))
             {
-                var application = new App();
+                application = new App();
 
                 application.InitializeComponent();
                 application.Run();
@@ -37,12 +39,34 @@ namespace RadarBidClient
                 SingleInstance<App>.Cleanup();
                 logger.InfoFormat("SingleInstance cleanup");
 
-            } else
+                forceCloseWindow();
+            }
+            else
             {
                 //Process current = Process.GetCurrentProcess();
-
                 logger.InfoFormat("radar application already exist - {0}", "just");
             }
+        }
+
+        private static void forceCloseWindow()
+        {
+            // 
+            logger.InfoFormat("force Kill current process, {0}, {1}.", Application.Current, application);
+            Process.GetCurrentProcess().Kill();
+
+            logger.InfoFormat("begin Application.Current Shutdown, {0}, {1}.", Application.Current, application);
+            Application.Current.Shutdown();
+            logger.InfoFormat("done Application.Current Shutdown, {0}, {1}.", Application.Current, application);
+
+            Environment.Exit(0);
+            logger.InfoFormat("Environment.Exit(0)");
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            base.OnExit(e);
+
+            logger.InfoFormat("OnExit code is {0}", e.ApplicationExitCode);
         }
 
         #region ISingleInstanceApp Members

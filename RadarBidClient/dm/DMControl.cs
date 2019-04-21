@@ -70,6 +70,9 @@ namespace RadarBidClient.dm
         [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
         public static extern int KeyPressChar(IntPtr dm, string charStr);
 
+        [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
+        public static extern int KeyPress(IntPtr dm, int vkCode);
+
         #endregion
 
         #region 图色相关
@@ -265,14 +268,21 @@ namespace RadarBidClient.dm
         //        按下指定的虚拟键码
         //            参数定义:
         //        key_str 字符串: 字符串描述的键码.大小写无所谓.点这里查看具体对应关系.
-        //返回值:
-        //整形数:
-        //0:失败
-        //1:成功
+        //        返回值: 0:失败 1:成功
         public int KeyPressChar(string charStr)
         {
             return KeyPressChar(_dm, charStr);
         }
+
+        // 按下指定的虚拟键码
+        // vk_code 整形数:虚拟按键码
+        // 返回值: 0:失败 1:成功
+        public int KeyPress(int vkCode)
+        {
+            return KeyPress(_dm, vkCode);
+        }
+
+
         #endregion
 
         #region 图色相关

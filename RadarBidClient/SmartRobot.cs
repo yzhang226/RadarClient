@@ -206,6 +206,20 @@ namespace RadarBidClient
             return ret;
         }
 
+        // 按下指定的虚拟键码 - 删除键
+        public int PressDeleteKey()
+        {
+            // press delete key
+            return _robot.KeyPress(46);
+        }
+
+        // 按下指定的虚拟键码 - 退格键
+        public int PressBackspacKey()
+        {
+            // press delete key
+            return _robot.KeyPress(8);
+        }
+
         public int FindStr(int x1, int y1, int x2, int y2, string text, string colorFormat, double sim, out int intX, out int intY)
         {
             return _robot.FindStr(x1, y1, x2, y2, text, colorFormat, sim, out intX, out intY);
@@ -298,8 +312,14 @@ namespace RadarBidClient
 
         public SimplePoint searchTextCoordXYInFlashScreen(int x1, int y1, string colorForamt, string target)
         {
-            string ret = this.OcrEx(x1, y1, x1+900, y1+700, colorForamt, 0.8);
-            logger.InfoFormat("900 OCR 识别的内容是 {0}, {1}. {2}", x1, y1, ret);
+            return searchTextCoordXYInFlashScreen(x1, y1, 900, 700, colorForamt, target);
+        }
+
+        public SimplePoint searchTextCoordXYInFlashScreen(int x1, int y1, int width, int height, string colorForamt, string target)
+        {
+            long s1 = KK.currentTs();
+            string ret = this.OcrEx(x1, y1, x1 + width, y1 + height, colorForamt, 0.8);
+            logger.InfoFormat("{0} OCR 识别的内容是 {1}, {2}. elapsed {3}ms, ret is {4}", width, x1, y1, KK.currentTs() - s1, ret);
 
             SimplePoint point = new SimplePoint();
 
@@ -319,8 +339,8 @@ namespace RadarBidClient
 
             string[] xy = arr[idx + 1].Split(',');
             // TODO: 目前必须在全屏下才能成功正确找到 确定按钮
-            int x = Int32.Parse(xy[0]);
-            int y = Int32.Parse(xy[1]);
+            int x = int.Parse(xy[0]);
+            int y = int.Parse(xy[1]);
 
             point.x = x;
             point.y = y;

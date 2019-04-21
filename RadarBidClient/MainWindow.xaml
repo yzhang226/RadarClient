@@ -5,38 +5,62 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RadarBidClient"
         mc:Ignorable="d"
-        Title="雷达竞拍" Height="883.96" Width="493.752" Left="50" Top="60" Icon="icon-radar2.ico">
-    <Canvas HorizontalAlignment="Left" Height="806" Margin="19,10,0,0" VerticalAlignment="Top" Width="431">
-       
-        <Button x:Name="reopenBiddingIE" Content="重新打开竞拍页面" Canvas.Left="28" Canvas.Top="35" Width="151" Click="ReopenBiddingPage" Height="26"/>
+        Title="雷达竞拍"  Icon="icon-radar2.ico">
+    <!-- Width="900" Height="806"  Left="50" Top="60" -->
+    <!-- Width="Auto" Height="Auto" -->
+
+    <Grid   Width="{Binding ActualWidth, 
+              RelativeSource = {RelativeSource AncestorType = {x:Type Window}}}" 
+            Height="{Binding ActualHeight, 
+              RelativeSource ={RelativeSource AncestorType = {x:Type Window}}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition x:Name="row2" Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition x:Name="clo2" Width="10*"/>
+        </Grid.ColumnDefinitions>
+        <!-- <Rectangle Grid.Row="0" Grid.Column="0" Fill="Green" Margin="10,10,10,20"/> -->
+
+        <Canvas HorizontalAlignment="Left" Width="300" Height="806" VerticalAlignment="Top" Margin="0,0,0,-31" Grid.RowSpan="2" >
+
+            <Button x:Name="reopenBiddingIE" Content="重新打开竞拍页面" Canvas.Left="10" Canvas.Top="35" Width="151" Click="ReopenBiddingPage" Height="26"/>
+
+            <Label x:Name="label" Content="出价第二阶段设置：" Canvas.Left="10" Canvas.Top="85"/>
+            <!-- -->
+            <Label x:Name="label1" Content="第一次" Canvas.Left="10" Canvas.Top="127"/>
+
+            <TextBox x:Name="timing021" Canvas.Left="56" TextWrapping="Wrap" Text="40" Canvas.Top="132" Height="20" Width="25"/>
+            <Label x:Name="label4" Content="秒" Canvas.Left="86" Canvas.Top="127"/>
+
+            <Label x:Name="label3" Content="加价" Canvas.Left="113" Canvas.Top="127" RenderTransformOrigin="0.059,0.12"/>
+            <TextBox x:Name="deltaPrice021" Canvas.Left="142" TextWrapping="Wrap" Canvas.Top="132" Text="100" Height="20" Width="50"/>
+
+            <Label x:Name="label2" Content="延迟毫秒" Canvas.Left="192" Canvas.Top="127"/>
+            <TextBox x:Name="delayMills021" Canvas.Left="250" TextWrapping="Wrap" Text="0" Canvas.Top="131" Height="20" Width="50"/>
+
+            <!--  -->
+            <Label x:Name="label1_Copy" Content="第二次" Canvas.Left="10" Canvas.Top="171"/>
+
+            <TextBox x:Name="timing022" Canvas.Left="61" TextWrapping="Wrap" Text="55" Canvas.Top="176" Height="20" Width="25"/>
+            <Label x:Name="label4_Copy" Content="秒" Canvas.Left="86" Canvas.Top="173" RenderTransformOrigin="-0.182,0.6"/>
+
+            <Label x:Name="label3_Copy" Content="加价" Canvas.Left="108" Canvas.Top="171" RenderTransformOrigin="0.059,0.12"/>
+            <TextBox x:Name="deltaPrice022" Canvas.Left="142" TextWrapping="Wrap" Canvas.Top="175" Text="100" Height="20" Width="50"/>
+
+            <Label x:Name="label2_Copy" Content="延迟毫秒" Canvas.Left="192" Canvas.Top="173"/>
+            <TextBox x:Name="delayMills022" Canvas.Left="250" TextWrapping="Wrap" Text="0" Canvas.Top="176" Height="20" Width="50"/>
+
+
+            <Button x:Name="saveSettingBtn" Content="保存设置" Canvas.Left="10" Canvas.Top="230" Width="86" Click="saveSetting" Height="26"/>
+
+        </Canvas>
         
-        <Label x:Name="label" Content="出价第二阶段设置：" Canvas.Left="28" Canvas.Top="85"/>
-        <!-- -->
-        <Label x:Name="label1" Content="第一次" Canvas.Left="28" Canvas.Top="127"/>
-
-        <TextBox x:Name="timing021" Canvas.Left="89" TextWrapping="Wrap" Text="40" Canvas.Top="132" Height="20" Width="25"/>
-        <Label x:Name="label4" Content="秒" Canvas.Left="119" Canvas.Top="127"/>
-
-        <Label x:Name="label3" Content="加价" Canvas.Left="170" Canvas.Top="127" RenderTransformOrigin="0.059,0.12"/>
-        <TextBox x:Name="deltaPrice021" Canvas.Left="221" TextWrapping="Wrap" Canvas.Top="132" Text="0" Height="20" Width="50"/>
+        <!--<WebBrowser Grid.Row="0" Grid.Column="1" Name="webBro" Navigating="webBroNav" HorizontalAlignment="Left" VerticalAlignment="Top"/>-->
+        <!--  Width="Auto" Height="Auto" http://127.0.0.1:3456/bid.htm -->
+        <WebBrowser Grid.Row="0" Grid.Column="1" Name="webBro" Height="{Binding Height, ElementName='row2'}" Width="{Binding Width, ElementName='clo2'}"  />
         
-        <Label x:Name="label2" Content="延迟毫秒" Canvas.Left="268" Canvas.Top="127"/>
-        <TextBox x:Name="delayMills021" Canvas.Left="350" TextWrapping="Wrap" Text="0" Canvas.Top="132" Height="20" Width="50"/>
-        
-        <!--  -->
-        <Label x:Name="label1_Copy" Content="第二次" Canvas.Left="28" Canvas.Top="173"/>
+    </Grid>
 
-        <TextBox x:Name="timing022" Canvas.Left="89" TextWrapping="Wrap" Text="59" Canvas.Top="178" Height="20" Width="25"/>
-        <Label x:Name="label4_Copy" Content="秒" Canvas.Left="119" Canvas.Top="173"/>
-
-        <Label x:Name="label3_Copy" Content="加价" Canvas.Left="170" Canvas.Top="173" RenderTransformOrigin="0.059,0.12"/>
-        <TextBox x:Name="deltaPrice022" Canvas.Left="221" TextWrapping="Wrap" Canvas.Top="178" Text="0" Height="20" Width="50"/>
-
-        <Label x:Name="label2_Copy" Content="延迟毫秒" Canvas.Left="268" Canvas.Top="173"/>
-        <TextBox x:Name="delayMills022" Canvas.Left="350" TextWrapping="Wrap" Text="0" Canvas.Top="178" Height="20" Width="50"/>
-        
-
-        <Button x:Name="saveSettingBtn" Content="保存设置" Canvas.Left="28" Canvas.Top="226" Width="86" Click="saveSetting" Height="26"/>
-
-    </Canvas>
 </Window>

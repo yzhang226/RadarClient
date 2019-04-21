@@ -33,9 +33,9 @@ namespace RadarBidClient
             return "127.0.0.1";
         }
 
-        public static void Sleep(long mills)
+        public static void Sleep(int mills)
         {
-            Thread.Sleep(2000);
+            Thread.Sleep(mills);
         }
 
         public static string uuid()
