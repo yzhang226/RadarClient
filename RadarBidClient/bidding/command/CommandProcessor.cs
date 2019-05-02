@@ -63,8 +63,18 @@ namespace RadarBidClient.command
         public abstract ExecuteResult<object> execute(string[] args);
     }
 
+
     public class OpenIEBrowserCommand : BaseLocalCommand
     {
+
+        private BidActionManager bidManager;
+
+        public OpenIEBrowserCommand(BidActionManager bidManager)
+        {
+            this.bidManager = bidManager;
+        }
+
+
         public override string commandName()
         {
             return "reopenBiddingIEBrowser";
@@ -73,7 +83,7 @@ namespace RadarBidClient.command
         public override ExecuteResult<object> execute(string[] args)
         {
             string url = args[0];
-            BidderMocker.mocker.ReopenNewBidWindow();
+            bidManager.ReopenNewBidWindow();
 
             return new ExecuteResult<object>();
         }

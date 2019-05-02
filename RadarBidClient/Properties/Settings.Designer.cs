@@ -22,5 +22,32 @@ namespace RadarBidClient.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://119.3.64.205:3456")]
+        public string BidAddressPrefix {
+            get {
+                return ((string)(this["BidAddressPrefix"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://119.3.64.205:8866")]
+        public string CaptchaAddressPrefix {
+            get {
+                return ((string)(this["CaptchaAddressPrefix"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool EnableAutoBidding {
+            get {
+                return ((bool)(this["EnableAutoBidding"]));
+            }
+        }
     }
 }

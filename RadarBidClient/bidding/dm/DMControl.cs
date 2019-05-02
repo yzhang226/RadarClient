@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RadarBidClient.ioc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -7,16 +8,20 @@ using System.Threading.Tasks;
 
 namespace RadarBidClient.dm
 {
-    class DMControl : IDisposable
+    public class DMCRef
     {
+        const string DMC_REF_PATH = "resource/dlls/dmc.dll";
 
-        const string DM_REF_PATH = "dm.dll";
+        static readonly DMCRef me = new DMCRef();
 
-        const string DMC_REF_PATH = "dmc.dll";
+        private DMCRef()
+        {
+
+        }
 
         #region import dm dll function
 
-        [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention =CallingConvention.StdCall)]
+        [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
         public static extern IntPtr CreateDM(string dmPath);
 
         [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
@@ -28,6 +33,12 @@ namespace RadarBidClient.dm
         [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
         public static extern int SetPath(IntPtr dm, string path);
 
+        [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
+        public static extern IntPtr GetPath(IntPtr dm);
+
+        [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
+        public static extern IntPtr GetBasePath(IntPtr dm);
+        
 
         #region 窗口相关
         // 获取窗口客户区域在屏幕上的位置
@@ -130,12 +141,18 @@ namespace RadarBidClient.dm
         [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
         public static extern int SetDict(IntPtr dm, int index, string fileName);
 
-
-        
-
         #endregion
 
         #endregion
+    }
+
+    // [ComponentRegister]
+    public class DMControl : IDisposable
+    {
+
+        const string DM_REF_PATH = "resource/dlls/dm.dll";
+
+        // public static readonly DMControl me = new DMControl();
 
         private IntPtr _dm = IntPtr.Zero;
         private bool disposed = false;
@@ -148,17 +165,27 @@ namespace RadarBidClient.dm
 
         public DMControl()
         {
-            _dm = CreateDM(DM_REF_PATH);
+            _dm = DMCRef.CreateDM(DM_REF_PATH);
         }
 
         public string Ver()
         {
-            return Marshal.PtrToStringUni(Ver(_dm));
+            return Marshal.PtrToStringUni(DMCRef.Ver(_dm));
         }
 
         public int SetPath(string path)
         {
-            return SetPath(_dm, path);
+            return DMCRef.SetPath(_dm, path);
+        }
+
+        public string GetPath()
+        {
+            return Marshal.PtrToStringUni(DMCRef.GetPath(_dm));
+        }
+
+        public string GetBasePath()
+        {
+            return Marshal.PtrToStringUni(DMCRef.GetBasePath(_dm));
         }
 
         #region 窗口相关
@@ -175,7 +202,7 @@ namespace RadarBidClient.dm
         {
             try
             {
-                return FindWindow(_dm, className, title);
+                return DMCRef.FindWindow(_dm, className, title);
             } catch (Exception e)
             {
                 return -410;
@@ -187,7 +214,7 @@ namespace RadarBidClient.dm
         {
             try
             {
-                return GetWindowClass(_dm, hwnd);
+                return DMCRef.GetWindowClass(_dm, hwnd);
             } catch (Exception e)
             {
                 return "-410";
@@ -199,7 +226,7 @@ namespace RadarBidClient.dm
         {
             try
             {
-                return GetWindowTitle(_dm, hwnd);
+                return DMCRef.GetWindowTitle(_dm, hwnd);
             } catch(Exception e)
             {
                 return "-410";
@@ -210,12 +237,12 @@ namespace RadarBidClient.dm
         // 获取窗口客户区域在屏幕上的位置
         public int GetClientRect(int hwnd, out int x1, out int y1, out int x2, out int y2)
         {
-            return GetClientRect(_dm, hwnd, out x1, out y1, out x2, out y2);
+            return DMCRef.GetClientRect(_dm, hwnd, out x1, out y1, out x2, out y2);
         }
 
         public int ScreenToClient(int hwnd, ref object x, ref object y)
         {
-            return ScreenToClient(_dm, hwnd, ref x, ref y);
+            return DMCRef.ScreenToClient(_dm, hwnd, ref x, ref y);
         }
 
 
@@ -256,13 +283,13 @@ namespace RadarBidClient.dm
         //        1:成功
         public int MoveTo(int x, int y)
         {
-            return MoveTo(_dm, x, y);
+            return DMCRef.MoveTo(_dm, x, y);
         }
 
         //按下鼠标左键
         public int LeftClick()
         {
-            return LeftClick(_dm);
+            return DMCRef.LeftClick(_dm);
         }
 
         //        按下指定的虚拟键码
@@ -271,7 +298,12 @@ namespace RadarBidClient.dm
         //        返回值: 0:失败 1:成功
         public int KeyPressChar(string charStr)
         {
-            return KeyPressChar(_dm, charStr);
+            charStr = charStr.Trim();
+            if (charStr.Length > 1 || charStr.Length == 0)
+            {
+                throw new System.ArgumentException("charStr must be char ", charStr);
+            }
+            return DMCRef.KeyPressChar(_dm, charStr);
         }
 
         // 按下指定的虚拟键码
@@ -279,7 +311,7 @@ namespace RadarBidClient.dm
         // 返回值: 0:失败 1:成功
         public int KeyPress(int vkCode)
         {
-            return KeyPress(_dm, vkCode);
+            return DMCRef.KeyPress(_dm, vkCode);
         }
 
 
@@ -301,12 +333,12 @@ namespace RadarBidClient.dm
         //        1:成功
         public int CaptureJpg(int x1, int y1, int x2, int y2, string filePath, int quality)
         {
-            return CaptureJpg(_dm, x1, y1, x2, y2, filePath, quality);
+            return DMCRef.CaptureJpg(_dm, x1, y1, x2, y2, filePath, quality);
         }
 
         public int Capture(int x1, int y1, int x2, int y2, string filePath)
         {
-            return Capture(_dm, x1, y1, x2, y2, filePath);
+            return DMCRef.Capture(_dm, x1, y1, x2, y2, filePath);
         }
 
         #endregion
@@ -314,7 +346,7 @@ namespace RadarBidClient.dm
         #region 系统相关
         public string GetMachineCode()
         {
-            return Marshal.PtrToStringUni(GetMachineCode(_dm));
+            return Marshal.PtrToStringUni(DMCRef.GetMachineCode(_dm));
         }
 
 
@@ -326,36 +358,36 @@ namespace RadarBidClient.dm
         // 在屏幕范围(x1,y1,x2,y2)内,查找string(可以是任意个字符串的组合),并返回符合color_format的坐标位置,相似度sim同Ocr接口描述.
         public int FindStr(int x1, int y1, int x2, int y2, string text, string colorFormat, double sim, out int intX, out int intY)
         {
-            return FindStr(_dm, x1, y1, x2, y2, text, colorFormat, sim, out intX, out intY);
+            return DMCRef.FindStr(_dm, x1, y1, x2, y2, text, colorFormat, sim, out intX, out intY);
         }
 
         
         public int FindStrFast(int x1, int y1, int x2, int y2, string text, string colorFormat, double sim, out int intX, out int intY)
         {
-            return FindStrFast(_dm, x1, y1, x2, y2, text, colorFormat, sim, out intX, out intY);
+            return DMCRef.FindStrFast(_dm, x1, y1, x2, y2, text, colorFormat, sim, out intX, out intY);
         }
 
         //
         public string Ocr(int x1, int y1, int x2, int y2, string color, double sim)
         {
-            return Marshal.PtrToStringUni(Ocr(_dm, x1, y1, x2, y2, color, sim));
+            return Marshal.PtrToStringUni(DMCRef.Ocr(_dm, x1, y1, x2, y2, color, sim));
         }
 
         // 
         public string OcrEx(int x1, int y1, int x2, int y2, string colorFormat, double sim)
         {
-            return Marshal.PtrToStringUni(OcrEx(_dm, x1, y1, x2, y2, colorFormat, sim));
+            return Marshal.PtrToStringUni(DMCRef.OcrEx(_dm, x1, y1, x2, y2, colorFormat, sim));
         }
 
         // 识别位图中区域(x1,y1,x2,y2)的文字
         public string OcrInFile(int x1, int y1, int x2, int y2, string picName, string colorFormat, double sim)
         {
-            return OcrInFile(_dm, x1, y1, x2, y2, picName, colorFormat, sim);
+            return DMCRef.OcrInFile(_dm, x1, y1, x2, y2, picName, colorFormat, sim);
         }
 
         public int SetDict(int index, string fileName)
         {
-            return SetDict(_dm, index, fileName);
+            return DMCRef.SetDict(_dm, index, fileName);
         }
 
         #endregion
@@ -367,7 +399,7 @@ namespace RadarBidClient.dm
         ///        1: 成功
         public int UnBindWindow()
         {
-            return UnBindWindow(_dm);
+            return DMCRef.UnBindWindow(_dm);
         }
 
         #region 释放
@@ -406,7 +438,7 @@ namespace RadarBidClient.dm
             {
                 UnBindWindow();
                 _dm = IntPtr.Zero;
-                int ret = FreeDM();
+                int ret = DMCRef.FreeDM();
             }
 
             disposed = true;

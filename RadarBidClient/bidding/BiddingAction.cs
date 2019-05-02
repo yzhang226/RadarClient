@@ -1,4 +1,5 @@
 ﻿using log4net;
+using RadarBidClient.ioc;
 using RadarBidClient.model;
 using System;
 using System.Collections.Generic;
@@ -9,15 +10,15 @@ using System.Threading;
 
 namespace RadarBidClient
 {
-    public class BidderMocker
+    [Component]
+    public class BidActionManager
     {
-        private static readonly ILog logger = LogManager.GetLogger(typeof(BidderMocker));
-
-        // TODO: 这里应该有更好的方式使用 单例 
-        public static BidderMocker mocker = null;
+        private static readonly ILog logger = LogManager.GetLogger(typeof(BidActionManager));
 
 
-        private SmartRobot robot;
+        private WindowSimulator robot;
+
+        private ProjectConfig conf;
 
         private SimplePoint bench;
 
@@ -29,16 +30,12 @@ namespace RadarBidClient
 
         private string processTitle = "客车";
 
-        private bool debugModeOpen = true;
-      
-
-
-        // private string bidingWebsiteAddress = "http://119.3.64.205:8888/login.htm";
+        private bool debugModeOpen = false;
 
         private string bidingWebsiteAddress = "http://127.0.0.1:8888/bid.htm";
 
-        private Dictionary<DateTime, PagePrice> timePriceMap = new Dictionary<DateTime, PagePrice>();
-        private List<PagePrice> pagePrices = new List<PagePrice>();
+        //private Dictionary<DateTime, PagePrice> timePriceMap = new Dictionary<DateTime, PagePrice>();
+        // private List<PagePrice> pagePrices = new List<PagePrice>();
 
         // 坐标 of 目前时间
         private SimplePoint coordOfCurrentTime { get; set; }
@@ -46,11 +43,10 @@ namespace RadarBidClient
         // 坐标 of 价格区间
         private SimplePoint coordOfPriceSection { get; set; }
 
-        public BidderMocker(SmartRobot robot)
+        public BidActionManager(WindowSimulator robot, ProjectConfig conf)
         {
             this.robot = robot;
-
-            BidderMocker.mocker = this;
+            this.conf = conf;
         }
 
         public void ReopenNewBidWindow()
@@ -90,66 +86,66 @@ namespace RadarBidClient
             }
         }
 
-        public void awaitPrice(int targetPrice, int targetMinute, int targetSecond)
-        {
-            int ret = 0;
-            do
-            {
-                DateTime no = DateTime.Now;
-                if (no.Minute < targetMinute)
-                {
+        //public void awaitPrice(int targetPrice, int targetMinute, int targetSecond)
+        //{
+        //    int ret = 0;
+        //    do
+        //    {
+        //        DateTime no = DateTime.Now;
+        //        if (no.Minute < targetMinute)
+        //        {
 
-                }
-                else if (no.Minute == targetMinute)
-                {
-                    if (no.Second <= targetSecond)
-                    {
-                        PagePrice pp = detectTimeOfPhase02(targetPrice);
-                        if (pp.status == 0)
-                        {
-                            this.MockPhase022(targetPrice);
-                        }
-                    }
-                    else if (no.Second > targetSecond)
-                    {
-                        // 直接提交
-                        this.MockPhase022(targetPrice);
-                    } 
-                    else
-                    {
-                        break;
-                    }
+        //        }
+        //        else if (no.Minute == targetMinute)
+        //        {
+        //            if (no.Second <= targetSecond)
+        //            {
+        //                PagePrice pp = detectTimeOfPhase02(targetPrice);
+        //                if (pp.status == 0)
+        //                {
+        //                    this.MockPhase022(targetPrice);
+        //                }
+        //            }
+        //            else if (no.Second > targetSecond)
+        //            {
+        //                // 直接提交
+        //                this.MockPhase022(targetPrice);
+        //            } 
+        //            else
+        //            {
+        //                break;
+        //            }
                     
-                } else
-                {
-                    logger.InfoFormat("minute of time over");
-                    break;
-                }
-                KK.Sleep(100);
-            } while (ret < 0);
-        }
+        //        } else
+        //        {
+        //            logger.InfoFormat("minute of time over");
+        //            break;
+        //        }
+        //        KK.Sleep(100);
+        //    } while (ret < 0);
+        //}
 
-        public void afterDetectPriceAndTime(int targetPrice, int targetMinute, int targetSecond)
-        {
-            if (pagePrices.Count == 0)
-            {
-                return;
-            }
+        //public void afterDetectPriceAndTime(int targetPrice, int targetMinute, int targetSecond)
+        //{
+        //    if (pagePrices.Count == 0)
+        //    {
+        //        return;
+        //    }
 
-            PagePrice last = pagePrices.LastOrDefault();
-            if (last == null)
-            {
-                return;
-            }
+        //    PagePrice last = pagePrices.LastOrDefault();
+        //    if (last == null)
+        //    {
+        //        return;
+        //    }
 
-            if (targetPrice == last.basePrice)
-            {
-                this.MockPhase022(targetPrice);
-            }
+        //    if (targetPrice == last.basePrice)
+        //    {
+        //        this.MockPhase022(targetPrice);
+        //    }
 
-        }
+        //}
 
-        public PagePrice detectPriceAndTimeInScreen()
+        public PageTimePriceResult detectPriceAndTimeInScreen()
         {
             long t1 = KK.currentTs();
             string uuid = KK.uuid();
@@ -165,23 +161,12 @@ namespace RadarBidClient
             //{
             //    robot.CaptureJpg(bench.x, bench.y, bench.x + 900, bench.y + 700, uuid + "-001.jpg", 80);
             //} 目前价时目前价目前时间
-            if (this.coordOfCurrentTime == null)
+            if (this.coordOfCurrentTime == null || coordOfCurrentTime.x <= 0 || coordOfCurrentTime.y <= 0)
             {
-                this.findAndSetCoordOfCurrentTime();
-                if (this.coordOfCurrentTime == null)
-                {
-                    logger.WarnFormat("this.coordOfCurrentTime is null");
-                    return null;
-                }
+                return PageTimePriceResult.ErrorCoordTime();
             }
-            var p = this.coordOfCurrentTime;
 
-            logger.DebugFormat("目前时间 - 坐标是 - {0}. {1}", p.ToString(), KK.currentTs() - t1);
-            
-            if (p.x <= 0 || p.y <= 0)
-            {
-                return null;
-            }
+            var p = this.coordOfCurrentTime;
 
             // 11:29:57
             int x1 = p.x + 55, y1 = p.y, x2 = p.x + 55 + 75, y2 = p.y + 18;
@@ -198,7 +183,7 @@ namespace RadarBidClient
 
             if (ret1 == null || ret1.Length == 0)
             {
-                return null;
+                return PageTimePriceResult.ErrorTime();
             }
 
             DateTime no = DateTime.Now;
@@ -227,14 +212,15 @@ namespace RadarBidClient
             //logger.InfoFormat(" datetime parsed is {0}, arr is {1}", dt, arr1);
 
             // 找到坐标 of 价格区间
-            if (this.coordOfPriceSection == null)
+            if (this.coordOfPriceSection == null || coordOfPriceSection.x <= 0 || coordOfPriceSection.y <= 0)
             {
-                findAndSetCoordOfPriceSection();
-                if (this.coordOfPriceSection == null)
-                {
-                    logger.WarnFormat("this.coordOfPriceSection is null");
-                    return null;
-                }
+                return PageTimePriceResult.ErrorCoordPrice();
+                //findAndSetCoordOfPriceSection();
+                //if (this.coordOfPriceSection == null)
+                //{
+                //    logger.WarnFormat("this.coordOfPriceSection is null");
+                //    return null;
+                //}
             }
 
             var p2 = this.coordOfPriceSection;
@@ -267,7 +253,7 @@ namespace RadarBidClient
             if (numberStr.Length % 2 != 0)
             {
                 logger.WarnFormat("识别到 错误的 价格 - {0}. 数字的位数不是2的整数倍", numberStr);
-                return null;
+                return PageTimePriceResult.ErrorPrice();
             }
 
             int mod2 = numberStr.Length / 2;           
@@ -280,7 +266,7 @@ namespace RadarBidClient
             if (priceHigh < 70000 || priceHigh < 70000)
             {
                 logger.WarnFormat("识别到 错误的 价格 - {0}, {1}.", priceLow, priceHigh);
-                return null;
+                return PageTimePriceResult.ErrorPrice();
             }
 
             logger.InfoFormat("price parsed priceLow is {0}, pricHigh is {1}", priceLow, priceHigh);
@@ -288,19 +274,18 @@ namespace RadarBidClient
             int currentPrice = (priceLow + priceHigh) / 2;
 
             var pp = new PagePrice(dt, currentPrice);
-            pp.status = 0;
             pp.low = priceLow;
             pp.high = priceHigh;
 
-            timePriceMap[dt] = pp;
+            //timePriceMap[dt] = pp;
             
-            if (pagePrices.Contains(pp))
-            {
-                pagePrices.Remove(pp);
-            }
-            pagePrices.Add(pp);
+            //if (pagePrices.Contains(pp))
+            //{
+            //    pagePrices.Remove(pp);
+            //}
+            //pagePrices.Add(pp);
 
-            return pp;
+            return PageTimePriceResult.Ok(pp);
         }
 
         public void findAndSetCoordOfCurrentTime()
@@ -737,6 +722,44 @@ namespace RadarBidClient
             logger.InfoFormat("第二阶段 尝试点击 - 出价结果 确认 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.currentTs() - t1);
         }
 
+        public CaptchaAnswerImage CapturePhase2CaptchaImage()
+        {
+            if (this.bench == null)
+            {
+                setBenchPoint();
+            }
+
+            DateTime dt = DateTime.Now;
+            var uuid = KK.uuid();
+            CaptchaAnswerImage img = new CaptchaAnswerImage();
+            img.Uuid = uuid;
+            img.CaptureTime = dt;
+
+            // 442 338 ， 380 53
+            int x11 = bench.x + 442, y11 = bench.y + 338;
+            int x21 = x11 + 380, y21 = y11 + 53;
+            var img01Path = getImageDirPath() + "" + uuid + "-" + dt.ToString("HHmmss") + "-phase02-01.jpg";
+            int ret1 = robot.CaptureJpg(x11, y11, x21, y21, img01Path, 80);
+            img.ImagePath1 = img01Path;
+
+            // 基准点偏移 445 390, 240 85
+            int x1 = bench.x + 445, y1 = bench.y + 390;
+            int x2 = x1 + 230, y2 = y1 + 90;
+            var img02Path = getImageDirPath() + "" + uuid + "-" + dt.ToString("HHmmss") + "-phase02-02.jpg";
+            int ret2 = robot.CaptureJpg(x1, y1, x2, y2, img02Path, 80);
+
+            img.ImagePath2 = img02Path;
+
+            return img;
+        }
+
+        public string getImageDirPath()
+        {
+            // d:\work\bid\radarbid\radarbidclient\radarbidclient\bin\x86\debug\resource\dlls\
+            string path = robot.GetBasePath();
+            int idx = path.LastIndexOf("\\resource\\");
+            return path.Substring(0, idx) + "\\Captures\\";
+        }
 
     }
 }
