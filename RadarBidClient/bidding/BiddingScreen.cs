@@ -27,6 +27,9 @@ namespace RadarBidClient.bidding
 
         private Thread collectingThread;
         private bool IsCollectingWork = true;
+        private Thread inquiryAnswerThread;
+
+        private CaptchaAnswerImage LastImage;
 
         public BiddingScreen(ProjectConfig conf, BidActionManager actionManager)
         {
@@ -40,6 +43,11 @@ namespace RadarBidClient.bidding
             {
                 this.StartWork();
             }
+        }
+
+        public void SetLastCaptchaAnswerImage(CaptchaAnswerImage LastImage)
+        {
+            this.LastImage = LastImage;
         }
 
         public void StartWork()
@@ -80,10 +88,21 @@ namespace RadarBidClient.bidding
                 KK.Sleep(1000);
             }
 
+            if (inquiryAnswerThread != null)
+            {
+                inquiryAnswerThread.Abort();
+                IsCollectingWork = false;
+                KK.Sleep(1000);
+            }
+
             IsCollectingWork = true;
             collectingThread = new Thread(loopDetectPriceAndTimeInScreen);
             collectingThread.IsBackground = true;
             collectingThread.Start();
+
+            inquiryAnswerThread = new Thread(loodInquiryCaptchaAnswer);
+            inquiryAnswerThread.IsBackground = true;
+            inquiryAnswerThread.Start();
         }
 
         public void Reset()
@@ -150,6 +169,59 @@ namespace RadarBidClient.bidding
             logger.InfoFormat("end loopDetectPriceAndTimeInScreen ");
         }
 
+        /// <summary>
+        /// 循环询问验证码图片的答案
+        /// </summary>
+        private void loodInquiryCaptchaAnswer()
+        {
+            while (IsCollectingWork)
+            {
+                long ss = KK.currentTs();
+                try
+                {
+                    long s1 = KK.currentTs();
+                    if (LastImage == null)
+                    {
+                        KK.Sleep(300);
+                        continue;
+                    }
+
+                    if (LastImage.Answer?.Length > 0)
+                    {
+                        KK.Sleep(300);
+                        continue;
+                    }
+
+                    var req = new CaptchaImageAnswerRequest();
+                    req.from = "test";
+                    req.token = "devJustTest";
+                    req.uid = LastImage.Uuid;
+                    req.timestamp = KK.currentTs();
+
+                    int httpStatus;
+
+                    DataResult<CaptchaImageAnswerResponse> dr = RestClient.PostAsJson<DataResult<CaptchaImageAnswerResponse>>(conf.CaptchaAddressPrefix + "/v1/biding/captcha-answer", req);
+
+                    if (DataResults.isOk(dr) && dr.Data?.answer?.Length > 0)
+                    {
+                        LastImage.Answer = dr.Data.answer;
+                        logger.InfoFormat("task#{0}'s answer is {1}", LastImage.Uuid, dr.Data.answer);
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    logger.Error("detect price and time error", e);
+                }
+                finally
+                {
+                    KK.Sleep(50);
+                }
+
+            }
+
+        }
+
         private void ProcessErrorDetect(PageTimePriceResult ret)
         {
             if (ret.status == -1)
@@ -184,7 +256,7 @@ namespace RadarBidClient.bidding
                     CaptchaAnswerImage img = actionManager.CapturePhase2CaptchaImage();
                     // img.ImagePath;
 
-                    HttpHelper.PostWebAPI("", "");
+                    // RestClient.PostWebAPI("", "");
 
                 }
             }

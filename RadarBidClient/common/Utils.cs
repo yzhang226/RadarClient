@@ -1,4 +1,6 @@
-﻿using System;
+﻿using RadarBidClient.common;
+using RadarBidClient.model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -90,5 +92,86 @@ namespace RadarBidClient
             return isAdmin;
         }
 
+        public static string ToText(object obj)
+        {
+            string data = "";
+            if (obj is string)
+            {
+                data = (string)obj;
+            }
+            else if (obj is byte[])
+            {
+                data = Encoding.UTF8.GetString((byte[])obj);
+            }
+            else
+            {
+                data = Jsons.ToJson(obj);
+            }
+
+            return data;
+        }
+
+
     }
+
+    public class DataResults
+    {
+
+        // private
+
+    /**
+     * 判断 <code>DataResult</code> 是否成功, null表示失败
+     * @param dr
+     * @return
+     */
+        public static bool isOk<T>(DataResult<T> dr)
+        {
+            return dr != null && dr.Status == 0;
+        }
+
+        /**
+         * 判断 <code>DataResult</code> 是否失败, null表示失败
+         * @param dr
+         * @return
+         */
+        public static bool isFail<T>(DataResult<T> dr)
+        {
+            return !isOk(dr);
+        }
+
+        /**
+         *
+         * @param data
+         * @param <T>
+         * @return
+         */
+        public static DataResult<T> ok<T>(T data)
+        {
+            return new DataResult<T>(0, data, "");
+        }
+
+        /**
+         *
+         * @param message
+         * @return
+         */
+        public static DataResult<T> fail<T>(string message)
+        {
+            // System.Nullable<T>
+            return new DataResult<T>(-1, default(T), message);
+        }
+
+        /**
+         *
+         * @param status
+         * @param message
+         * @return
+         */
+        public static DataResult<T> fail<T>(int status, String message)
+        {
+            return new DataResult<T>(status, default(T), message);
+        }
+
+    }
+
 }

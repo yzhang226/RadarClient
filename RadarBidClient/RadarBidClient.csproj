@@ -173,6 +173,7 @@
     <Compile Include="bidding\command\CommandProcessor.cs" />
     <Compile Include="bidding\socket\MessageProcessors.cs" />
     <Compile Include="common\HttpClients.cs" />
+    <Compile Include="common\Jsons.cs" />
     <Compile Include="ioc\IoC.cs" />
     <Compile Include="bidding\model\ProjectConfig.cs" />
     <Compile Include="common\Utils.cs" />

@@ -1,6 +1,8 @@
 ﻿using Autofac;
 using log4net;
+using RadarBidClient.bidding;
 using RadarBidClient.bidding.socket;
+using RadarBidClient.common;
 using RadarBidClient.ioc;
 using RadarBidClient.model;
 using RadarBidClient.utils;
@@ -27,7 +29,10 @@ namespace RadarBidClient
 
         private BidActionManager actionManager;
 
+        private BiddingScreen biddingScreen;
+
         private ProjectConfig conf;
+
 
         public MainWindow()
         {
@@ -39,6 +44,7 @@ namespace RadarBidClient
 
             robot = IoC.me.Get<WindowSimulator>();
             actionManager = IoC.me.Get<BidActionManager>();
+            biddingScreen = IoC.me.Get<BiddingScreen>();
             conf = IoC.me.Get<ProjectConfig>();
 
             // 为了禁用js错误提示
@@ -71,8 +77,34 @@ namespace RadarBidClient
 
         public void CaptureCaptchaImage(object sender, RoutedEventArgs e)
         {
-            actionManager.CapturePhase2CaptchaImage();
+            CaptchaAnswerImage img = actionManager.CapturePhase2CaptchaImage();
+            string url = conf.CaptchaAddressPrefix + "/v1/biding/captcha-task";
+            CaptchaImageUploadRequest req = new CaptchaImageUploadRequest();
+            req.token = "devJustTest";
+            req.uid = img.Uuid;
+            req.timestamp = KK.currentTs();
+            req.from = "test";
+
+
+            int httpStatus;
+            DataResult<CaptchaImageUploadResponse> dr = RestClient.PostWithFiles<DataResult<CaptchaImageUploadResponse>>(url, req, new List<string> { img.ImagePath1, img.ImagePath2 }, out httpStatus);
+
+            logger.InfoFormat("update load result is {0}", Jsons.ToJson(dr));
+
+            biddingScreen.SetLastCaptchaAnswerImage(img);
+
         }
+
+        public void AutoLoginPhase1(object sender, RoutedEventArgs e)
+        {
+            actionManager.MockLoginAndPhase1();
+        }
+
+        public void StartAutoBidding(object sender, RoutedEventArgs e)
+        {
+            biddingScreen.StartWork();
+        }
+
 
         //public void writeStrategyToFile()
         //{

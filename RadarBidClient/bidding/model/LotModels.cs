@@ -246,4 +246,74 @@ namespace RadarBidClient.model
 
     }
 
+    public class DataResult<T>
+    {
+        public int Status;
+
+        public int HttpStatus;
+
+        public string Message;
+
+        public T Data;
+
+        public DataResult()
+        {
+
+        }
+
+        public DataResult(int Status, T Data, string Message)
+        {
+            this.Status = Status;
+            this.Data = Data;
+            this.Message = Message;
+        }
+
+    }
+
+    public class CaptchaImageUploadRequest
+    {
+        public string uid;
+
+        public string from;
+
+        public string token;
+
+        public long timestamp;
+
+    }
+
+    public class CaptchaImageUploadResponse
+    {
+        public string uid;
+
+        public string from;
+
+        public long timestamp;
+
+    }
+
+    public class CaptchaImageAnswerRequest
+    {
+        public string uid;
+
+        public string from;
+
+        public string token;
+
+        public long timestamp;
+    }
+
+    public class CaptchaImageAnswerResponse
+    {
+
+        public string uid;
+
+        public string from;
+
+        public string answer;
+
+        public long serverTimestamp;
+
+    }
+
 }

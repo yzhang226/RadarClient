@@ -69,18 +69,21 @@ namespace RadarBidClient.utils
 
         public static void readFile(string path, ref byte[] fileBuffer)
         {
+            FileStream fs = null;
             try
             {
-                FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
+                fs = new FileStream(path, FileMode.Open, FileAccess.Read);
                 int fileSize = (int)fs.Length;
                 fileBuffer = new byte[fileSize];
                 fs.Read(fileBuffer, 0, fileSize);
-                fs.Close();
-                fs.Dispose();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                ;
+                logger.Error("", e);
+            }
+            finally
+            {
+                closeQuiet(fs);
             }
         }
 

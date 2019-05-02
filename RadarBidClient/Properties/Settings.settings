@@ -6,7 +6,7 @@
       <Value Profile="(Default)">http://119.3.64.205:3456</Value>
     </Setting>
     <Setting Name="CaptchaAddressPrefix" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">http://119.3.64.205:8866</Value>
+      <Value Profile="(Default)">http://127.0.0.1:8866</Value>
     </Setting>
     <Setting Name="EnableAutoBidding" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
