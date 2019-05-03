@@ -43,6 +43,9 @@ namespace RadarBidClient
             InitializeComponent();
 
             robot = IoC.me.Get<WindowSimulator>();
+            // TODO: 开启异步会带来很多不一致，coding时必须实时注意 异步
+            robot.SetEnableAsync(false);
+
             actionManager = IoC.me.Get<BidActionManager>();
             biddingScreen = IoC.me.Get<BiddingScreen>();
             conf = IoC.me.Get<ProjectConfig>();
@@ -51,8 +54,15 @@ namespace RadarBidClient
             this.webBro.Navigated += new NavigatedEventHandler(wbMain_Navigated);
             this.webBro.Navigate(new Uri(conf.BidLoginUrl));
 
+            //this.webBro.
+
 
             robot.SetDict(0, "resource/dict/dictwin10-001.txt");
+
+            // 
+            robot.SetDict((int) DictIndex.INDEX_CURRENT_TIME, "resource/dict/win10/dict-win10-1.txt");
+            robot.SetDict((int) DictIndex.INDEX_PRICE_SECTION, "resource/dict/win10/dict-win10-2.txt");
+            robot.SetDict((int) DictIndex.INDEX_NUMBER, "resource/dict/win10/dict-win10-3.txt");
 
             // TODO: load biddig-setting 
 
@@ -75,29 +85,20 @@ namespace RadarBidClient
             //this.initSubmitPrice();
         }
 
-        public void CaptureCaptchaImage(object sender, RoutedEventArgs e)
+        public void JustTest(object sender, RoutedEventArgs e)
         {
-            CaptchaAnswerImage img = actionManager.CapturePhase2CaptchaImage();
-            string url = conf.CaptchaAddressPrefix + "/v1/biding/captcha-task";
-            CaptchaImageUploadRequest req = new CaptchaImageUploadRequest();
-            req.token = "devJustTest";
-            req.uid = img.Uuid;
-            req.timestamp = KK.currentTs();
-            req.from = "test";
 
-
-            int httpStatus;
-            DataResult<CaptchaImageUploadResponse> dr = RestClient.PostWithFiles<DataResult<CaptchaImageUploadResponse>>(url, req, new List<string> { img.ImagePath1, img.ImagePath2 }, out httpStatus);
-
-            logger.InfoFormat("update load result is {0}", Jsons.ToJson(dr));
-
-            biddingScreen.SetLastCaptchaAnswerImage(img);
-
+            PagePrice pp = new PagePrice();
+            pp.basePrice = 8900;
+            // KK.Sleep(100);
+            biddingScreen.PreviewPhase2Captcha(pp);
         }
 
         public void AutoLoginPhase1(object sender, RoutedEventArgs e)
         {
             actionManager.MockLoginAndPhase1();
+
+            
         }
 
         public void StartAutoBidding(object sender, RoutedEventArgs e)

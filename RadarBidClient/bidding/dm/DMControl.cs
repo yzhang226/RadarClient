@@ -1,4 +1,6 @@
-﻿using RadarBidClient.ioc;
+﻿using RadarBidClient.common;
+using RadarBidClient.ioc;
+using RadarBidClient.model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -141,6 +143,9 @@ namespace RadarBidClient.dm
         [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
         public static extern int SetDict(IntPtr dm, int index, string fileName);
 
+        [DllImport(DMC_REF_PATH, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
+        public static extern int UseDict(IntPtr dm, int index);
+
         #endregion
 
         #endregion
@@ -154,6 +159,8 @@ namespace RadarBidClient.dm
 
         // public static readonly DMControl me = new DMControl();
 
+        private bool EnableAsync = false;
+
         private IntPtr _dm = IntPtr.Zero;
         private bool disposed = false;
 
@@ -166,6 +173,12 @@ namespace RadarBidClient.dm
         public DMControl()
         {
             _dm = DMCRef.CreateDM(DM_REF_PATH);
+        }
+
+
+        public void SetEnableAsync(bool EnableAsync)
+        {
+            this.EnableAsync = EnableAsync;
         }
 
         public string Ver()
@@ -275,6 +288,23 @@ namespace RadarBidClient.dm
 
         #endregion
 
+        private int Execute01(UserTask task)
+        {
+            int ret = -1;
+            if (EnableAsync)
+            {
+                SingleThread.Execute(task, null, (taskStatus) => {
+                    ret = (int) taskStatus.ReturnData;
+                });
+            }
+            else
+            {
+                ret = (int) task.Invoke(null);
+            }
+
+            return ret;
+        }
+
         #region 键鼠相关
         //        把鼠标移动到目的点(x, y)
         //        返回值:
@@ -283,13 +313,19 @@ namespace RadarBidClient.dm
         //        1:成功
         public int MoveTo(int x, int y)
         {
-            return DMCRef.MoveTo(_dm, x, y);
+            return Execute01((obj) =>
+            {
+                return DMCRef.MoveTo(_dm, x, y);
+            });
         }
 
         //按下鼠标左键
         public int LeftClick()
         {
-            return DMCRef.LeftClick(_dm);
+            return Execute01((obj) =>
+            {
+                return DMCRef.LeftClick(_dm);
+            });
         }
 
         //        按下指定的虚拟键码
@@ -303,7 +339,11 @@ namespace RadarBidClient.dm
             {
                 throw new System.ArgumentException("charStr must be char ", charStr);
             }
-            return DMCRef.KeyPressChar(_dm, charStr);
+
+            return Execute01((obj) =>
+            {
+                return DMCRef.KeyPressChar(_dm, charStr);
+            });
         }
 
         // 按下指定的虚拟键码
@@ -311,7 +351,11 @@ namespace RadarBidClient.dm
         // 返回值: 0:失败 1:成功
         public int KeyPress(int vkCode)
         {
-            return DMCRef.KeyPress(_dm, vkCode);
+            return Execute01((obj) =>
+            {
+                return DMCRef.KeyPress(_dm, vkCode);
+            });
+            
         }
 
 
@@ -333,12 +377,18 @@ namespace RadarBidClient.dm
         //        1:成功
         public int CaptureJpg(int x1, int y1, int x2, int y2, string filePath, int quality)
         {
-            return DMCRef.CaptureJpg(_dm, x1, y1, x2, y2, filePath, quality);
+            return Execute01((obj) =>
+            {
+                return DMCRef.CaptureJpg(_dm, x1, y1, x2, y2, filePath, quality);
+            });
         }
 
         public int Capture(int x1, int y1, int x2, int y2, string filePath)
         {
-            return DMCRef.Capture(_dm, x1, y1, x2, y2, filePath);
+            return Execute01((obj) =>
+            {
+                return DMCRef.Capture(_dm, x1, y1, x2, y2, filePath);
+            });
         }
 
         #endregion
@@ -388,6 +438,16 @@ namespace RadarBidClient.dm
         public int SetDict(int index, string fileName)
         {
             return DMCRef.SetDict(_dm, index, fileName);
+        }
+
+        public int UseDict(int index)
+        {
+            return DMCRef.UseDict(_dm, index);
+        }
+
+        public int UseDict(DictIndex index)
+        {
+            return DMCRef.UseDict(_dm, (int) index);
         }
 
         #endregion

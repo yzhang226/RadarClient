@@ -29,7 +29,7 @@
 
             <Button x:Name="AutoLoginPhase1Btn" Content="自动测试登录" Canvas.Left="10" Canvas.Top="97" Width="151" Click="AutoLoginPhase1" Height="26"/>
 
-            <Button x:Name="CaptureCaptchaImageBtn" Content="截图验证码" Canvas.Left="10" Canvas.Top="158" Width="151" Click="CaptureCaptchaImage" Height="26" RenderTransformOrigin="0.564,4.212"/>
+            <Button x:Name="JustTestBtn" Content="测试专用" Canvas.Left="10" Canvas.Top="158" Width="151" Click="JustTest" Height="26" RenderTransformOrigin="0.564,4.212"/>
 
             <Button x:Name="StartAutoBiddingBtn" Content="开始自动竞拍" Canvas.Left="10" Canvas.Top="204" Width="151" Click="StartAutoBidding" Height="26" RenderTransformOrigin="0.564,4.212"/>
 

@@ -172,6 +172,8 @@
     <Compile Include="bidding\BiddingAction.cs" />
     <Compile Include="bidding\command\CommandProcessor.cs" />
     <Compile Include="bidding\socket\MessageProcessors.cs" />
+    <Compile Include="common\CustomThreadPool.cs" />
+    <Compile Include="common\Threads.cs" />
     <Compile Include="common\HttpClients.cs" />
     <Compile Include="common\Jsons.cs" />
     <Compile Include="ioc\IoC.cs" />
@@ -218,9 +220,12 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="Captures\.gitkeep">
+    <Content Include="Captures\.gitkeep">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
+    <Content Include="Captures\debug\.gitkeep">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="lib\.gitkeep">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -253,13 +258,22 @@
     <Content Include="resource\dict\dictwin7-01.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="resource\dict\win10\dict-win10-1.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="resource\dict\win10\dict-win10-2.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="resource\dict\win10\dict-win10-3.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="resource\dlls\dm.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="resource\dlls\dmc.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="submitStrategy.txt">
+    <Content Include="resource\submitStrategy.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Resource Include="resource\icon-radar.ico" />
@@ -276,7 +290,9 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="resource\w\" />
+  </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>

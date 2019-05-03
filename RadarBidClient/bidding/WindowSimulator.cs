@@ -19,10 +19,13 @@ namespace RadarBidClient
 
         private static readonly ILog logger = LogManager.GetLogger(typeof(WindowSimulator));
 
+        
+
         public WindowSimulator()
         {
         }
-        
+
+
 
         // 按下指定的虚拟键码
         public int KeyPressChar(char ch)

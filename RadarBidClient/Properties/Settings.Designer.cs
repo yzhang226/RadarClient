@@ -34,7 +34,7 @@ namespace RadarBidClient.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://127.0.0.1:8866")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://119.3.64.205:8866")]
         public string CaptchaAddressPrefix {
             get {
                 return ((string)(this["CaptchaAddressPrefix"]));

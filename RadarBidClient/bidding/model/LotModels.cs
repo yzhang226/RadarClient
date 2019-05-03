@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace RadarBidClient.model
 
     public class BiddingContext
     {
-
+        private static readonly ILog logger = LogManager.GetLogger(typeof(BiddingContext));
         /// <summary>
         /// 
         /// </summary>
@@ -23,7 +24,70 @@ namespace RadarBidClient.model
 
         public List<CaptchaAnswerImage> Answers = new List<CaptchaAnswerImage>();
 
-        public CaptchaAnswerImage Phase2Answer;
+        // public CaptchaAnswerImage Phase2PreviewCaptcha;
+
+        // public CaptchaAnswerImage LastAnswer;
+
+        private List<CaptchaAnswerImage> ImagesOfAwaitAnswer = new List<CaptchaAnswerImage>();
+
+        private Dictionary<string, string> answerMap = new Dictionary<string, string>();
+
+        public void PutAnswer(string uuid, string answer)
+        {
+            answerMap[uuid] = answer;
+        }
+
+        public string GetAnswer(string uuid)
+        {
+            if (!answerMap.ContainsKey(uuid))
+            {
+                return string.Empty;
+            }
+
+            return answerMap[uuid];
+        }
+
+        public void PutAwaitImage(CaptchaAnswerImage image)
+        {
+            ImagesOfAwaitAnswer.Add(image);
+            logger.InfoFormat("add task#{0} to await list", image.Uuid);
+        }
+
+        public void RemoveAwaitImage(string uuid)
+        {
+            foreach (var img in ImagesOfAwaitAnswer)
+            {
+                if (img.Uuid == uuid)
+                {
+                    ImagesOfAwaitAnswer.Remove(img);
+                    logger.InfoFormat("remove task#{} from await list", uuid);
+                    break;
+                }
+            }
+        }
+
+        public List<CaptchaAnswerImage> GetImagesOfAwaitAnswer()
+        {
+            return ImagesOfAwaitAnswer;
+        }
+
+        public bool IsAllImagesAnswered()
+        {
+            if (ImagesOfAwaitAnswer == null || ImagesOfAwaitAnswer.Count == 0)
+            {
+                return true;
+            }
+
+            foreach (var img in ImagesOfAwaitAnswer)
+            {
+                if (img != null && (img.Answer == null || img.Answer.Length == 0))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         public void addPagePrice(PagePrice price)
         {
@@ -72,6 +136,7 @@ namespace RadarBidClient.model
         /// -11 - 没有找到时间坐标，即通过OCR未找到 目前时间 文字
         /// -12 - 没有找到时间坐标，即通过OCR未找到 价格区间 文字
         /// -100 - 未知错误 
+        /// 300 - 重复检测, 不需要处理
         /// </summary>
         public int status { get; set; }
 
@@ -115,6 +180,11 @@ namespace RadarBidClient.model
         public static PageTimePriceResult ErrorCoordPrice()
         {
             return new PageTimePriceResult(-12);
+        }
+
+        public static PageTimePriceResult RepeatedTime()
+        {
+            return new PageTimePriceResult(300);
         }
 
     }
@@ -204,7 +274,7 @@ namespace RadarBidClient.model
 
         public static SubmitPriceSetting fromLine(string line)
         {
-            if (line?.Trim().Length == 0)
+            if (line == null || line.Trim().Length == 0)
             {
                 return null;
             }
@@ -313,6 +383,25 @@ namespace RadarBidClient.model
         public string answer;
 
         public long serverTimestamp;
+
+    }
+
+    public enum DictIndex
+    {
+        /// <summary>
+        /// 字库 - 当前时间
+        /// </summary>
+        INDEX_CURRENT_TIME = 1,
+
+        /// <summary>
+        /// 字库 - 价格区间
+        /// </summary>
+        INDEX_PRICE_SECTION = 2,
+
+        /// <summary>
+        /// 字库 - 数字[0, 9]
+        /// </summary>
+        INDEX_NUMBER = 3,
 
     }
 
