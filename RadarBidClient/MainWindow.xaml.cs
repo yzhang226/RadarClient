@@ -54,8 +54,8 @@ namespace RadarBidClient
             this.webBro.Navigated += new NavigatedEventHandler(wbMain_Navigated);
             this.webBro.Navigate(new Uri(conf.BidLoginUrl));
 
-            //this.webBro.
-
+            biddingScreen.SetWebBrowser(this.webBro);
+            biddingScreen.SetShowUpBlock(this.RecoBlock);
 
             robot.SetDict(0, "resource/dict/dictwin10-001.txt");
 
@@ -96,14 +96,14 @@ namespace RadarBidClient
 
         public void AutoLoginPhase1(object sender, RoutedEventArgs e)
         {
-            actionManager.MockLoginAndPhase1();
+            actionManager.MockLogin();
 
             
         }
 
         public void StartAutoBidding(object sender, RoutedEventArgs e)
         {
-            biddingScreen.StartWork();
+            biddingScreen.ResetAndRestart();
         }
 
 

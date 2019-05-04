@@ -74,11 +74,14 @@
     <OutputPath>bin\x86\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -171,6 +174,9 @@
     <Compile Include="bidding\BiddingScreen.cs" />
     <Compile Include="bidding\BiddingAction.cs" />
     <Compile Include="bidding\command\CommandProcessor.cs" />
+    <Compile Include="bidding\LoginManager.cs" />
+    <Compile Include="bidding\Phase2Manager.cs" />
+    <Compile Include="bidding\Phase1Manager.cs" />
     <Compile Include="bidding\socket\MessageProcessors.cs" />
     <Compile Include="common\CustomThreadPool.cs" />
     <Compile Include="common\Threads.cs" />
@@ -290,9 +296,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="resource\w\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>

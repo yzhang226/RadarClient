@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace RadarBidClient
 {
@@ -22,7 +23,7 @@ namespace RadarBidClient
 
         private ProjectConfig conf;
 
-        private SimplePoint bench;
+        private CoordPoint Datum;
 
         // IE进程句柄
         private int ieHwdn;
@@ -36,14 +37,13 @@ namespace RadarBidClient
 
         // private string bidingWebsiteAddress = "http://127.0.0.1:8888/bid.htm";
 
-        //private Dictionary<DateTime, PagePrice> timePriceMap = new Dictionary<DateTime, PagePrice>();
-        // private List<PagePrice> pagePrices = new List<PagePrice>();
+        
 
         // 坐标 of 目前时间
-        private SimplePoint coordOfCurrentTime { get; set; }
+        private CoordPoint coordOfCurrentTime { get; set; }
 
         // 坐标 of 价格区间
-        private SimplePoint coordOfPriceSection { get; set; }
+        private CoordPoint coordOfPriceSection { get; set; }
 
         public BidActionManager(WindowSimulator robot, ProjectConfig conf)
         {
@@ -87,65 +87,7 @@ namespace RadarBidClient
                 proc.Kill(); // Close it down.
             }
         }
-
-        //public void awaitPrice(int targetPrice, int targetMinute, int targetSecond)
-        //{
-        //    int ret = 0;
-        //    do
-        //    {
-        //        DateTime no = DateTime.Now;
-        //        if (no.Minute < targetMinute)
-        //        {
-
-        //        }
-        //        else if (no.Minute == targetMinute)
-        //        {
-        //            if (no.Second <= targetSecond)
-        //            {
-        //                PagePrice pp = detectTimeOfPhase02(targetPrice);
-        //                if (pp.status == 0)
-        //                {
-        //                    this.MockPhase022(targetPrice);
-        //                }
-        //            }
-        //            else if (no.Second > targetSecond)
-        //            {
-        //                // 直接提交
-        //                this.MockPhase022(targetPrice);
-        //            } 
-        //            else
-        //            {
-        //                break;
-        //            }
-                    
-        //        } else
-        //        {
-        //            logger.InfoFormat("minute of time over");
-        //            break;
-        //        }
-        //        KK.Sleep(100);
-        //    } while (ret < 0);
-        //}
-
-        //public void afterDetectPriceAndTime(int targetPrice, int targetMinute, int targetSecond)
-        //{
-        //    if (pagePrices.Count == 0)
-        //    {
-        //        return;
-        //    }
-
-        //    PagePrice last = pagePrices.LastOrDefault();
-        //    if (last == null)
-        //    {
-        //        return;
-        //    }
-
-        //    if (targetPrice == last.basePrice)
-        //    {
-        //        this.MockPhase022(targetPrice);
-        //    }
-
-        //}
+        
 
         public void ResetDictIndex()
         {
@@ -158,7 +100,8 @@ namespace RadarBidClient
             string uuid = KK.uuid();
             // PagePrice pp = new PagePrice();
 
-            if (this.bench == null)
+
+            if (this.Datum == null)
             {
                 setBenchPoint();
             }
@@ -185,7 +128,7 @@ namespace RadarBidClient
             string ret1 = robot.Ocr(x1, y1, x2, y2, "ff0000-000000", 0.8);
             logger.InfoFormat("目前时间 - OCR内容 {0}, {1}, {2}, {3}. elapsed {4}ms, {5}, {6}", x1, y1, x2, y2, KK.currentTs() - s1, ret1, uuid);
 
-            if (ret1 == null || ret1.Length == 0)
+            if (ret1 == null || ret1.Length == 0 || ret1.Length < 6)
             {
                 return PageTimePriceResult.ErrorTime();
             }
@@ -204,6 +147,11 @@ namespace RadarBidClient
                     arr1[mod] = st;
                     idx1 += 1;
                 }
+            }
+
+            if (arr1[0].Length < 2 || arr1[1].Length < 2 || arr1[2].Length < 2)
+            {
+                return PageTimePriceResult.ErrorTime();
             }
 
             logger.InfoFormat(" datetime arr is {0}, {1}, {2}.", arr1[0], arr1[1], arr1[2]);
@@ -272,7 +220,7 @@ namespace RadarBidClient
             int priceLow = int.Parse(arr2[0]);
             int priceHigh = int.Parse(arr2[1]);
 
-            if (priceHigh < 70000 || priceHigh < 70000)
+            if (priceHigh < 70000 || priceHigh < 70000 || priceHigh > 200000 || priceLow > 200000)
             {
                 logger.WarnFormat("识别到 错误的 价格 - {0}, {1}.", priceLow, priceHigh);
                 return PageTimePriceResult.ErrorPrice();
@@ -300,7 +248,7 @@ namespace RadarBidClient
         public void findAndSetCoordOfCurrentTime()
         {
             robot.UseDict(DictIndex.INDEX_CURRENT_TIME);
-            var p = robot.searchTextCoordXYInFlashScreen(bench.x + 20, bench.y + 365, 370, 190, "0066cc-101010", "目前时间");
+            var p = robot.searchTextCoordXYInFlashScreen(Datum.x + 20, Datum.y + 365, 370, 190, "0066cc-101010", "目前时间");
             if (p != null && p.x > 0 && p.y > 0)
             {
                 logger.InfoFormat("find coord of current-time is {0}", p.ToString());
@@ -312,7 +260,7 @@ namespace RadarBidClient
         {
             // 找到坐标 of 价格区间
             robot.UseDict(DictIndex.INDEX_PRICE_SECTION);
-            var p = robot.searchTextCoordXYInFlashScreen(bench.x + 20, bench.y + 365, 371, 190, "0066cc-101010", "价格区间");
+            var p = robot.searchTextCoordXYInFlashScreen(Datum.x + 20, Datum.y + 365, 371, 190, "0066cc-101010", "价格区间");
             if (p != null && p.x > 0 && p.y > 0)
             {
                 logger.InfoFormat("find coord of price-range is {0}", p.ToString());
@@ -342,19 +290,19 @@ namespace RadarBidClient
             return null;
         }
 
-        private static List<SimplePoint> FenceEndPoints = new List<SimplePoint>();
+        private static List<CoordPoint> FenceEndPoints = new List<CoordPoint>();
 
-        private static List<SimplePoint> FenceEndPointsReverse = new List<SimplePoint>();
+        private static List<CoordPoint> FenceEndPointsReverse = new List<CoordPoint>();
 
         public void setBenchPoint()
         {
-            bench = this.detectBenchPoint();
+            Datum = this.detectBenchPoint();
             // 设置 验证码区域的 确认/取消 按钮 的 栅栏
             // 440 438
             // 按钮长宽 114 x 27
             // 栅栏 起始点 delta(440, 448) 长宽 422 x 87
             // 假设 每一个cell 长宽是  55 x 21
-            var startPoint = bench.AddDelta(440, 448);
+            var startPoint = Datum.AddDelta(440, 448);
             int areaLen = 422, areaWidth = 87;
             int columns = 8;
             int rows = 4;
@@ -374,14 +322,47 @@ namespace RadarBidClient
                 }
             }
 
-            FenceEndPointsReverse = new List<SimplePoint>(FenceEndPoints);
+            FenceEndPointsReverse = new List<CoordPoint>(FenceEndPoints);
             FenceEndPointsReverse.Reverse();
 
             logger.InfoFormat("init FenceEndPoints, size {0}", FenceEndPoints.Count);
 
         }
 
-        public async void MockLoginAndPhase1()
+
+        public void MockLogin()
+        {
+
+            this.setBenchPoint();
+
+            Task.Factory.StartNew(() =>
+            {
+                // 首屏 确定 按钮
+                var p11 = Datum.AddDelta(741, 507);
+                // Task task1 = 
+                this.clickConfirmAtIndex(p11);
+
+                // 首屏 同意 按钮
+                var p12 = Datum.AddDelta(730, 509);
+                this.clickAgreeAtIndex(p11);
+
+                // 登录页
+                var p21 = Datum.AddDelta(610, 200);
+                var p22 = Datum.AddDelta(610, 255);
+                var p23 = Datum.AddDelta(610, 314);
+
+                var p24 = Datum.AddDelta(630, 378);
+
+                this.inputBidNumberAtLogin(p21, "22222222");
+                this.inputPasswordAtLogin(p22, "2222");
+                this.inputCaptchaAtLogin(p23, "301726");
+                this.clickLoginAtLogin(p24);
+                
+            });
+        }
+
+
+        public void MockLoginAndPhase1()
         {
 
             this.setBenchPoint();
@@ -391,23 +372,23 @@ namespace RadarBidClient
 
 
                 // 首屏 确定 按钮
-                var p11 = bench.AddDelta(741, 507);
+                var p11 = Datum.AddDelta(741, 507);
                 // Task task1 = 
                 this.clickConfirmAtIndex(p11);
                 // Task.WaitAll(task1);
 
                 // 首屏 同意 按钮
-                var p12 = bench.AddDelta(730, 509);
+                var p12 = Datum.AddDelta(730, 509);
                 // Task task2 = 
                 this.clickAgreeAtIndex(p11);
                 // Task.WaitAll(task2);
 
                 // 登录页
-                var p21 = bench.AddDelta(610, 200);
-                var p22 = bench.AddDelta(610, 255);
-                var p23 = bench.AddDelta(610, 314);
+                var p21 = Datum.AddDelta(610, 200);
+                var p22 = Datum.AddDelta(610, 255);
+                var p23 = Datum.AddDelta(610, 314);
 
-                var p24 = bench.AddDelta(630, 378);
+                var p24 = Datum.AddDelta(630, 378);
 
                 this.inputBidNumberAtLogin(p21, "22222222");
                 this.inputPasswordAtLogin(p22, "2222");
@@ -416,13 +397,13 @@ namespace RadarBidClient
 
                 // 第一阶段
                 Thread.Sleep(4 * 1000);
-                var p31 = bench.AddDelta(690, 314);
-                var p32 = bench.AddDelta(690, 373);
+                var p31 = Datum.AddDelta(690, 314);
+                var p32 = Datum.AddDelta(690, 373);
 
-                var p33 = bench.AddDelta(800, 375);
+                var p33 = Datum.AddDelta(800, 375);
 
-                var p34 = bench.AddDelta(744, 416);
-                var p35 = bench.AddDelta(552, 498);
+                var p34 = Datum.AddDelta(744, 416);
+                var p35 = Datum.AddDelta(552, 498);
 
                 this.inputPriceAtPhase1(p31, 89000);
                 this.inputPrice2AtPhase1(p32, 89000);
@@ -435,53 +416,54 @@ namespace RadarBidClient
 
                 // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
                 Thread.Sleep(2 * 1000);
-                var p36 = bench.AddDelta(661, 478);
+                var p36 = Datum.AddDelta(661, 478);
                 this.clickConfirmBidOkAtPhase1(p36);
             });
         }
 
         public void MockPhase2()
         {
-            logger.InfoFormat("第二阶段 使用基准点 {0}", bench);
+            logger.InfoFormat("第二阶段 使用基准点 {0}", Datum);
 
             // 第二阶段
-            var p41 = bench.AddDelta(676, 417);
-            var p42 = bench.AddDelta(800, 415);
+            var p41 = Datum.AddDelta(676, 417);
+            var p42 = Datum.AddDelta(800, 415);
 
             this.inputPriceAtPhase2(p41, 89000);
-            this.clickBidButtonAtPhase2(p42);
+            this.ClickOfferBtn(p42);
 
-            var p43 = bench.AddDelta(734, 416);
-            var p44 = bench.AddDelta(553, 500);
+            var p43 = Datum.AddDelta(734, 416);
+            var p44 = Datum.AddDelta(553, 500);
 
-            this.inputCaptchAtPhase2(p43, "0282");
-            this.clickConfirmCaptchaAtPhase2(p44);
+            this.InputCaptchAtPoint(p43, "0282");
+            this.ClickBtnUseFenceFromLeftToRight(p44);
 
             // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
             Thread.Sleep(2 * 1000);
-            var p36 = bench.AddDelta(661, 478);
-            this.clickConfirmBidOkAtPhase2(p36);
+            var p36 = Datum.AddDelta(661, 478);
+            this.ClickBtnOnceAtPoint(p36);
         }
 
-        public void MockPhase2AtCaptcha(int bidPrice)
+        public CoordPoint MockPhase2AtCaptcha(int bidPrice)
         {
-            logger.InfoFormat("第二阶段 使用基准点 {0}", bench);
+            logger.InfoFormat("第二阶段 使用基准点 {0}", Datum);
 
             // 第二阶段
-            var p41 = bench.AddDelta(676, 417);
-            var p42 = bench.AddDelta(800, 415);
+            var p41 = Datum.AddDelta(676, 417);
+            var p42 = Datum.AddDelta(800, 415);
 
             this.inputPriceAtPhase2(p41, bidPrice);
-            this.clickBidButtonAtPhase2(p42);
-            
+            this.ClickOfferBtn(p42);
+
+            return p41;
         }
 
         public void MockCancelPhase2AtCaptcha()
         {
-            logger.InfoFormat("第二阶段 使用基准点 {0}", bench);
+            logger.InfoFormat("第二阶段 使用基准点 {0}", Datum);
 
             // 第二阶段 742 502
-            var p42 = bench.AddDelta(742, 502);
+            var p42 = Datum.AddDelta(742, 502);
 
             // TODO: 取消按钮的可能会变化，所以这里使用全点击的方式
             // 按钮长宽 114 x 27
@@ -501,31 +483,31 @@ namespace RadarBidClient
 
         public void MockPhase022(int targetPrice)
         {
-            logger.InfoFormat("第二阶段修改 - 使用基准点 {0}", bench);
+            logger.InfoFormat("第二阶段修改 - 使用基准点 {0}", Datum);
 
             // 第二阶段
-            var p41 = bench.AddDelta(676, 417);
-            var p42 = bench.AddDelta(800, 415);
+            var p41 = Datum.AddDelta(676, 417);
+            var p42 = Datum.AddDelta(800, 415);
 
             this.inputPriceAtPhase2(p41, targetPrice);
             KK.Sleep(10);
-            this.clickBidButtonAtPhase2(p42);
+            this.ClickOfferBtn(p42);
             KK.Sleep(10);
 
-            var p43 = bench.AddDelta(734, 416);
-            var p44 = bench.AddDelta(553, 500);
+            var p43 = Datum.AddDelta(734, 416);
+            var p44 = Datum.AddDelta(553, 500);
 
             // TODO: 检测 enter 键
 
             // 上传验证码 
 
-            this.inputCaptchAtPhase2(p43, "0282");
-            this.clickConfirmCaptchaAtPhase2(p44);
+            this.InputCaptchAtPoint(p43, "0282");
+            this.ClickBtnUseFenceFromLeftToRight(p44);
 
             // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
             KK.Sleep(1500);
-            var p36 = bench.AddDelta(661, 478);
-            this.clickConfirmBidOkAtPhase2(p36);
+            var p36 = Datum.AddDelta(661, 478);
+            this.ClickBtnOnceAtPoint(p36);
 
             // TODO: 确定按钮的位置 可能 会变化, 则检测 
 
@@ -535,19 +517,19 @@ namespace RadarBidClient
 
         public void MockPhase022(int targetPrice, BiddingContext context)
         {
-            logger.InfoFormat("第二阶段修改 - 使用基准点 {0}", bench);
+            logger.InfoFormat("第二阶段修改 - 使用基准点 {0}", Datum);
 
             // 第二阶段
-            var p41 = bench.AddDelta(676, 417);
-            var p42 = bench.AddDelta(800, 415);
+            var p41 = Datum.AddDelta(676, 417);
+            var p42 = Datum.AddDelta(800, 415);
 
             this.inputPriceAtPhase2(p41, targetPrice);
             KK.Sleep(2);
-            this.clickBidButtonAtPhase2(p42);
+            this.ClickOfferBtn(p42);
             KK.Sleep(2);
 
-            var p43 = bench.AddDelta(734, 416);
-            var p44 = bench.AddDelta(553, 500);
+            var p43 = Datum.AddDelta(734, 416);
+            var p44 = Datum.AddDelta(553, 500);
 
             // TODO: 检测 enter 键
 
@@ -579,43 +561,28 @@ namespace RadarBidClient
 
             }
 
-            logger.InfoFormat("get answer#{0} for task#{}", answer, img.Uuid);
-            this.inputCaptchAtPhase2(p43, answer);
-            this.clickConfirmCaptchaAtPhase2(p44);
+            logger.InfoFormat("get answer#{0} for task#{1}", answer, img.Uuid);
+            this.InputCaptchAtPoint(p43, answer);
+            this.ClickBtnUseFenceFromLeftToRight(p44);
 
             // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
             // TODO: 应该检测 区域 是否有 出价有效
-            KK.Sleep(1000);
-            var p36 = bench.AddDelta(661, 478);
-            this.clickConfirmBidOkAtPhase2(p36);
+            KK.Sleep(800);
+            var p36 = Datum.AddDelta(661, 478);
+            this.ClickBtnOnceAtPoint(p36);
+
+            // 清除以前输入的价格
+            this.CleanPriceAtPoint(p41, true);
 
 
         }
 
-        public void UploadPhase2CaptchaImage(CaptchaAnswerImage img)
-        {
 
-            // 
-            string url = conf.CaptchaAddressPrefix + "/v1/biding/captcha-task";
-            CaptchaImageUploadRequest req = new CaptchaImageUploadRequest();
-            req.token = "devJustTest";
-            req.uid = img.Uuid;
-            req.timestamp = KK.currentTs();
-            req.from = "test";
-
-
-            int httpStatus;
-            DataResult<CaptchaImageUploadResponse> dr = RestClient.PostWithFiles<DataResult<CaptchaImageUploadResponse>>(url, req, new List<string> { img.ImagePath1, img.ImagePath2 }, out httpStatus);
-
-            logger.InfoFormat("upload catpcha task, result is {0}", Jsons.ToJson(dr));
-        
-             
-        }
 
         public CaptchaAnswerImage CaptureCaptchaAndUploadTask()
         {   
-            CaptchaAnswerImage img = CapturePhase2CaptchaImage();
-            UploadPhase2CaptchaImage(img);
+            CaptchaAnswerImage img = CaptureCaptchaImageAtPoint();
+            // UploadPhase2CaptchaImage(img);
 
             return img;
         }
@@ -624,22 +591,22 @@ namespace RadarBidClient
         private void clickPossiblePopupSureButton()
         {
             long t1 = KK.currentTs();
-            int x = bench.x + 655;
-            int y = bench.y + 450;
+            int x = Datum.x + 655;
+            int y = Datum.y + 450;
             int ret = robot.MoveTo(x, y);
             robot.LeftClick();
             logger.InfoFormat("第二阶段 尝试点击 - 出价结果 确认 按钮 - {0}, {1}, {2}", x, y, KK.currentTs() - t1);
         }
 
-        private SimplePoint getScreenResolution()
+        private CoordPoint getScreenResolution()
         {
             int screenWidth = Convert.ToInt32(System.Windows.SystemParameters.PrimaryScreenWidth);
             int screenHeight = Convert.ToInt32(System.Windows.SystemParameters.PrimaryScreenHeight);
 
-            return new SimplePoint(screenWidth, screenHeight);
+            return new CoordPoint(screenWidth, screenHeight);
         }
 
-        private SimplePoint detectBenchPoint()
+        private CoordPoint detectBenchPoint()
         {
             long t1 = KK.currentTs();
             // 尝试使用 相对位置 - 上海市个人非营业性客车额度投标拍卖
@@ -689,7 +656,7 @@ namespace RadarBidClient
         }
 
         // 首屏 确定 按钮
-        private void clickConfirmAtIndex(SimplePoint p1)
+        private void clickConfirmAtIndex(CoordPoint p1)
         {
             long t1 = KK.currentTs();
             if (p1.x > 0 && p1.y > 0)
@@ -705,7 +672,7 @@ namespace RadarBidClient
         }
 
         // 首屏 同意 按钮
-        private void clickAgreeAtIndex(SimplePoint p2)
+        private void clickAgreeAtIndex(CoordPoint p2)
         {
             long t1 = KK.currentTs();
             if (p2.x > 0 && p2.y > 0)
@@ -723,7 +690,7 @@ namespace RadarBidClient
         }
 
         // 登录页  投标号 输入框
-        private void inputBidNumberAtLogin(SimplePoint p3, string bidNumber)
+        private void inputBidNumberAtLogin(CoordPoint p3, string bidNumber)
         {
             long t1 = KK.currentTs();
             if (p3.x > 0 && p3.y > 0)
@@ -737,7 +704,7 @@ namespace RadarBidClient
         }
 
         // 登录页   密码 输入框
-        private void inputPasswordAtLogin(SimplePoint p4, string password)
+        private void inputPasswordAtLogin(CoordPoint p4, string password)
         {
             long t1 = KK.currentTs();
             if (p4.x > 0 && p4.y > 0)
@@ -751,7 +718,7 @@ namespace RadarBidClient
         }
 
         // 登录页   图像校验码 输入框
-        private void inputCaptchaAtLogin(SimplePoint p5, string captcha)
+        private void inputCaptchaAtLogin(CoordPoint p5, string captcha)
         {
             long t1 = KK.currentTs();
             if (p5.x > 0 && p5.y > 0)
@@ -765,7 +732,7 @@ namespace RadarBidClient
         }
 
         // 登录页 参加投标竞买 按钮
-        private void clickLoginAtLogin(SimplePoint p6)
+        private void clickLoginAtLogin(CoordPoint p6)
         {
             long t1 = KK.currentTs();
             if (p6.x > 0 && p6.y > 0)
@@ -778,7 +745,7 @@ namespace RadarBidClient
         }
 
         // 第一阶段页 输入价格 输入框
-        private void inputPriceAtPhase1(SimplePoint p11, int price)
+        private void inputPriceAtPhase1(CoordPoint p11, int price)
         {
             long t1 = KK.currentTs();
             if (p11.x > 0 && p11.y > 0)
@@ -792,7 +759,7 @@ namespace RadarBidClient
         }
 
         // 第一阶段页 再次输入价格 输入框
-        private void inputPrice2AtPhase1(SimplePoint p12, int price)
+        private void inputPrice2AtPhase1(CoordPoint p12, int price)
         {
             long t1 = KK.currentTs();
             if (p12.x > 0 && p12.y > 0)
@@ -806,7 +773,7 @@ namespace RadarBidClient
         }
 
         // 第一阶段页 出价 按钮
-        private void clickBidButtonAtPhase1(SimplePoint p12)
+        private void clickBidButtonAtPhase1(CoordPoint p12)
         {
             long t1 = KK.currentTs();
             int ret = robot.MoveTo(p12.x, p12.y);
@@ -815,7 +782,7 @@ namespace RadarBidClient
         }
 
         // 第一阶段页 弹框 验证码 输入框
-        private void inputCaptchAtPhase1(SimplePoint p13, string captcha)
+        private void inputCaptchAtPhase1(CoordPoint p13, string captcha)
         {
             long t1 = KK.currentTs();
             if (p13.x > 0 && p13.y > 0)
@@ -828,7 +795,7 @@ namespace RadarBidClient
         }
 
         // 第一阶段页 弹框 验证码 确认 按钮
-        private void clickConfirmCaptchaAtPhase1(SimplePoint p12)
+        private void clickConfirmCaptchaAtPhase1(CoordPoint p12)
         {
             long t1 = KK.currentTs();
             int ret = robot.MoveTo(p12.x, p12.y);
@@ -837,7 +804,7 @@ namespace RadarBidClient
         }
 
         // 第一阶段页 弹框 出价结果 确认 按钮
-        private void clickConfirmBidOkAtPhase1(SimplePoint p12)
+        private void clickConfirmBidOkAtPhase1(CoordPoint p12)
         {
             long t1 = KK.currentTs();
             int ret = robot.MoveTo(p12.x, p12.y);
@@ -846,7 +813,7 @@ namespace RadarBidClient
         }
 
         // 第二阶段页 自行输入价格 输入框
-        private void inputPriceAtPhase2(SimplePoint p13, int price)
+        private void inputPriceAtPhase2(CoordPoint p13, int price)
         {
             long t1 = KK.currentTs();
             if (p13.x > 0 && p13.y > 0)
@@ -855,34 +822,54 @@ namespace RadarBidClient
                 robot.MoveTo(p13.x, p13.y);
                 robot.LeftClick();
 
-                // 先清空已输入的价格
-                for (int i = 0; i < 6; i++)
-                {
-                    robot.PressBackspacKey();
-                    robot.PressDeleteKey();
-                    // KK.Sleep(1);
-                }
+                CleanPriceAtPoint(p13, false);
 
                 robot.KeyPressString(price.ToString());
                 logger.InfoFormat("第二阶段 尝试输入 - 自行输入价格 输入框 - {0}, {1} {2}. {3}", p13.x, p13.y, price, KK.currentTs() - t1);
             }
         }
 
-        // 第二阶段页 出价 按钮 
-        private void clickBidButtonAtPhase2(SimplePoint p13)
+        public void InputPriceAtPoint(CoordPoint coord, int price)
         {
             long t1 = KK.currentTs();
-            if (p13.x > 0 && p13.y > 0)
+            robot.MoveTo(coord.x, coord.y);
+            robot.LeftClick();
+
+            CleanPriceAtPoint(coord, false);
+
+            robot.KeyPressString(price.ToString());
+
+            logger.DebugFormat("输入 - 自行输入价格 输入框 - {0}, {1}, elapsed {2}", coord.ToString(), price, KK.currentTs() - t1);
+        }
+
+        public void CleanPriceAtPoint(CoordPoint p13, bool NeedMoveTo)
+        {
+            if (NeedMoveTo)
             {
                 robot.MoveTo(p13.x, p13.y);
                 robot.LeftClick();
-                robot.LeftClick();
-                logger.InfoFormat("第二阶段 尝试点击 - 出价 按钮 - {0}, {1}. {2}", p13.x, p13.y, KK.currentTs() - t1);
+            }
+            
+            // 先清空已输入的价格
+            for (int i = 0; i < 6; i++)
+            {
+                robot.PressBackspacKey();
+                robot.PressDeleteKey();
             }
         }
 
         // 第二阶段页 出价 按钮 
-        private void clickCancelButtonAtPhase2(SimplePoint p13)
+        public void ClickOfferBtn(CoordPoint p13)
+        {
+            long t1 = KK.currentTs();
+            robot.MoveTo(p13.x, p13.y);
+            robot.LeftClick();
+            robot.LeftClick();
+            logger.InfoFormat("点击 出价 按钮 - {0}, elapsed {1}.", p13.ToString(), KK.currentTs() - t1);
+        }
+
+        // 第二阶段页 出价 按钮 
+        private void clickCancelButtonAtPhase2(CoordPoint p13)
         {
             long t1 = KK.currentTs();
             if (p13.x > 0 && p13.y > 0)
@@ -894,56 +881,68 @@ namespace RadarBidClient
         }
 
         // 第二阶段页 弹框 验证码 输入框
-        private void inputCaptchAtPhase2(SimplePoint p13, string captcha)
+        public void InputCaptchAtPoint(CoordPoint p13, string captcha)
         {
             long t1 = KK.currentTs();
-            if (p13.x > 0 && p13.y > 0)
+            robot.MoveTo(p13.x, p13.y);
+            robot.LeftClick();
+
+            // 先清空已输入的验证码
+            for (int i = 0; i < 4; i++)
             {
-                robot.MoveTo(p13.x, p13.y);
-                robot.LeftClick();
-                robot.KeyPressString(captcha);
-                logger.InfoFormat("第二阶段 尝试输入 - 验证码 输入框 - {0}, {1}, {2}. {3}", p13.x, p13.y, captcha, KK.currentTs() - t1);
+                robot.PressBackspacKey();
+                robot.PressDeleteKey();
             }
+
+            robot.KeyPressString(captcha);
+            logger.InfoFormat("输入 - 验证码 - {0}, {1}, elapsed {2}.", p13.ToString(), captcha, KK.currentTs() - t1);
         }
 
         // 第二阶段页 弹框 验证码 确认 按钮
-        private void clickConfirmCaptchaAtPhase2(SimplePoint p12)
+        public void ClickBtnUseFenceFromLeftToRight(CoordPoint p12)
         {
             long t1 = KK.currentTs();
 
-
-            // TODO: 确定按钮的位置 可能 会变化, 则检测 
+            // 按钮的位置 可能 会变化, 这里使用 栅栏模式多次点击
             foreach (var p in FenceEndPoints)
             {
                 robot.MoveTo(p.x, p.y);
                 robot.LeftClick();
-                // KK.Sleep(50);
             }
 
-            // int ret = robot.MoveTo(p12.x, p12.y);
-            // robot.LeftClick();
-            logger.InfoFormat("第二阶段 尝试点击 - 验证码 确认 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.currentTs() - t1);
+            logger.InfoFormat("栅栏模式（从右到左） 点击 - 按钮 - {0}, elpased {1}.", p12.ToString(), KK.currentTs() - t1);
+        }
+
+        public void ClickBtnUseFenceFromRightToLeft(CoordPoint p12)
+        {
+            long t1 = KK.currentTs();
+
+            // 按钮的位置 可能 会变化, 这里使用 栅栏模式多次点击
+            foreach (var p in FenceEndPointsReverse)
+            {
+                robot.MoveTo(p.x, p.y);
+                robot.LeftClick();
+            }
+
+            logger.InfoFormat("栅栏模式（从左到右） 点击 - 按钮 - {0}, elpased {1}.", p12.ToString(), KK.currentTs() - t1);
         }
 
         // 第二阶段页 弹框 出价结果 确认 按钮
-        private void clickConfirmBidOkAtPhase2(SimplePoint p12)
+        public void ClickBtnOnceAtPoint(CoordPoint p12)
         {
             long t1 = KK.currentTs();
             int ret = robot.MoveTo(p12.x, p12.y);
             robot.LeftClick();
-            logger.InfoFormat("第二阶段 尝试点击 - 出价结果 确认 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.currentTs() - t1);
+            logger.InfoFormat("点击 - 按钮（一次） - {0}, elapsed {1}.", p12.ToString(), KK.currentTs() - t1);
         }
 
         /// <summary>
         /// 第二阶段 - 截图验证码区域 且 上传验证码图片
         /// </summary>
         /// <returns></returns>
-        public CaptchaAnswerImage CapturePhase2CaptchaImage()
+        public CaptchaAnswerImage CaptureCaptchaImageAtPoint()
         {
-            if (this.bench == null)
-            {
-                setBenchPoint();
-            }
+            var Datum = GetDatum();
 
             DateTime dt = DateTime.Now;
             var uuid = KK.uuid();
@@ -952,14 +951,14 @@ namespace RadarBidClient
             img.CaptureTime = dt;
 
             // 442 338 ， 380 53
-            int x11 = bench.x + 442, y11 = bench.y + 338;
+            int x11 = Datum.x + 442, y11 = Datum.y + 338;
             int x21 = x11 + 380, y21 = y11 + 53;
             var img01Path = getImageDirPath() + "" + uuid + "-" + dt.ToString("HHmmss") + "-phase02-01.jpg";
             int ret1 = robot.CaptureJpg(x11, y11, x21, y21, img01Path, 80);
             img.ImagePath1 = img01Path;
 
             // 基准点偏移 445 390, 240 85
-            int x1 = bench.x + 445, y1 = bench.y + 390;
+            int x1 = Datum.x + 445, y1 = Datum.y + 390;
             int x2 = x1 + 230, y2 = y1 + 90;
             var img02Path = getImageDirPath() + "" + uuid + "-" + dt.ToString("HHmmss") + "-phase02-02.jpg";
             int ret2 = robot.CaptureJpg(x1, y1, x2, y2, img02Path, 80);
@@ -969,12 +968,23 @@ namespace RadarBidClient
             return img;
         }
 
+        public int CaptureImage(CoordRectangle rect, string filePath)
+        {
+            return robot.CaptureJpg(rect.x1, rect.y1, rect.x2, rect.y2, filePath, 90);
+        }
+
+
         public string getImageDirPath()
         {
             // d:\work\bid\radarbid\radarbidclient\radarbidclient\bin\x86\debug\resource\dlls\
             string path = robot.GetBasePath();
             int idx = path.LastIndexOf("\\resource\\");
             return path.Substring(0, idx) + "\\Captures\\";
+        }
+
+        public CoordPoint GetDatum()
+        {
+            return this.Datum;
         }
 
     }

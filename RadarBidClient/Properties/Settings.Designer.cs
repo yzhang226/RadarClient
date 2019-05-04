@@ -49,5 +49,23 @@ namespace RadarBidClient.Properties {
                 return ((bool)(this["EnableAutoBidding"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("/login.htm")]
+        public string BidLoginUrl {
+            get {
+                return ((string)(this["BidLoginUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("/bid.html")]
+        public string BidBiddingUrl {
+            get {
+                return ((string)(this["BidBiddingUrl"]));
+            }
+        }
     }
 }

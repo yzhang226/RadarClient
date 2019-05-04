@@ -111,6 +111,26 @@ namespace RadarBidClient
             return data;
         }
 
+        public static int RandomInt(int n, int m)
+        {
+            Random r = new Random(); 
+            return r.Next(n, m);
+        }
+
+        public static string WorkingBaseDir()
+        {
+            return AppDomain.CurrentDomain.BaseDirectory;
+        }
+
+        public static string ResourceDir()
+        {
+            return WorkingBaseDir() + "\\resource";
+        }
+
+        public static string CapturesDir()
+        {
+            return WorkingBaseDir() + "\\Captures";
+        }
 
     }
 

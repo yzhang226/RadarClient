@@ -26,11 +26,27 @@ namespace RadarBidClient.model
             }
         }
 
+        public string UploadCaptchaTaskUrl
+        {
+            get
+            {
+                return this.CaptchaAddressPrefix + "/v1/biding/captcha-task"; ;
+            }
+        }
+
         public string BidLoginUrl
         {
             get
             {
-                return this.BidAddressPrefix + "/login.htm";
+                return this.BidAddressPrefix + Properties.Settings.Default.BidLoginUrl;
+            }
+        }
+
+        public string BidBidingUrl
+        {
+            get
+            {
+                return this.BidAddressPrefix + Properties.Settings.Default.BidBiddingUrl;
             }
         }
 

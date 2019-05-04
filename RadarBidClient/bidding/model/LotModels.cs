@@ -32,6 +32,59 @@ namespace RadarBidClient.model
 
         private Dictionary<string, string> answerMap = new Dictionary<string, string>();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private Dictionary<int, int> PriceAfter29 = new Dictionary<int, int>();
+
+        private Dictionary<int, PriceSubmitOperate> submitOperateMap = new Dictionary<int, PriceSubmitOperate>();
+
+        public void AddPrice(int sec, int basePrice)
+        {
+            PriceAfter29[sec] = basePrice;
+        }
+
+        public int GetPrice(int sec)
+        {
+            if (!PriceAfter29.ContainsKey(sec))
+            {
+                return -1;
+            }
+
+            return PriceAfter29[sec];
+        }
+
+        public PriceSubmitOperate AddPriceSetting(SubmitPriceSetting settting)
+        {
+            var oper = new PriceSubmitOperate();
+            oper.setting = settting;
+            oper.status = -1;
+
+            submitOperateMap[settting.second] = oper;
+
+            return oper;
+        }
+
+        public Dictionary<int, PriceSubmitOperate> GetSubmitOperateMap()
+        {
+            return submitOperateMap;
+        }
+
+        public bool RemoveSubmitOperate(int second)
+        {
+            if (submitOperateMap.ContainsKey(second))
+            {
+                return false;
+            }
+
+            return submitOperateMap.Remove(second);
+        }
+
+        public void CleanSubmitOperate()
+        {
+            submitOperateMap.Clear();
+        }
+
         public void PutAnswer(string uuid, string answer)
         {
             answerMap[uuid] = answer;
@@ -60,7 +113,7 @@ namespace RadarBidClient.model
                 if (img.Uuid == uuid)
                 {
                     ImagesOfAwaitAnswer.Remove(img);
-                    logger.InfoFormat("remove task#{} from await list", uuid);
+                    logger.InfoFormat("remove task#{0} from await list", uuid);
                     break;
                 }
             }
@@ -97,33 +150,93 @@ namespace RadarBidClient.model
 
     }
 
-    public class SimplePoint
+    /// <summary>
+    /// 坐标 - 点
+    /// </summary>
+    public class CoordPoint
     {
         public int x { get; set; }
 
         public int y { get; set; }
 
-        public SimplePoint()
+        public CoordPoint()
         {
 
         }
 
-        public SimplePoint(int x, int y)
+        public CoordPoint(int x, int y)
         {
             this.x = x;
             this.y = y;
         }
 
         // 增加增量
-        public SimplePoint AddDelta(int x1, int y1)
+        public CoordPoint AddDelta(int dx, int dy)
         {
-            return new SimplePoint(this.x + x1, this.y + y1);
+            return new CoordPoint(this.x + dx, this.y + dy);
         }
 
         public override string ToString()
         {
             return "(" + x + ", " + y + ")";
         }
+
+    }
+
+    /// <summary>
+    /// 坐标 - 矩形
+    /// </summary>
+    public class CoordRectangle
+    {
+        public int x1 { get; set; }
+
+        public int y1 { get; set; }
+
+        public int x2 { get; set; }
+
+        public int y2 { get; set; }
+
+        public CoordRectangle()
+        {
+
+        }
+
+        public CoordRectangle(int x1, int y1, int x2, int y2)
+        {
+            this.x1 = x1;
+            this.y1 = y1;
+            this.x2 = x2;
+            this.y2 = y2;
+        }
+
+        public static CoordRectangle From(int x1, int y1, int length, int width)
+        {
+            CoordRectangle rect = new CoordRectangle(x1, y1, x1+length, y1+width);
+            return rect;
+        }
+
+        public static CoordRectangle From(CoordPoint p, int length, int width)
+        {
+            CoordRectangle rect = new CoordRectangle(p.x, p.y, p.x + length, p.y + width);
+            return rect;
+        }
+
+
+        public int GetLength()
+        {
+            return x2 - x1;
+        }
+
+        public int GetWidth()
+        {
+            return y2 - y1;
+        }
+
+        public override string ToString()
+        {
+            return "{(" + x1 + ", " + y1 + "), (" + x2 + ", " + y2 + ")}";
+        }
+
 
     }
 
@@ -247,6 +360,22 @@ namespace RadarBidClient.model
         public string[] args;
     }
 
+    public class PriceSubmitOperate
+    {
+        public SubmitPriceSetting setting;
+
+        public string answerUuid;
+
+        /// <summary>
+        /// 0 - 出价完成
+        /// 1 - 提交完成
+        /// 20 - 等待验证码
+        /// -1 - 未执行
+        /// </summary>
+        public int status = -1;
+
+    }
+
     public class SubmitPriceSetting
     {
         // 检测秒数
@@ -272,6 +401,15 @@ namespace RadarBidClient.model
             return second + "," + deltaPrice + "," + delayMills;
         }
 
+        /// <summary>
+        /// 当时出价
+        /// </summary>
+        /// <returns></returns>
+        public int GetOfferedPrice()
+        {
+            return basePrice + deltaPrice;
+        }
+
         public static SubmitPriceSetting fromLine(string line)
         {
             if (line == null || line.Trim().Length == 0)
@@ -283,6 +421,7 @@ namespace RadarBidClient.model
             {
                 return null;
             }
+            // 秒数,加价,延迟毫秒数(未使用)
             SubmitPriceSetting sps = new SubmitPriceSetting();
             sps.second = int.Parse(arr[0]);
             sps.deltaPrice = int.Parse(arr[1]);

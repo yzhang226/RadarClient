@@ -32,6 +32,8 @@
             <Button x:Name="JustTestBtn" Content="测试专用" Canvas.Left="10" Canvas.Top="158" Width="151" Click="JustTest" Height="26" RenderTransformOrigin="0.564,4.212"/>
 
             <Button x:Name="StartAutoBiddingBtn" Content="开始自动竞拍" Canvas.Left="10" Canvas.Top="204" Width="151" Click="StartAutoBidding" Height="26" RenderTransformOrigin="0.564,4.212"/>
+            <Label x:Name="RecognizeLabel" Content="识别区：" Canvas.Left="10" Canvas.Top="356"/>
+            <TextBlock x:Name="RecoBlock" Canvas.Left="15" TextWrapping="Wrap" Text="oo" Canvas.Top="386" Width="146" Height="68"/>
 
             <!--<Label x:Name="label" Content="出价第二阶段设置：" Canvas.Left="10" Canvas.Top="85"/>-->
             <!-- -->

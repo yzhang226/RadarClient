@@ -5,10 +5,12 @@ using RadarBidClient.model;
 using RadarBidClient.utils;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace RadarBidClient.bidding
 {
@@ -17,14 +19,10 @@ namespace RadarBidClient.bidding
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(BiddingScreen));
 
-        private static readonly string submitStrategyPath = "resource\\submitStrategy.txt";
-
         private ProjectConfig conf;
         private BidActionManager actionManager;
 
         private BiddingContext biddingContext = new BiddingContext();
-        private List<SubmitPriceSetting> settings = new List<SubmitPriceSetting>();
-        private Dictionary<int, SubmitPriceSetting> strategyMap = new Dictionary<int, SubmitPriceSetting>();
 
         public CaptchaAnswerImage Phase2PreviewCaptcha;
 
@@ -32,50 +30,114 @@ namespace RadarBidClient.bidding
         private bool IsCollectingWork = true;
         private Thread inquiryAnswerThread;
 
+        private bool IsPreviewDone = false;
+
+        private bool IsOneRoundStarted = false;
+
+        private SubmitStrategyManager strategyManager;
+
+        private WebBrowser webBro;
+
+        private Phase2Manager phase2Manager;
+
+
+        private static TimeSpan PreviewStartTime = new TimeSpan(11, 29, 15);
+
+        private static TimeSpan PreviewEndTime = new TimeSpan(11, 29, 29);
+
+        private TextBlock ShowUpBlock;
+
+        private int DrawbackDeltaPrice = 500;
+
+        private int Delay1Start = 0;
+        private int Delay1End = 200;
+
+        private int Delay2Start = 0;
+        private int Delay2End = 600;
+
+        private int Delay3Start = 500;
+        private int Delay3End = 900;
+
+        private int ForceStart = 500;
+        private int ForceEnd = 1500;
+
         // private CaptchaAnswerImage LastImage;
 
-        public BiddingScreen(ProjectConfig conf, BidActionManager actionManager)
+        public BiddingScreen(ProjectConfig conf, BidActionManager actionManager, Phase2Manager phase2Manager, SubmitStrategyManager strategyManager)
         {
             this.conf = conf;
             this.actionManager = actionManager;
+            this.phase2Manager = phase2Manager;
+            this.strategyManager = strategyManager;
+        }
+
+        public void SetWebBrowser(WebBrowser webBro)
+        {
+            this.webBro = webBro;
         }
 
         public void AfterPropertiesSet()
         {
             if (conf.EnableAutoBidding)
             {
-                this.StartWork();
+                this.ResetAndRestart();
             }
         }
 
-        public void StartWork()
+        public void SetShowUpBlock(TextBlock ShowUpBlock)
         {
-            biddingContext = new BiddingContext();
+            this.ShowUpBlock = ShowUpBlock;
+        }
 
-            // 
-            string lines = FileUtils.readTxtFile(submitStrategyPath);
-
-            // logger.InfoFormat("load Price Submit Strategy: {0}", lines);
-
-            string[] lis = lines.Split('\n');
-            foreach (string li in lis)
-            {
-                logger.InfoFormat("load price setting {0}", li);
-                var sps = SubmitPriceSetting.fromLine(li);
-                if (sps != null)
-                {
-                    this.settings.Add(sps);
-                }
-            }
-
-            foreach (SubmitPriceSetting sps in this.settings)
-            {
-                strategyMap[sps.second] = sps;
-            }
-
-
+        public void ResetAndRestart()
+        {
+            ResetContext();
             StartCollectingThread();
         }
+
+        public void ResetContext()
+        {
+            RefreshBiddingPage();
+
+            biddingContext = new BiddingContext();
+            ResetStrategyByReload();
+
+            IsPreviewDone = false;
+            IsOneRoundStarted = false;
+        }
+
+        public void ResetStrategyByReload()
+        {
+            biddingContext.CleanSubmitOperate();
+
+            List<SubmitPriceSetting> settings = this.strategyManager.LoadStrategies();
+            foreach (SubmitPriceSetting sps in settings)
+            {
+                biddingContext.AddPriceSetting(sps);
+            }
+        }
+
+        public void RefreshBiddingPage()
+        {
+            Action action1 = () =>
+            {
+                this.webBro.Refresh();
+            };
+            this.webBro.Dispatcher.BeginInvoke(action1);
+        }
+
+
+        private void SetShowUpText(string text)
+        {
+
+            Action action1 = () =>
+            {
+                ShowUpBlock.Text = text;
+            };
+
+            ShowUpBlock.Dispatcher.BeginInvoke(action1);
+        }
+
 
         /// <summary>
         /// 需要一个线程 收集页面信息 - 价格时间, 从11:29:00开始
@@ -95,6 +157,7 @@ namespace RadarBidClient.bidding
                 IsCollectingWork = false;
                 KK.Sleep(1000);
             }
+
 
             IsCollectingWork = true;
             collectingThread = new Thread(loopDetectPriceAndTimeInScreen);
@@ -117,7 +180,7 @@ namespace RadarBidClient.bidding
             logger.InfoFormat("begin loopDetectPriceAndTimeInScreen");
             int i = 0;
 
-            PageTimePriceResult LastResult = null;
+            PageTimePriceResult LastResultx = null;
             while (IsCollectingWork)
             {
                 long ss = KK.currentTs();
@@ -125,21 +188,24 @@ namespace RadarBidClient.bidding
                 try
                 {
                     long s1 = KK.currentTs();
-                    LastResult = actionManager.detectPriceAndTimeInScreen(LastResult);
+                    PageTimePriceResult LastResult = actionManager.detectPriceAndTimeInScreen(LastResultx);
 
                     // 重复检测
                     if (LastResult.status == 300)
                     {
-
                         continue;
                     }
+
+                    SetShowUpText(ToShowUpText(LastResult));
 
                     // 处理异常情况
                     if (LastResult.status != 0)
                     {
                         ProcessErrorDetect(LastResult);
                         continue;
-                    }
+                    }                    
+
+                    LastResultx = LastResult;
 
                     PagePrice pp = LastResult.data;
 
@@ -147,21 +213,25 @@ namespace RadarBidClient.bidding
 
                     if (pp != null)
                     {
-
+                        if (pp.pageTime.Minute == 28)
+                        {
+                            if (IsOneRoundStarted)
+                            {
+                                ResetContext();
+                                IsOneRoundStarted = false;
+                            }
+                        }
+                        else if (pp.pageTime.Minute == 29)
+                        {
+                            if (!IsOneRoundStarted)
+                            {
+                                IsOneRoundStarted = true;
+                            }
+                        }
 
                         s1 = KK.currentTs();
                         AfterSuccessDetect(pp);
                         logger.DebugFormat("afterDetect elapsed {0}ms", KK.currentTs() - s1);
-
-                        var dt = pp.pageTime;
-                        if ((dt.Minute == 28 && dt.Second == 59)
-                            || (dt.Minute == 29 && dt.Second == 59)
-                            || (dt.Minute == 28 && dt.Second == 0)
-                            || (dt.Minute == 29 && dt.Second == 0)
-                            )
-                        {
-                            // this.initDoneStatus();
-                        }
                     }
 
                 }
@@ -181,30 +251,50 @@ namespace RadarBidClient.bidding
             logger.InfoFormat("end loopDetectPriceAndTimeInScreen ");
         }
 
+        private string ToShowUpText(PageTimePriceResult LastResult)
+        {
+            string prefix = "本机时间：" + DateTime.Now.ToString("HH:mm:ss") + "。\n解析的内容是：";
+
+            if (LastResult.status != 0)
+            {
+                return prefix + "ERROR: " + LastResult.status;
+            }
+            
+            PagePrice pp = LastResult.data;
+
+            return prefix + pp.pageTime.ToString("HH:mm:ss") + ".\n" + pp.low + " - " + pp.high + ".";
+        }
+
+        private TimeSpan FinalTime = new TimeSpan(11, 29, 57);
 
         private void AfterSuccessDetect(PagePrice pp)
         {
 
             // 1. 11:29:15 获取验证码 用于预览
-            if (pp.pageTime.TimeOfDay >= PreviewStartTime && pp.pageTime.TimeOfDay <= PreviewEndTime)
+            if (!IsPreviewDone && pp.pageTime.TimeOfDay >= PreviewStartTime && pp.pageTime.TimeOfDay <= PreviewEndTime)
             {
-                if (Phase2PreviewCaptcha == null)
-                {
-                    // CaptchaAnswerImage img = 
-                        PreviewPhase2Captcha(pp);
-                    
-                    return;
-                }
+                PreviewPhase2Captcha(pp);
+                return;
             }
 
             long s1 = KK.currentTs();
             int sec = pp.pageTime.Second;
             int minute = pp.pageTime.Minute;
-            foreach (var item in strategyMap)
+            DateTime now = DateTime.Now;
+
+            var strats = new Dictionary<int, PriceSubmitOperate>(biddingContext.GetSubmitOperateMap());
+
+            if (minute == 29)
+            {
+                biddingContext.AddPrice(sec, pp.basePrice);
+            }
+
+            foreach (var item in strats)
             {
                 int fixSec = item.Key;
 
-                SubmitPriceSetting stra = item.Value;
+                var oper = item.Value;
+                SubmitPriceSetting stra = oper.setting;
                 int fixMinute = stra.minute > 0 ? stra.minute : 29;
 
                 if (fixMinute != minute)
@@ -212,25 +302,99 @@ namespace RadarBidClient.bidding
                     continue;
                 }
 
-
+                // 到点就出价
                 if (sec == fixSec)
                 {
                     stra.basePrice = pp.basePrice;
-                    logger.InfoFormat("set detected base-price {0} {1}, {2}", fixMinute, sec, pp.basePrice);
+
+                    logger.InfoFormat("find target second#{0}, delta#{1}, base-price#{2}, offer-price#{3}", fixSec, stra.deltaPrice, pp.basePrice, stra.GetOfferedPrice());
+
+                    // 1. 此处直接出价
+                    CaptchaAnswerImage ansImg = phase2Manager.OfferPrice(stra.GetOfferedPrice());
+                    biddingContext.PutAwaitImage(ansImg);
+
+                    oper.answerUuid = ansImg.Uuid;
+                    oper.status = 0;
                 }
 
-
-
-                if (sec >= fixSec)// && !doneStatus[fixSec]
+                // 检查是否到价
+                if (sec >= fixSec && oper.status == 0)
                 {
-                    int targetPrice = pp.basePrice + stra.deltaPrice;
-                    if (pp.high >= targetPrice)
+                    // 2. 检查提交价格策略
+                    int OfferedPrice = stra.GetOfferedPrice();
+                    int PriceAt50 = biddingContext.GetPrice(50);
+                    string answer = biddingContext.GetAnswer(oper.answerUuid);
+
+                    if (OfferedPrice <= (pp.basePrice + 300))
                     {
-                        logger.InfoFormat("find target price {0}, {1}", sec, stra.deltaPrice, targetPrice);
-                        actionManager.MockPhase022(targetPrice, biddingContext);
-                        // doneStatus[fixSec] = true;
+                        logger.InfoFormat("submit target second#{0}, offer-price#{1}, delta#{2}. delta ", fixSec, OfferedPrice, stra.deltaPrice);
+
+                        
+                        if (answer?.Length > 0)
+                        {
+                            phase2Manager.SubmitOfferedPrice(answer);
+                            oper.status = 1;
+                            biddingContext.RemoveSubmitOperate(fixSec);
+                        } else
+                        {
+                            // oper.status = 20;
+                            logger.WarnFormat("target second#{0} has no captcha-answer", fixSec);
+                        }
+                        
                     }
+                    else if (sec > 50 && PriceAt50 > 0 && OfferedPrice >= (PriceAt50 + DrawbackDeltaPrice + 100))
+                    {
+                        int PriceBack2 = biddingContext.GetPrice(sec - 2);
+                        if (PriceBack2 > 0 && (pp.basePrice - PriceBack2) >= 200)
+                        {
+                            bool matched = false;
+                            int delay = -1;
+                            if (OfferedPrice == (pp.basePrice + 300 + 100)) // 提前 100
+                            {
+                                delay = KK.RandomInt(Delay1Start, Delay1End);
+                                matched = true;
+                            }
+                            else if (OfferedPrice == (pp.basePrice + 300 + 200))
+                            {
+                                delay = KK.RandomInt(Delay2Start, Delay2End);
+                                matched = true;
+                            }
+                            else if (OfferedPrice == (pp.basePrice + 300 + 300))
+                            {
+                                delay = KK.RandomInt(Delay3Start, Delay3End);
+                                matched = true;
+                            }
+
+                            if (matched)
+                            {
+                                
+                                KK.Sleep(delay);
+
+                                phase2Manager.SubmitOfferedPrice(answer);
+                                oper.status = 1;
+                                biddingContext.RemoveSubmitOperate(fixSec);
+
+                                logger.InfoFormat("matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}.", fixSec, delay, OfferedPrice, pp.basePrice);
+                            }
+
+                        }
+                    }
+                    else if (sec > 50 && now.TimeOfDay > FinalTime)
+                    {
+                        int delay = KK.RandomInt(ForceStart, ForceEnd);
+                        KK.Sleep(delay);
+
+                        phase2Manager.SubmitOfferedPrice(answer);
+                        oper.status = 1;
+                        biddingContext.RemoveSubmitOperate(fixSec);
+
+                        logger.InfoFormat("force submit second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}.", fixSec, delay, OfferedPrice, pp.basePrice);
+                    }
+
+
                 }
+                
+
 
             }
 
@@ -330,35 +494,107 @@ namespace RadarBidClient.bidding
         }
 
 
-        private TimeSpan PreviewStartTime = new TimeSpan(11, 29, 15);
-
-        private TimeSpan PreviewEndTime = new TimeSpan(11, 29, 29);
-
         public CaptchaAnswerImage PreviewPhase2Captcha(PagePrice pp)
         {
-
             // TODO: 这里使用异步处理，否则出现不能显示验证码。
             // TODO: 这里可以归为一类问题：模拟时，必须等到所有操作才能显示页面。需要解决。
 
             CaptchaAnswerImage img = null;
-            Task.Factory.StartNew(() => {
-                actionManager.MockPhase2AtCaptcha(pp.basePrice + 1500);
-                // 需要等待一会 验证码才会出现
-                // KK.Sleep(100);
-                KK.Sleep(100);
-                img = actionManager.CaptureCaptchaAndUploadTask();
-
-                KK.Sleep(500);
-                actionManager.MockCancelPhase2AtCaptcha();
+            Task.Factory.StartNew(() =>
+            {
+                img = phase2Manager.OfferPrice(pp.basePrice + 1500);
+                phase2Manager.CancelOfferedPrice();
 
                 biddingContext.PutAwaitImage(img);
                 Phase2PreviewCaptcha = img;
             });
-            
+
+            IsPreviewDone = true;
 
             return img;
         }
 
 
     }
+
+    [Component]
+    public class SubmitStrategyManager : InitializingBean
+    {
+        private static readonly ILog logger = LogManager.GetLogger(typeof(SubmitStrategyManager));
+
+        private static readonly string StrategyFileName = "submitStrategy.txt";
+        private static readonly string StrategyPath = "resource\\" + StrategyFileName;
+
+        private BiddingScreen screen;
+
+        private FileSystemWatcher watcher = null;
+        // BiddingScreen screen
+
+        public SubmitStrategyManager()
+        {
+            // this.screen = screen;
+        }
+
+        public void AfterPropertiesSet()
+        {
+            this.WatchStragetyFile();
+        }
+
+        public List<SubmitPriceSetting> LoadStrategies()
+        {
+            string lines = FileUtils.readTxtFile(StrategyPath);
+
+            List<SubmitPriceSetting> settings = new List<SubmitPriceSetting>();
+            string[] lis = lines.Split('\n');
+            foreach (string li in lis)
+            {
+                logger.InfoFormat("load submit setting {0}", li);
+
+                if (li == null || li.Trim().StartsWith("#"))
+                {
+                    continue;
+                }
+
+                var sps = SubmitPriceSetting.fromLine(li.Trim());
+                if (sps != null)
+                {
+                    settings.Add(sps);
+                }
+            }
+
+            return settings;
+        }
+
+        private void WatchStragetyFile()
+        {
+            logger.InfoFormat("start watch directory#{0}, strategy-file#{1}", KK.ResourceDir(), StrategyFileName);
+
+            if (watcher != null)
+            {
+                watcher.Dispose();
+                logger.InfoFormat("Dispose previous watcher#{0}", watcher);
+            }
+
+            watcher = new FileSystemWatcher();
+            watcher.Path = KK.ResourceDir();
+            watcher.Filter = StrategyFileName;
+            watcher.Changed += new FileSystemEventHandler(OnProcess);
+            watcher.EnableRaisingEvents = true;
+            watcher.NotifyFilter = NotifyFilters.Attributes | NotifyFilters.CreationTime | NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastAccess
+                                   | NotifyFilters.LastWrite | NotifyFilters.Security | NotifyFilters.Size;
+            watcher.IncludeSubdirectories = false;
+        }
+
+        private void OnProcess(object source, FileSystemEventArgs e)
+        {
+            logger.InfoFormat("File#{0} with change#{1}, {2}.", e.FullPath, e.ChangeType, e.Name);
+
+            if (e.ChangeType == WatcherChangeTypes.Changed)
+            {
+                // screen.ResetStrategyByReload();
+            }
+        }
+
+    }
+
 }

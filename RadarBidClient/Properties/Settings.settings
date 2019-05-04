@@ -11,5 +11,11 @@
     <Setting Name="EnableAutoBidding" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="BidLoginUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">/login.htm</Value>
+    </Setting>
+    <Setting Name="BidBiddingUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">/bid.html</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
