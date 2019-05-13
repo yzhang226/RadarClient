@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace RadarBidClient.bidding
 {
@@ -26,9 +27,9 @@ namespace RadarBidClient.bidding
 
         public CaptchaAnswerImage Phase2PreviewCaptcha;
 
-        private Thread collectingThread;
-        private bool IsCollectingWork = true;
-        private Thread inquiryAnswerThread;
+        private static bool IsCollectingWork = true;
+        private static Thread collectingThread;
+        private static Thread inquiryAnswerThread;
 
         private bool IsPreviewDone = false;
 
@@ -46,6 +47,8 @@ namespace RadarBidClient.bidding
         private static TimeSpan PreviewEndTime = new TimeSpan(11, 29, 29);
 
         private TextBlock ShowUpBlock;
+
+        // private static bool ThreadContinue = true;
 
         private int DrawbackDeltaPrice = 500;
 
@@ -69,6 +72,36 @@ namespace RadarBidClient.bidding
             this.actionManager = actionManager;
             this.phase2Manager = phase2Manager;
             this.strategyManager = strategyManager;
+        }
+
+        public static void StopCollectingWorkThread()
+        {
+            IsCollectingWork = false;
+            // DispatcherTimer
+            if (collectingThread != null)
+            {
+                KK.Sleep(1000);
+
+                if ( (collectingThread.ThreadState & ThreadState.Running) == ThreadState.Running)
+                {
+                    collectingThread.Abort();
+                }
+
+                logger.InfoFormat("collectingThread.ThreadState is {0}", collectingThread.ThreadState);
+            }
+
+            if (inquiryAnswerThread != null)
+            {
+                KK.Sleep(1000);
+
+                if ((inquiryAnswerThread.ThreadState & ThreadState.Running) == ThreadState.Running)
+                {
+                    inquiryAnswerThread.Abort();
+                }
+
+                logger.InfoFormat("inquiryAnswerThread.ThreadState is {0}", inquiryAnswerThread.ThreadState);
+            }
+
         }
 
         public void SetWebBrowser(WebBrowser webBro)
@@ -248,7 +281,7 @@ namespace RadarBidClient.bidding
                 logger.DebugFormat("round {0} loopDetectPriceAndTimeInScreen elapsed {1}ms", i++, KK.currentTs() - ss);
             }
 
-            logger.InfoFormat("end loopDetectPriceAndTimeInScreen ");
+            logger.InfoFormat("END loopDetectPriceAndTimeInScreen ");
         }
 
         private string ToShowUpText(PageTimePriceResult LastResult)
@@ -305,38 +338,55 @@ namespace RadarBidClient.bidding
                 // 到点就出价
                 if (sec == fixSec)
                 {
+
+                    // 0. 检查之前秒数的策略状态
+                    foreach (var va in strats)
+                    {
+                        if (va.Key < fixSec)
+                        {
+                            // 取消之前的策略
+                            logger.InfoFormat("previous strategy second#{0} detected#{1}, cancel this strategy.", va.Key, va.Value.status);
+                            va.Value.status = 99;
+                            biddingContext.RemoveSubmitOperate(va.Key);
+                        }
+                    }
+
+
                     stra.basePrice = pp.basePrice;
 
                     logger.InfoFormat("find target second#{0}, delta#{1}, base-price#{2}, offer-price#{3}", fixSec, stra.deltaPrice, pp.basePrice, stra.GetOfferedPrice());
 
                     // 1. 此处直接出价
-                    CaptchaAnswerImage ansImg = phase2Manager.OfferPrice(stra.GetOfferedPrice());
-                    biddingContext.PutAwaitImage(ansImg);
+                    CaptchaAnswerImage ansImg = phase2Manager.OfferPrice(stra.GetOfferedPrice(), true);
+                    biddingContext.PutAwaitImage(ansImg, oper);
 
                     oper.answerUuid = ansImg.Uuid;
                     oper.status = 0;
+                    oper.status = 20;
+
                 }
 
                 // 检查是否到价
-                if (sec >= fixSec && oper.status == 0)
+                if (sec >= fixSec && (oper.status != 1 && oper.status != 99 && oper.status != -1))
                 {
                     // 2. 检查提交价格策略
                     int OfferedPrice = stra.GetOfferedPrice();
                     int PriceAt50 = biddingContext.GetPrice(50);
                     string answer = biddingContext.GetAnswer(oper.answerUuid);
 
+                    // logger.InfoFormat("try target second#{0}, offer-price#{1}, delta#{2}. delta ", fixSec, OfferedPrice, (pp.basePrice + 300));
+
                     if (OfferedPrice <= (pp.basePrice + 300))
                     {
-                        logger.InfoFormat("submit target second#{0}, offer-price#{1}, delta#{2}. delta ", fixSec, OfferedPrice, stra.deltaPrice);
+                        logger.InfoFormat("submit target second#{0}, offer-price#{1}, delta#{2}.", fixSec, OfferedPrice, stra.deltaPrice);
 
-                        
                         if (answer?.Length > 0)
                         {
-                            phase2Manager.SubmitOfferedPrice(answer);
-                            oper.status = 1;
-                            biddingContext.RemoveSubmitOperate(fixSec);
-                        } else
+                            SubmitOfferedPrice(fixSec, oper, answer);
+                        }
+                        else
                         {
+                            // TODO: 到价时，依然未有验证码
                             // oper.status = 20;
                             logger.WarnFormat("target second#{0} has no captcha-answer", fixSec);
                         }
@@ -370,9 +420,7 @@ namespace RadarBidClient.bidding
                                 
                                 KK.Sleep(delay);
 
-                                phase2Manager.SubmitOfferedPrice(answer);
-                                oper.status = 1;
-                                biddingContext.RemoveSubmitOperate(fixSec);
+                                SubmitOfferedPrice(fixSec, oper, answer);
 
                                 logger.InfoFormat("matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}.", fixSec, delay, OfferedPrice, pp.basePrice);
                             }
@@ -384,9 +432,7 @@ namespace RadarBidClient.bidding
                         int delay = KK.RandomInt(ForceStart, ForceEnd);
                         KK.Sleep(delay);
 
-                        phase2Manager.SubmitOfferedPrice(answer);
-                        oper.status = 1;
-                        biddingContext.RemoveSubmitOperate(fixSec);
+                        SubmitOfferedPrice(fixSec, oper, answer);
 
                         logger.InfoFormat("force submit second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}.", fixSec, delay, OfferedPrice, pp.basePrice);
                     }
@@ -402,6 +448,28 @@ namespace RadarBidClient.bidding
 
         }
 
+        private int SubmitOfferedPrice(int fixSec, PriceSubmitOperate oper, string answer)
+        {
+            if (oper.status == 21)
+            {
+                phase2Manager.SubmitOfferedPrice();
+            }
+            else
+            {
+                if (answer == null || answer.Length == 0)
+                {
+                    logger.WarnFormat("target second#{0} has no captcha-answer", fixSec);
+                    return -1;
+                }
+
+                logger.InfoFormat("submit target second#{0}, still not fill captcha answer#{1}", fixSec, answer);
+                phase2Manager.SubmitOfferedPrice(answer);
+            }
+            oper.status = 1;
+            biddingContext.RemoveSubmitOperate(fixSec);
+
+            return 0;
+        }
 
         private void ProcessErrorDetect(PageTimePriceResult ret)
         {
@@ -454,7 +522,6 @@ namespace RadarBidClient.bidding
                         }
                         if (img.Answer == null || img.Answer.Length == 0)
                         {
-
                             var req = new CaptchaImageAnswerRequest();
                             req.from = "test";
                             req.token = "devJustTest";
@@ -470,6 +537,17 @@ namespace RadarBidClient.bidding
                                 biddingContext.RemoveAwaitImage(img.Uuid);
 
                                 logger.InfoFormat("task#{0}'s answer is {1}", img.Uuid, dr.Data.answer);
+
+                                // 尝试提前输入答案
+                                var oper = biddingContext.GetSubmitOperateByUuid(img.Uuid);
+                                if (oper != null && oper.status != 99)
+                                {
+                                    phase2Manager.InputCaptchForSubmit(dr.Data.answer);
+                                    logger.InfoFormat("task#{0}'s answer#{1} is inputted", img.Uuid, dr.Data.answer);
+
+                                    oper.status = 21;
+                                }
+                                
                             }
                         }
                         else
@@ -491,6 +569,8 @@ namespace RadarBidClient.bidding
 
             }
 
+            logger.InfoFormat("END loodInquiryCaptchaAnswer ");
+
         }
 
 
@@ -502,10 +582,10 @@ namespace RadarBidClient.bidding
             CaptchaAnswerImage img = null;
             Task.Factory.StartNew(() =>
             {
-                img = phase2Manager.OfferPrice(pp.basePrice + 1500);
+                img = phase2Manager.OfferPrice(pp.basePrice + 1500, false);
                 phase2Manager.CancelOfferedPrice();
 
-                biddingContext.PutAwaitImage(img);
+                biddingContext.PutAwaitImage(img, null);
                 Phase2PreviewCaptcha = img;
             });
 
@@ -525,7 +605,7 @@ namespace RadarBidClient.bidding
         private static readonly string StrategyFileName = "submitStrategy.txt";
         private static readonly string StrategyPath = "resource\\" + StrategyFileName;
 
-        private BiddingScreen screen;
+        // private BiddingScreen screen;
 
         private FileSystemWatcher watcher = null;
         // BiddingScreen screen

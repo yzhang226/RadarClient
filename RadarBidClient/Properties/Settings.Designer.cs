@@ -67,5 +67,14 @@ namespace RadarBidClient.Properties {
                 return ((string)(this["BidBiddingUrl"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool EnableAutoUpdate {
+            get {
+                return ((bool)(this["EnableAutoUpdate"]));
+            }
+        }
     }
 }

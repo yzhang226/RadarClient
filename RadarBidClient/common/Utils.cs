@@ -1,4 +1,5 @@
-﻿using RadarBidClient.common;
+﻿using Microsoft.Win32;
+using RadarBidClient.common;
 using RadarBidClient.model;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,15 @@ namespace RadarBidClient
 {
     class KK
     {
+
+        private const string Windows2000 = "5.0";
+        private const string WindowsXP = "5.1";
+        private const string Windows2003 = "5.2";
+        private const string Windows2008 = "6.0";
+        private const string Windows7 = "6.1";
+        private const string Windows8OrWindows81 = "6.2";
+        private const string Windows10 = "10.0";
+
         // 
         public static long currentTs()
         {
@@ -81,11 +91,11 @@ namespace RadarBidClient
                 WindowsPrincipal principal = new WindowsPrincipal(user);
                 isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
                 isAdmin = false;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 isAdmin = false;
             }
@@ -130,6 +140,52 @@ namespace RadarBidClient
         public static string CapturesDir()
         {
             return WorkingBaseDir() + "\\Captures";
+        }
+
+        public static string GetFitOSName()
+        {
+            string osName = "";
+            switch (System.Environment.OSVersion.Version.Major + "." + System.Environment.OSVersion.Version.Minor)
+            {
+                case Windows2000:
+                    osName = "win2000";
+                    break;
+                case WindowsXP:
+                    osName = "winxp";
+                    break;
+                case Windows2003:
+                    osName = "win2003";
+                    break;
+                case Windows2008:
+                    osName = "win2008";
+                    break;
+                case Windows7:
+                    osName = "win7";
+                    break;
+                case Windows8OrWindows81:
+                    osName = "win10";
+                    break;
+                case Windows10:
+                    osName = "win10";
+                    break;
+            }
+
+            return osName;
+        }
+
+        public static string ExtractNumber(string text)
+        {
+            char[] cs2 = text.ToCharArray();
+            string numberStr = "";
+
+            foreach (char c in cs2)
+            {
+                if (c >= '0' && c <= '9')
+                {
+                    numberStr += c.ToString();
+                }
+            }
+            return numberStr;
         }
 
     }

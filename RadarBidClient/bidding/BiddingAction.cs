@@ -126,7 +126,9 @@ namespace RadarBidClient
             long s1 = KK.currentTs();
             robot.UseDict(DictIndex.INDEX_NUMBER);
             string ret1 = robot.Ocr(x1, y1, x2, y2, "ff0000-000000", 0.8);
+            // string ret1 = robot.Ocr(x1, y1, x2, y2, "0066cc-101010", 0.8);
             logger.InfoFormat("目前时间 - OCR内容 {0}, {1}, {2}, {3}. elapsed {4}ms, {5}, {6}", x1, y1, x2, y2, KK.currentTs() - s1, ret1, uuid);
+
 
             if (ret1 == null || ret1.Length == 0 || ret1.Length < 6)
             {
@@ -188,37 +190,24 @@ namespace RadarBidClient
             s1 = KK.currentTs();
             robot.UseDict(DictIndex.INDEX_NUMBER);
             string ret2 = robot.Ocr(x21, y21, x22, y22, "ff0000-000000", 0.8);
-
+            // string ret2 = robot.Ocr(x21, y21, x22, y22, "0066cc-101010", 0.8);
             logger.InfoFormat("价格区间 - OCR内容 elapsed {0}ms, {1}, {2}.", KK.currentTs() - s1, ret2, uuid);
 
-            if (ret2 == null || ret2.Length == 0)
+            if (ret2 == null || ret2.Length == 0 || ret2.Length < 10)
             {
                 return PageTimePriceResult.ErrorPrice();
             }
 
-            char[] cs2 = ret2.ToCharArray();
-            string numberStr = "";
-
-            foreach (char c in cs2)
+            string numberStr = KK.ExtractNumber(ret2);
+            if (numberStr.Length < 10)
             {
-                if (c >= '0' && c <= '9')
-                {
-                    numberStr += c.ToString();
-                }
-            }
-
-            if (numberStr.Length % 2 != 0)
-            {
-                logger.WarnFormat("识别到 错误的 价格 - {0}. 数字的位数不是2的整数倍", numberStr);
+                logger.WarnFormat("识别到 错误的 价格 - {0}. 数字的位数不对.", numberStr);
                 return PageTimePriceResult.ErrorPrice();
             }
-
-            int mod2 = numberStr.Length / 2;           
-
-            string[] arr2 = new string[2] { numberStr.Substring(0, mod2), numberStr.Substring(mod2, mod2) };
-
-            int priceLow = int.Parse(arr2[0]);
-            int priceHigh = int.Parse(arr2[1]);
+            
+            int[] arr2 = ParsePrice(numberStr);
+            int priceLow = arr2[0];
+            int priceHigh = arr2[1];
 
             if (priceHigh < 70000 || priceHigh < 70000 || priceHigh > 200000 || priceLow > 200000)
             {
@@ -234,15 +223,36 @@ namespace RadarBidClient
             pp.low = priceLow;
             pp.high = priceHigh;
 
-            //timePriceMap[dt] = pp;
-            
-            //if (pagePrices.Contains(pp))
-            //{
-            //    pagePrices.Remove(pp);
-            //}
-            //pagePrices.Add(pp);
-
             return PageTimePriceResult.Ok(pp);
+        }
+
+        private int[] ParsePrice(string numberStr)
+        {
+            string price1 = "", price2 = "";
+            if (numberStr.Length == 10)
+            {
+                price1 = numberStr.Substring(0, 5);
+                price2 = numberStr.Substring(5, 5);
+            }
+            else
+            {
+                price1 = numberStr.Substring(0, 5);
+                if (int.Parse(price1) < 99700)
+                {
+                    price2 = numberStr.Substring(numberStr.Length - 5, 5);
+                }
+                else
+                {
+                    price2 = numberStr.Substring(numberStr.Length - 5, 5);
+                    if (int.Parse(price2) < 90000)
+                    {
+                        price2 = numberStr.Substring(numberStr.Length - 6, 6);
+                    }
+                }
+
+            }
+
+            return new int[] { int.Parse(price1), int.Parse(price2) };
         }
 
         public void findAndSetCoordOfCurrentTime()
@@ -303,14 +313,14 @@ namespace RadarBidClient
             // 栅栏 起始点 delta(440, 448) 长宽 422 x 87
             // 假设 每一个cell 长宽是  55 x 21
             var startPoint = Datum.AddDelta(440, 448);
-            int areaLen = 422, areaWidth = 87;
-            int columns = 8;
-            int rows = 4;
+            // int areaLen = 425, areaWidth = 87;
+            int columns = 4;
+            int rows = 3;
 
-            logger.InfoFormat("fence startPoint is {2}.", startPoint.ToString());
+            logger.InfoFormat("fence startPoint is {0}.", startPoint.ToString());
 
             // int cellLen = areaLen / columns, cellWidth = areaWidth / rows;
-            int cellLen = 53, cellWidth = 22;
+            int cellLen = 113, cellWidth = 29;
 
             for (int c = 1; c <= columns; c++) 
             {
@@ -536,7 +546,7 @@ namespace RadarBidClient
             // 对验证码区域截屏且上传 
             KK.Sleep(100);
             CaptchaAnswerImage img = CaptureCaptchaAndUploadTask();
-            context.PutAwaitImage(img);
+            context.PutAwaitImage(img, null);
 
             string answer = "";
             while (true)
@@ -634,20 +644,24 @@ namespace RadarBidClient
                 logger.InfoFormat("降级使用 - 屏幕分辨率 - {0}", re.ToString());
 
                 //bench.y = 79;
-                //if (re.y > h + 150)
-                //{
-                //    // 不会有 scroll
-                //    bench.x = (re.x - w) / 2;
-                //}
-                //else
-                //{
-                //    bench.x = (re.x - w - 15) / 2;
-                //}
+                if (re.x > 1900)
+                {
+                    // 不会有 scroll
+                    // bench.x = (re.x - w) / 2;
+                    bench.x = 682;
+                    bench.y = 23;
+                }
+                else
+                {
+                    // bench.x = (re.x - w - 15) / 2;
+                    bench.x = 354;
+                    bench.y = 19;
+                }
 
                 // 内嵌模式
                 // 682 x 23
-                bench.x = 682;
-                bench.y = 23;
+                // bench.x = 682;
+                // bench.y = 23;
 
                 logger.InfoFormat("降级使用 - 新的基准点坐标是 - {0}", bench.ToString());
             }
@@ -910,7 +924,7 @@ namespace RadarBidClient
                 robot.LeftClick();
             }
 
-            logger.InfoFormat("栅栏模式（从右到左） 点击 - 按钮 - {0}, elpased {1}.", p12.ToString(), KK.currentTs() - t1);
+            logger.DebugFormat("栅栏模式（从右到左） 点击 - 按钮 - {0}, elpased {1}.", p12.ToString(), KK.currentTs() - t1);
         }
 
         public void ClickBtnUseFenceFromRightToLeft(CoordPoint p12)
@@ -924,7 +938,7 @@ namespace RadarBidClient
                 robot.LeftClick();
             }
 
-            logger.InfoFormat("栅栏模式（从左到右） 点击 - 按钮 - {0}, elpased {1}.", p12.ToString(), KK.currentTs() - t1);
+            logger.DebugFormat("栅栏模式（从左到右） 点击 - 按钮 - {0}, elpased {1}.", p12.ToString(), KK.currentTs() - t1);
         }
 
         // 第二阶段页 弹框 出价结果 确认 按钮

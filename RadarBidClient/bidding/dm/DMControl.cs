@@ -216,7 +216,7 @@ namespace RadarBidClient.dm
             try
             {
                 return DMCRef.FindWindow(_dm, className, title);
-            } catch (Exception e)
+            } catch (Exception)
             {
                 return -410;
             }
@@ -228,7 +228,7 @@ namespace RadarBidClient.dm
             try
             {
                 return DMCRef.GetWindowClass(_dm, hwnd);
-            } catch (Exception e)
+            } catch (Exception)
             {
                 return "-410";
             }
@@ -240,7 +240,7 @@ namespace RadarBidClient.dm
             try
             {
                 return DMCRef.GetWindowTitle(_dm, hwnd);
-            } catch(Exception e)
+            } catch(Exception)
             {
                 return "-410";
             }

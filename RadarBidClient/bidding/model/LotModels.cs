@@ -20,7 +20,7 @@ namespace RadarBidClient.model
         /// <summary>
         /// 最后一次 触发 时间
         /// </summary>
-        private DateTime LastTickTime;
+        // private DateTime LastTickTime;
 
         public List<CaptchaAnswerImage> Answers = new List<CaptchaAnswerImage>();
 
@@ -38,6 +38,8 @@ namespace RadarBidClient.model
         private Dictionary<int, int> PriceAfter29 = new Dictionary<int, int>();
 
         private Dictionary<int, PriceSubmitOperate> submitOperateMap = new Dictionary<int, PriceSubmitOperate>();
+
+        private Dictionary<string, PriceSubmitOperate> uuidOfsubmitOperateMap = new Dictionary<string, PriceSubmitOperate>();
 
         public void AddPrice(int sec, int basePrice)
         {
@@ -70,6 +72,8 @@ namespace RadarBidClient.model
             return submitOperateMap;
         }
 
+
+
         public bool RemoveSubmitOperate(int second)
         {
             if (submitOperateMap.ContainsKey(second))
@@ -100,10 +104,23 @@ namespace RadarBidClient.model
             return answerMap[uuid];
         }
 
-        public void PutAwaitImage(CaptchaAnswerImage image)
+        public void PutAwaitImage(CaptchaAnswerImage image, PriceSubmitOperate oper)
         {
             ImagesOfAwaitAnswer.Add(image);
+            if (oper != null)
+            {
+                uuidOfsubmitOperateMap[image.Uuid] = oper;
+            }
             logger.InfoFormat("add task#{0} to await list", image.Uuid);
+        }
+
+        public PriceSubmitOperate GetSubmitOperateByUuid(string uuid)
+        {
+            if (!uuidOfsubmitOperateMap.ContainsKey(uuid))
+            {
+                return null;
+            }
+            return uuidOfsubmitOperateMap[uuid];
         }
 
         public void RemoveAwaitImage(string uuid)
@@ -370,6 +387,8 @@ namespace RadarBidClient.model
         /// 0 - 出价完成
         /// 1 - 提交完成
         /// 20 - 等待验证码
+        /// 21 - 验证码输入完成
+        /// 99 - Cancelled
         /// -1 - 未执行
         /// </summary>
         public int status = -1;

@@ -107,6 +107,7 @@ namespace RadarBidClient.common
                     } while (true);
                 });
             taskScheduler.Priority = ThreadPriority.AboveNormal;
+            taskScheduler.IsBackground = true;
             taskScheduler.Start();
         }
 
@@ -179,6 +180,7 @@ namespace RadarBidClient.common
                     Thread.Yield(); Thread.Sleep(MIN_WAIT); //TODO: need to see if Sleep is required here
                 } while (true); // it's a continuous loop until task gets abort request
             });
+            taskItem.handler.IsBackground = true;
             taskItem.handler.Start();
             lock (criticalLock) // always use this lock for Pool
             {

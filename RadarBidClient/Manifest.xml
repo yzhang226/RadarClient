@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Increment the version for each update. -->
+<Manifest version="3">
+  <!-- Your application will check for updates every (seconds) -->
+  <CheckInterval>900</CheckInterval>
+
+  <!-- The URI to the remote manifest -->
+  <RemoteConfigUri>http://119.3.64.20:8877/RadarBidClient/update.xml</RemoteConfigUri>
+
+  <!-- This token must be the same at both ends to avoid tampering -->
+  <SecurityToken>7D8C733AC0D541CF8BF28D0E5C25814F</SecurityToken>
+  <!-- All payload files are assumed to have this URI prefix. -->
+  <BaseUri>http://119.3.64.20:8877/RadarBidClient/</BaseUri>
+
+  <!-- One or more files containing updates. -->
+  <Payload>RadarBidClient.zip</Payload>
+</Manifest>

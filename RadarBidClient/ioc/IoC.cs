@@ -41,7 +41,7 @@ namespace RadarBidClient.ioc
 
             foreach (Assembly asse in projAsses)
             {
-                logger.DebugFormat("Assembly FullName is {0}", asse.FullName);
+                logger.InfoFormat("Assembly FullName is {0}", asse.FullName);
             }
 
 
@@ -67,7 +67,8 @@ namespace RadarBidClient.ioc
                         }
                     }
                 })
-                .AutoActivate() // 参考 https://autofaccn.readthedocs.io/en/latest/lifetime/startup.html
+                
+                // .AutoActivate() // 参考 https://autofaccn.readthedocs.io/en/latest/lifetime/startup.html
                 ;
 
 

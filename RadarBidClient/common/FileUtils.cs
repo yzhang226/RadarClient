@@ -212,7 +212,7 @@ namespace RadarBidClient.utils
                     stream.Dispose();
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
 
             }
@@ -227,7 +227,7 @@ namespace RadarBidClient.utils
                     reader.Close();
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
 
             }
@@ -242,7 +242,7 @@ namespace RadarBidClient.utils
                     writer.Close();
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
 
             }

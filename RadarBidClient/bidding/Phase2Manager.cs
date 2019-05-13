@@ -31,9 +31,16 @@ namespace RadarBidClient.bidding
         /// 2. 点击出价按钮 - 移动到按钮位置，点击
         /// 3. 对验证码区域截图 且 上传
         /// </summary>
-        public CaptchaAnswerImage OfferPrice(int targetPrice)
+        public CaptchaAnswerImage OfferPrice(int targetPrice, bool EnableCancelFirst)
         {
             var Datum = ActionManager.GetDatum();
+
+            // 0. 出价前，先尝试取消，防止上一步的可能的遮罩
+            if (EnableCancelFirst)
+            {
+                // this.CancelOfferedPrice();
+                ActionManager.ClickBtnUseFenceFromRightToLeft(Datum.AddDelta(742, 502));
+            }
 
             // 1. 输入价格 且 出价
             // TODO: 坐标方法 - 应该抽取出来单独管理 
@@ -91,16 +98,36 @@ namespace RadarBidClient.bidding
         }
 
         /// <summary>
-        /// 提交已出的价格
+        /// 提交之前输入验证码, 然后再提交已出的价格
         /// </summary>
         /// <param name="answer"></param>
         public void SubmitOfferedPrice(string answer)
+        {
+            this.InputCaptchForSubmit(answer);
+            this.SubmitOfferedPrice();
+        }
+
+        /// <summary>
+        /// 提交之前输入验证码
+        /// </summary>
+        /// <param name="answer"></param>
+        public void InputCaptchForSubmit(string answer)
         {
             logger.InfoFormat("submit offered-price with answer#{0}", answer);
 
             var Datum = ActionManager.GetDatum();
 
             ActionManager.InputCaptchAtPoint(Datum.AddDelta(734, 416), answer);
+
+        }
+
+        /// <summary>
+        /// 提交已出的价格
+        /// </summary>
+        public void SubmitOfferedPrice()
+        {
+            var Datum = ActionManager.GetDatum();
+
             ActionManager.ClickBtnUseFenceFromLeftToRight(Datum.AddDelta(553, 500));
 
             // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效

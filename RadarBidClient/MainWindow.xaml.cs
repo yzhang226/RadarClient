@@ -1,5 +1,7 @@
 ﻿using Autofac;
+using Butter.Update;
 using log4net;
+using Microsoft.Win32;
 using RadarBidClient.bidding;
 using RadarBidClient.bidding.socket;
 using RadarBidClient.common;
@@ -14,6 +16,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
+using System.Windows.Threading;
 
 namespace RadarBidClient
 {
@@ -24,6 +27,8 @@ namespace RadarBidClient
     {
 
         private static readonly ILog logger = LogManager.GetLogger(typeof(MainWindow));
+
+        public static Updater updater;
 
         private WindowSimulator robot;
 
@@ -42,6 +47,33 @@ namespace RadarBidClient
 
             InitializeComponent();
 
+            InitBizComponent();
+
+            logger.InfoFormat("Launch Radar Client MainWindow at {0}", DateTime.Now);
+
+            if (conf.EnableAutoUpdate)
+            {
+                EnableAutoUpdate();
+            }
+
+            // this.Topmost = true;
+        }
+
+        private static void EnableAutoUpdate()
+        {
+            updater = new Updater();
+            DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+            timer.Tick += delegate
+            {
+                updater.SafeCheck(null);
+            };
+            timer.Start();
+            logger.InfoFormat("Start Updater-Timer.");
+        }
+
+        private void InitBizComponent()
+        {
+
             robot = IoC.me.Get<WindowSimulator>();
             // TODO: 开启异步会带来很多不一致，coding时必须实时注意 异步
             robot.SetEnableAsync(false);
@@ -57,20 +89,56 @@ namespace RadarBidClient
             biddingScreen.SetWebBrowser(this.webBro);
             biddingScreen.SetShowUpBlock(this.RecoBlock);
 
-            robot.SetDict(0, "resource/dict/dictwin10-001.txt");
 
-            // 
-            robot.SetDict((int) DictIndex.INDEX_CURRENT_TIME, "resource/dict/win10/dict-win10-1.txt");
-            robot.SetDict((int) DictIndex.INDEX_PRICE_SECTION, "resource/dict/win10/dict-win10-2.txt");
-            robot.SetDict((int) DictIndex.INDEX_NUMBER, "resource/dict/win10/dict-win10-3.txt");
+            string osName = KK.GetFitOSName();
 
-            // TODO: load biddig-setting 
+            logger.InfoFormat("osName is {0}.", osName);
 
-            logger.InfoFormat("launch bid client {0}", DateTime.Now);
+            string fullDictPath = "resource/dict/dict-" +  osName + ".txt";
 
+            robot.SetDict(0, fullDictPath);
+            foreach (int dictIdx in Enum.GetValues(typeof(DictIndex)))
+            {
+                robot.SetDict(dictIdx, "resource/dict/" + osName + "/dict-" + osName + "-" + dictIdx + ".txt");
+            }
 
-            // this.Topmost = true;
         }
+
+
+        //private void UseLatestIE()
+        //{
+        //    int ieValue = 0;
+            
+        //    switch (webBro.Version.Major)
+        //    {
+        //        case 11:
+        //            ieValue = 11001;
+        //            break;
+        //        case 10:
+        //            ieValue = 10001;
+        //            break;
+        //        case 9:
+        //            ieValue = 9999;
+        //            break;
+        //        case 8:
+        //            ieValue = 8888;
+        //            break;
+        //        case 7:
+        //            ieValue = 7000;
+        //            break;
+        //    }
+
+        //    if (ieValue != 0)
+        //    {
+        //        using (RegistryKey registryKey =
+        //            Registry.CurrentUser.OpenSubKey(
+        //                @"SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION", true))
+        //        {
+        //            registryKey?.SetValue(Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName), ieValue,
+        //                RegistryValueKind.DWord);
+        //        }
+        //    }
+        //}
 
 
         public void ReopenBiddingPage(object sender, RoutedEventArgs e)
@@ -105,63 +173,6 @@ namespace RadarBidClient
         {
             biddingScreen.ResetAndRestart();
         }
-
-
-        //public void writeStrategyToFile()
-        //{
-        //    string lines = "";
-        //    foreach (SubmitPriceSetting sps in this.settings)
-        //    {
-        //        lines += sps.toLine() + "\n";
-        //    }
-
-        //    FileUtils.writeTxtFile(submitStrategyPath, lines);
-        //}
-
-        //public void reSetStrategyMap()
-        //{
-        //    foreach (SubmitPriceSetting sps in this.settings)
-        //    {
-        //        strategyMap[sps.second] = sps;
-        //    }
-        //}
-
-        //private List<SubmitPriceSetting> buildBiddingSetting()
-        //{
-        //    SubmitPriceSetting setting1 = new SubmitPriceSetting();
-        //    setting1.second = int.Parse(this.timing021.Text);
-        //    setting1.deltaPrice = int.Parse(this.deltaPrice021.Text);
-        //    setting1.delayMills = int.Parse(this.delayMills021.Text);
-
-        //    SubmitPriceSetting setting2 = new SubmitPriceSetting();
-        //    setting2.second = int.Parse(this.timing022.Text);
-        //    setting2.deltaPrice = int.Parse(this.deltaPrice022.Text);
-        //    setting2.delayMills = int.Parse(this.delayMills022.Text);
-
-        //    return new List<SubmitPriceSetting>() { setting1, setting2 };
-        //}
-
-        //private void preSetPriceSettingTextBlock()
-        //{
-        //    for (int idx = 0; idx < this.settings.Count; idx++)
-        //    {
-        //        SubmitPriceSetting sps = this.settings[idx];
-        //        if (idx == 0)
-        //        {
-        //            this.timing021.Text = sps.second.ToString();
-        //            this.deltaPrice021.Text = sps.deltaPrice.ToString();
-        //            this.delayMills021.Text = sps.delayMills.ToString();
-        //        }
-        //        else if (idx == 1)
-        //        {
-        //            this.timing022.Text = sps.second.ToString();
-        //            this.deltaPrice022.Text = sps.deltaPrice.ToString();
-        //            this.delayMills022.Text = sps.delayMills.ToString();
-        //        }
-        //    }
-
-        //}
-
 
 
         void wbMain_Navigated(object sender, NavigationEventArgs e)

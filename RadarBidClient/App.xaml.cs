@@ -8,6 +8,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Butter.Update;
+using System.Windows.Threading;
 
 namespace RadarBidClient
 {
@@ -23,48 +25,79 @@ namespace RadarBidClient
 
         private static App application;
 
+        private static Process thisProcess;
+
+        private static Application thisApplication;
+
         [STAThread]
         public static void Main()
         {
-            if (SingleInstance<App>.InitializeAsFirstInstance(Unique))
+            logger.InfoFormat("App RUNNING...");
+
+            //if (SingleInstance<App>.InitializeAsFirstInstance(Unique))
+            //{
+
+            thisProcess = Process.GetCurrentProcess();
+            thisApplication = Application.Current;
+
+            try
             {
                 application = new App();
 
+                logger.InfoFormat("new App done.");
+
                 application.InitializeComponent();
+
+                logger.InfoFormat("InitializeComponent done.");
+
                 application.Run();
-
-                logger.InfoFormat("radar application run - {0}", application);
-
-                // Allow single instance code to perform cleanup operations
-                SingleInstance<App>.Cleanup();
-                logger.InfoFormat("SingleInstance cleanup");
-
-                forceCloseWindow();
-            }
-            else
+            } 
+            catch (Exception e)
             {
-                //Process current = Process.GetCurrentProcess();
-                logger.InfoFormat("radar application already exist - {0}", "just");
+                logger.Error("run App error.", e);
             }
+
+            logger.InfoFormat("Radar application DONE Run - {0}", application);
+
+            // Allow single instance code to perform cleanup operations
+            // SingleInstance<App>.Cleanup();
+            // logger.InfoFormat("SingleInstance cleanup");
+
+            // ForceCloseWindow();
+            //}
+            //else
+            //{
+            //    Process current = Process.GetCurrentProcess();
+            //    logger.InfoFormat("Radar application already exist - {0}", "just");
+            //}
         }
 
-        private static void forceCloseWindow()
+        private static void ForceCloseWindow()
         {
             // 
-            logger.InfoFormat("force Kill current process, {0}, {1}.", Application.Current, application);
-            Process.GetCurrentProcess().Kill();
+            try
+            {
+                // logger.InfoFormat("Force Kill current process, {0}, {1}.", thisProcess, application);
+                // thisProcess.Kill();
 
-            logger.InfoFormat("begin Application.Current Shutdown, {0}, {1}.", Application.Current, application);
-            Application.Current.Shutdown();
-            logger.InfoFormat("done Application.Current Shutdown, {0}, {1}.", Application.Current, application);
+                // logger.InfoFormat("Begin Application.Current Shutdown, {0}, {1}.", thisApplication, application);
+                // thisApplication.Shutdown();
+                // logger.InfoFormat("Done Application.Current Shutdown, {0}, {1}.", thisApplication, application);
 
-            Environment.Exit(0);
-            logger.InfoFormat("Environment.Exit(0)");
+                // Environment.Exit(0);
+                // logger.InfoFormat("Environment.Exit(0)");
+
+                logger.InfoFormat("ForceCloseWindow doing nothing.");
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
-            base.OnExit(e);
+            // base.OnExit(e);
 
             logger.InfoFormat("OnExit code is {0}", e.ApplicationExitCode);
         }

@@ -395,6 +395,7 @@ namespace RadarBidClient
 
                 //初始化线程
                 bytesReceiveThread = new Thread(new ThreadStart(StartReceiveForEver));
+                bytesReceiveThread.IsBackground = true;
                 //开启线程[用于接收数据]
                 bytesReceiveThread.Start();
 

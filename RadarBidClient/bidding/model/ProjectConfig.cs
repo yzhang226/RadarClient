@@ -58,5 +58,13 @@ namespace RadarBidClient.model
             }
         }
 
+        public bool EnableAutoUpdate
+        {
+            get
+            {
+                return Properties.Settings.Default.EnableAutoUpdate;
+            }
+        }
+
     }
 }
