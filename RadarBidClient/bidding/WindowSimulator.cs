@@ -91,16 +91,16 @@ namespace RadarBidClient
             return point;
         }
 
-        public CoordPoint searchTextCoordXYInFlashScreen(int x1, int y1, string colorForamt, string target)
+        public CoordPoint SearchTextCoordXYInFlashScreen(int x1, int y1, string colorForamt, string target)
         {
-            return searchTextCoordXYInFlashScreen(x1, y1, 900, 700, colorForamt, target);
+            return SearchTextCoordXYInFlashScreen(x1, y1, 900, 700, colorForamt, target);
         }
 
-        public CoordPoint searchTextCoordXYInFlashScreen(int x1, int y1, int width, int height, string colorForamt, string target)
+        public CoordPoint SearchTextCoordXYInFlashScreen(int x1, int y1, int width, int height, string colorForamt, string target)
         {
             long s1 = KK.currentTs();
             string ret = this.OcrEx(x1, y1, x1 + width, y1 + height, colorForamt, 0.8);
-            logger.InfoFormat("{0} OCR 识别的内容是 {1}, {2}. elapsed {3}ms, ret is {4}", width, x1, y1, KK.currentTs() - s1, ret);
+            logger.DebugFormat("Search {0} OCR 识别的内容是 {1}, {2}. elapsed {3}ms, ret is {4}", width, x1, y1, KK.currentTs() - s1, ret);
 
             CoordPoint point = new CoordPoint();
 

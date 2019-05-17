@@ -1,4 +1,6 @@
 ﻿using log4net;
+using RadarBidClient.bidding.model;
+using RadarBidClient.command;
 using RadarBidClient.ioc;
 using RadarBidClient.model;
 using System;
@@ -33,6 +35,18 @@ namespace RadarBidClient.bidding.socket
             logger.InfoFormat("start execute command#{0}", command);
 
             CommandRequest co = parse(command);
+
+            // LocalCommandExecutor.executor.
+            CommandProcessor<string> processor = CommandProcessorFactory.GetProcessor(co.CommandName);
+            if (processor == null)
+            {
+
+                return;
+            }
+
+
+            processor.Execute(co.args);
+
 
             if (co.action == "MockLoginAndPhase1")
             {
@@ -91,6 +105,8 @@ namespace RadarBidClient.bidding.socket
                 req.action = comm;
                 req.args = new string[0];
             }
+
+            req.CommandName = (CommandEnum) Enum.ToObject(typeof(CommandEnum), int.Parse(req.action));
 
             return req;
         }

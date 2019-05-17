@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Autofac.Core;
 using log4net;
+using RadarBidClient.common;
 using RadarBidClient.dm;
 using RadarBidClient.model;
 using System;
@@ -44,12 +45,19 @@ namespace RadarBidClient.ioc
                 logger.InfoFormat("Assembly FullName is {0}", asse.FullName);
             }
 
+            var componentClasses = new List<Type>();
 
             builder.RegisterAssemblyTypes(projAsses)
                 .Where(t => {
                     var arr = t.GetCustomAttributes(typeof(ComponentAttribute), false);
                     var ret = arr != null && arr.Length > 0;
-                    return ret; })
+                    
+                    if (ret)
+                    {
+                        componentClasses.Add(t);
+                    }
+                    return ret;
+                })
                 .AsSelf()
                 .SingleInstance()
                 .OnActivated(e => {
@@ -67,15 +75,23 @@ namespace RadarBidClient.ioc
                         }
                     }
                 })
-                
-                // .AutoActivate() // 参考 https://autofaccn.readthedocs.io/en/latest/lifetime/startup.html
                 ;
 
 
             Container = builder.Build();
 
-            logger.InfoFormat("init IoC Container done, elasped {0}ms", KK.currentTs() - s1);
-  
+            logger.InfoFormat("init IoC Container done. Components count#{0}. version is {1}. elasped {2}ms.", componentClasses.Count, Ver.ver, KK.currentTs() - s1);
+            
+            // 初始化 InitializingBean
+            foreach (var t in componentClasses)
+            {
+                if (typeof(InitializingBean).IsAssignableFrom(t))
+                {
+                    Container.Resolve(t);
+                }
+            }
+
+
         }
 
 

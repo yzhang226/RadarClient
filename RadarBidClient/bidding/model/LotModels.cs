@@ -1,4 +1,5 @@
 ﻿using log4net;
+using RadarBidClient.bidding.model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -371,6 +372,8 @@ namespace RadarBidClient.model
     public class CommandRequest
     {
         public int messageType;
+
+        public CommandEnum CommandName;
 
         public string action;
 

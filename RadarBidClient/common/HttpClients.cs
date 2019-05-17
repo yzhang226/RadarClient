@@ -13,16 +13,16 @@ using System.Threading.Tasks;
 
 namespace RadarBidClient.common
 {
-    public class RestClient
+    public class HttpClients
     {
 
-        private static readonly ILog logger = LogManager.GetLogger(typeof(RestClient));
+        private static readonly ILog logger = LogManager.GetLogger(typeof(HttpClients));
 
         private static HttpClient httpClient;
 
         private static HttpClient uploadClient;
 
-        static RestClient() {
+        static HttpClients() {
             // AutomaticDecompression = DecompressionMethods.GZip
             HttpClientHandler httpHandler = new HttpClientHandler();
             httpClient = new HttpClient(httpHandler);
@@ -35,7 +35,7 @@ namespace RadarBidClient.common
 
         }
 
-        private RestClient()
+        private HttpClients()
         {
 
         }
@@ -84,6 +84,37 @@ namespace RadarBidClient.common
                 return string.Empty;
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="httpStatus"></param>
+        /// <returns></returns>
+        public static byte[] GetAsBytes(string url, out int httpStatus)
+        {
+            byte[] result = new byte[0];
+            try
+            {
+
+                HttpResponseMessage response = httpClient.GetAsync(url).Result;
+                httpStatus = (int) response.StatusCode;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    result = response.Content.ReadAsByteArrayAsync().Result;
+                }
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                httpStatus = -1;
+                logger.Error("GetAsBytes for url#" + url + " error.", e);
+                return new byte[0];
+            }
+        }
+
 
         /// <summary>
         /// Get请求指定的URL地址

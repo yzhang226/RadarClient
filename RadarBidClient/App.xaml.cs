@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Butter.Update;
 using System.Windows.Threading;
+using RadarBidClient.common;
 
 namespace RadarBidClient
 {
@@ -32,7 +33,7 @@ namespace RadarBidClient
         [STAThread]
         public static void Main()
         {
-            logger.InfoFormat("App RUNNING...");
+            logger.InfoFormat("App RUNNING and version is {0}", Ver.ver);
 
             //if (SingleInstance<App>.InitializeAsFirstInstance(Unique))
             //{
@@ -51,6 +52,8 @@ namespace RadarBidClient
                 logger.InfoFormat("InitializeComponent done.");
 
                 application.Run();
+
+                ForceCloseWindow();
             } 
             catch (Exception e)
             {
@@ -63,7 +66,7 @@ namespace RadarBidClient
             // SingleInstance<App>.Cleanup();
             // logger.InfoFormat("SingleInstance cleanup");
 
-            // ForceCloseWindow();
+            
             //}
             //else
             //{
@@ -77,17 +80,17 @@ namespace RadarBidClient
             // 
             try
             {
-                // logger.InfoFormat("Force Kill current process, {0}, {1}.", thisProcess, application);
-                // thisProcess.Kill();
+                logger.InfoFormat("Force Kill current process, {0}, {1}.", thisProcess, application);
+                thisProcess.Kill();
 
-                // logger.InfoFormat("Begin Application.Current Shutdown, {0}, {1}.", thisApplication, application);
-                // thisApplication.Shutdown();
-                // logger.InfoFormat("Done Application.Current Shutdown, {0}, {1}.", thisApplication, application);
+                logger.InfoFormat("Begin Application.Current Shutdown, {0}, {1}.", thisApplication, application);
+                thisApplication.Shutdown();
+                logger.InfoFormat("Done Application.Current Shutdown, {0}, {1}.", thisApplication, application);
 
                 // Environment.Exit(0);
                 // logger.InfoFormat("Environment.Exit(0)");
 
-                logger.InfoFormat("ForceCloseWindow doing nothing.");
+                // logger.InfoFormat("ForceCloseWindow doing nothing.");
             }
             catch (Exception)
             {

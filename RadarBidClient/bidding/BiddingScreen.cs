@@ -221,7 +221,7 @@ namespace RadarBidClient.bidding
                 try
                 {
                     long s1 = KK.currentTs();
-                    PageTimePriceResult LastResult = actionManager.detectPriceAndTimeInScreen(LastResultx);
+                    PageTimePriceResult LastResult = actionManager.DetectPriceAndTimeInScreen(LastResultx);
 
                     // 重复检测
                     if (LastResult.status == 300)
@@ -242,7 +242,7 @@ namespace RadarBidClient.bidding
 
                     PagePrice pp = LastResult.data;
 
-                    logger.InfoFormat("detectPriceAndTimeInScreen elapsed {0}ms", KK.currentTs() - s1);
+                    logger.DebugFormat("detectPriceAndTimeInScreen elapsed {0}ms", KK.currentTs() - s1);
 
                     if (pp != null)
                     {
@@ -310,9 +310,19 @@ namespace RadarBidClient.bidding
                 return;
             }
 
+            int hour = pp.pageTime.Hour;
+
+            if (hour != 11)
+            {
+                return;
+            }
+
             long s1 = KK.currentTs();
-            int sec = pp.pageTime.Second;
+
             int minute = pp.pageTime.Minute;
+            int sec = pp.pageTime.Second;
+            
+            
             DateTime now = DateTime.Now;
 
             var strats = new Dictionary<int, PriceSubmitOperate>(biddingContext.GetSubmitOperateMap());
@@ -392,7 +402,22 @@ namespace RadarBidClient.bidding
                         }
                         
                     }
-                    else if (sec > 50 && PriceAt50 > 0 && OfferedPrice >= (PriceAt50 + DrawbackDeltaPrice + 100))
+
+                    if (sec > 50
+                                && hour >= FinalTime.Hours
+                                && minute >= FinalTime.Minutes
+                                && sec >= FinalTime.Seconds)
+                    {
+                        logger.InfoFormat("Trigger force submit second#{0}, OfferedPrice#{1}, base-price#{2}. {3}.", fixSec, OfferedPrice, pp.basePrice, (now.TimeOfDay >= FinalTime));
+                        int delay = KK.RandomInt(ForceStart, ForceEnd);
+                        KK.Sleep(delay);
+
+                        SubmitOfferedPrice(fixSec, oper, answer);
+
+                        logger.InfoFormat("Force submit second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}.", fixSec, delay, OfferedPrice, pp.basePrice);
+                    }
+
+                    if (sec > 50 && PriceAt50 > 0 && OfferedPrice >= (PriceAt50 + DrawbackDeltaPrice + 100))
                     {
                         int PriceBack2 = biddingContext.GetPrice(sec - 2);
                         if (PriceBack2 > 0 && (pp.basePrice - PriceBack2) >= 200)
@@ -427,14 +452,10 @@ namespace RadarBidClient.bidding
 
                         }
                     }
-                    else if (sec > 50 && now.TimeOfDay > FinalTime)
+                     
+                    else
                     {
-                        int delay = KK.RandomInt(ForceStart, ForceEnd);
-                        KK.Sleep(delay);
-
-                        SubmitOfferedPrice(fixSec, oper, answer);
-
-                        logger.InfoFormat("force submit second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}.", fixSec, delay, OfferedPrice, pp.basePrice);
+                        logger.InfoFormat("ELSE - {0}, {1}, {2}. ", now.TimeOfDay, FinalTime, (now.TimeOfDay >= FinalTime));
                     }
 
 
@@ -475,19 +496,19 @@ namespace RadarBidClient.bidding
         {
             if (ret.status == -1)
             {
-                actionManager.findAndSetCoordOfCurrentTime();
+                actionManager.FindAndSetCoordOfCurrentTime();
             }
             else if (ret.status == -2)
             {
-                actionManager.findAndSetCoordOfPriceSection();
+                actionManager.FindAndSetCoordOfPriceSection();
             }
             else if (ret.status == -11)
             {
-                actionManager.findAndSetCoordOfCurrentTime();
+                actionManager.FindAndSetCoordOfCurrentTime();
             }
             else if (ret.status == -12)
             {
-                actionManager.findAndSetCoordOfPriceSection();
+                actionManager.FindAndSetCoordOfPriceSection();
             }
 
         }
@@ -512,7 +533,7 @@ namespace RadarBidClient.bidding
 
                     var images = new List<CaptchaAnswerImage>(biddingContext.GetImagesOfAwaitAnswer());
 
-                    logger.InfoFormat("inquiry answer, image size is {0}. First Uuid is {1}", images.Count, images[0].Uuid);
+                    logger.DebugFormat("inquiry answer, image size is {0}. First Uuid is {1}", images.Count, images[0].Uuid);
 
                     foreach (var img in images)
                     {
@@ -528,15 +549,15 @@ namespace RadarBidClient.bidding
                             req.uid = img.Uuid;
                             req.timestamp = KK.currentTs();
 
-                            DataResult<CaptchaImageAnswerResponse> dr = RestClient
+                            DataResult<CaptchaImageAnswerResponse> dr = HttpClients
                                 .PostAsJson<DataResult<CaptchaImageAnswerResponse>>(conf.CaptchaAddressPrefix + "/v1/biding/captcha-answer", req);
 
-                            if (DataResults.isOk(dr) && dr.Data?.answer?.Length > 0)
+                            if (DataResults.IsOK(dr) && dr.Data?.answer?.Length > 0)
                             {
                                 biddingContext.PutAnswer(img.Uuid, dr.Data.answer);
                                 biddingContext.RemoveAwaitImage(img.Uuid);
 
-                                logger.InfoFormat("task#{0}'s answer is {1}", img.Uuid, dr.Data.answer);
+                                logger.InfoFormat("GET task#{0}'s answer is {1}", img.Uuid, dr.Data.answer);
 
                                 // 尝试提前输入答案
                                 var oper = biddingContext.GetSubmitOperateByUuid(img.Uuid);

@@ -94,7 +94,7 @@ namespace RadarBidClient
             robot.UseDict(0);
         }
 
-        public PageTimePriceResult detectPriceAndTimeInScreen(PageTimePriceResult LastResult)
+        public PageTimePriceResult DetectPriceAndTimeInScreen(PageTimePriceResult LastResult)
         {
             long t1 = KK.currentTs();
             string uuid = KK.uuid();
@@ -127,7 +127,7 @@ namespace RadarBidClient
             robot.UseDict(DictIndex.INDEX_NUMBER);
             string ret1 = robot.Ocr(x1, y1, x2, y2, "ff0000-000000", 0.8);
             // string ret1 = robot.Ocr(x1, y1, x2, y2, "0066cc-101010", 0.8);
-            logger.InfoFormat("目前时间 - OCR内容 {0}, {1}, {2}, {3}. elapsed {4}ms, {5}, {6}", x1, y1, x2, y2, KK.currentTs() - s1, ret1, uuid);
+            logger.DebugFormat("目前时间 - OCR内容 {0}, {1}, {2}, {3}. elapsed {4}ms, {5}, {6}", x1, y1, x2, y2, KK.currentTs() - s1, ret1, uuid);
 
 
             if (ret1 == null || ret1.Length == 0 || ret1.Length < 6)
@@ -156,7 +156,7 @@ namespace RadarBidClient
                 return PageTimePriceResult.ErrorTime();
             }
 
-            logger.InfoFormat(" datetime arr is {0}, {1}, {2}.", arr1[0], arr1[1], arr1[2]);
+            logger.DebugFormat(" datetime arr is {0}, {1}, {2}.", arr1[0], arr1[1], arr1[2]);
 
             DateTime dt = new DateTime(no.Year, no.Month, no.Day, int.Parse(arr1[0]), int.Parse(arr1[1]), int.Parse(arr1[2]));
             
@@ -191,7 +191,8 @@ namespace RadarBidClient
             robot.UseDict(DictIndex.INDEX_NUMBER);
             string ret2 = robot.Ocr(x21, y21, x22, y22, "ff0000-000000", 0.8);
             // string ret2 = robot.Ocr(x21, y21, x22, y22, "0066cc-101010", 0.8);
-            logger.InfoFormat("价格区间 - OCR内容 elapsed {0}ms, {1}, {2}.", KK.currentTs() - s1, ret2, uuid);
+            
+            logger.InfoFormat("价格区间 - OCR内容, {0} @ {1}, elapsed {2}ms",ret2, dt, KK.currentTs() - s1);
 
             if (ret2 == null || ret2.Length == 0 || ret2.Length < 10)
             {
@@ -255,25 +256,25 @@ namespace RadarBidClient
             return new int[] { int.Parse(price1), int.Parse(price2) };
         }
 
-        public void findAndSetCoordOfCurrentTime()
+        public void FindAndSetCoordOfCurrentTime()
         {
             robot.UseDict(DictIndex.INDEX_CURRENT_TIME);
-            var p = robot.searchTextCoordXYInFlashScreen(Datum.x + 20, Datum.y + 365, 370, 190, "0066cc-101010", "目前时间");
+            var p = robot.SearchTextCoordXYInFlashScreen(Datum.x + 20, Datum.y + 365, 370, 190, "0066cc-101010", "目前时间");
             if (p != null && p.x > 0 && p.y > 0)
             {
-                logger.InfoFormat("find coord of current-time is {0}", p.ToString());
+                logger.DebugFormat("find coord of current-time is {0}", p.ToString());
                 this.coordOfCurrentTime = p;
             }
         }
 
-        public void findAndSetCoordOfPriceSection()
+        public void FindAndSetCoordOfPriceSection()
         {
             // 找到坐标 of 价格区间
             robot.UseDict(DictIndex.INDEX_PRICE_SECTION);
-            var p = robot.searchTextCoordXYInFlashScreen(Datum.x + 20, Datum.y + 365, 371, 190, "0066cc-101010", "价格区间");
+            var p = robot.SearchTextCoordXYInFlashScreen(Datum.x + 20, Datum.y + 365, 371, 190, "0066cc-101010", "价格区间");
             if (p != null && p.x > 0 && p.y > 0)
             {
-                logger.InfoFormat("find coord of price-range is {0}", p.ToString());
+                logger.DebugFormat("find coord of price-range is {0}", p.ToString());
 
                 this.coordOfPriceSection = p;
             }

@@ -1,4 +1,5 @@
 ﻿using log4net;
+using RadarBidClient.common;
 using System;
 using System.IO;
 using System.Net;
@@ -20,28 +21,12 @@ namespace Butter.Net
         /// </summary>
         public Fetch()
         {
-            Headers = new WebHeaderCollection();
             Retries = 5;
             Timeout = 60000;
         }
         #endregion
 
         #region Properties
-        /// <summary>
-        /// Gets the headers.
-        /// </summary>
-        /// <value>The headers.</value>
-        public WebHeaderCollection Headers { get; private set; }
-
-        /// <summary>
-        /// Gets the response.
-        /// </summary>
-        public HttpWebResponse Response { get; private set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public NetworkCredential Credential { get; set; }
 
         /// <summary>
         /// Gets the response data.
@@ -85,50 +70,14 @@ namespace Butter.Net
             {
                 try
                 {
-                    var req = HttpWebRequest.Create(url) as HttpWebRequest;
-                    req.AllowAutoRedirect = true;
-                    ServicePointManager.ServerCertificateValidationCallback = (a, b, c, d) => true;
-                    if (Credential != null)
-                        req.Credentials = Credential;
-                    req.Headers = Headers;
-                    req.Timeout = Timeout;
-
-                    Response = req.GetResponse() as HttpWebResponse;
-                    switch (Response.StatusCode)
-                    {
-                        case HttpStatusCode.Found:
-                            // This is a redirect to an error page, so ignore.
-                            logger.InfoFormat("Found (302), ignoring ");
-                            break;
-
-                        case HttpStatusCode.OK:
-                            // This is a valid page.
-                            using (var sr = Response.GetResponseStream())
-                            using (var ms = new MemoryStream())
-                            {
-                                for (int b; (b = sr.ReadByte()) != -1;)
-                                    ms.WriteByte((byte) b);
-                                ResponseData = ms.ToArray();
-                            }
-                            break;
-
-                        default:
-                            // This is unexpected.
-                            logger.InfoFormat("Response.StatusCode#{0}", Response.StatusCode);
-                            break;
-                    }
+                    int httpStatus = 0;
+                    ResponseData = HttpClients.GetAsBytes(url, out httpStatus);
                     Success = true;
                     break;
                 }
-                catch (WebException ex)
+                catch (Exception ex)
                 {
                     logger.Error("Load url#" + url + " error.", ex);
-                    Response = ex.Response as HttpWebResponse;
-                    if (ex.Status == WebExceptionStatus.Timeout)
-                    {
-                        Thread.Sleep(RetrySleep);
-                        continue;
-                    }
                     break;
                 }
             }
@@ -146,17 +95,6 @@ namespace Butter.Net
             return f.ResponseData;
         }
 
-        /// <summary>
-        /// Gets the string.
-        /// </summary>
-        /// <returns></returns>
-        public string GetString()
-        {
-            var encoder = string.IsNullOrEmpty(Response.ContentEncoding) ? Encoding.UTF8 : Encoding.GetEncoding(Response.ContentEncoding);
-            if (ResponseData == null)
-                return string.Empty;
-            return encoder.GetString(ResponseData);
-        }
         #endregion
     }
 }

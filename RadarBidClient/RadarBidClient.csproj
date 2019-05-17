@@ -183,6 +183,7 @@
     <Compile Include="bidding\BiddingAction.cs" />
     <Compile Include="bidding\command\CommandProcessor.cs" />
     <Compile Include="bidding\LoginManager.cs" />
+    <Compile Include="bidding\model\Enums.cs" />
     <Compile Include="bidding\Phase2Manager.cs" />
     <Compile Include="bidding\Phase1Manager.cs" />
     <Compile Include="bidding\socket\MessageProcessors.cs" />
@@ -193,6 +194,7 @@
     <Compile Include="common\Threads.cs" />
     <Compile Include="common\HttpClients.cs" />
     <Compile Include="common\Jsons.cs" />
+    <Compile Include="common\Versions.cs" />
     <Compile Include="ioc\IoC.cs" />
     <Compile Include="bidding\model\ProjectConfig.cs" />
     <Compile Include="common\Utils.cs" />
@@ -259,7 +261,7 @@
     </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <LastGenOutput>Settings1.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
   </ItemGroup>

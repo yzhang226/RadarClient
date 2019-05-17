@@ -62,12 +62,14 @@ namespace RadarBidClient
         private static void EnableAutoUpdate()
         {
             updater = new Updater();
-            DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
-            timer.Tick += delegate
-            {
-                updater.SafeCheck(null);
-            };
-            timer.Start();
+            updater.StartMonitoring();
+
+            //DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+            //timer.Tick += delegate
+            //{
+            //    updater.SafeCheck(null);
+            //};
+            //timer.Start();
             logger.InfoFormat("Start Updater-Timer.");
         }
 
@@ -177,6 +179,8 @@ namespace RadarBidClient
 
         void wbMain_Navigated(object sender, NavigationEventArgs e)
         {
+            logger.InfoFormat("Nav Handl sender#{0}, e#{1}", sender, e);
+
             SetSilent(this.webBro, true); // make it silent
         }
 

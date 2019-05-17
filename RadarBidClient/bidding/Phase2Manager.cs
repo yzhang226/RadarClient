@@ -48,7 +48,7 @@ namespace RadarBidClient.bidding
             ActionManager.ClickOfferBtn(Datum.AddDelta(800, 415));
 
             // 2. 对验证码区域截屏且上传 
-            KK.Sleep(300);
+            KK.Sleep(500);
             CaptchaAnswerImage img = CaptureCaptchaImage();
             UploadCaptchaImage(img);
 
@@ -91,7 +91,7 @@ namespace RadarBidClient.bidding
             req.from = "test";
 
             int httpStatus;
-            DataResult<CaptchaImageUploadResponse> dr = RestClient
+            DataResult<CaptchaImageUploadResponse> dr = HttpClients
                 .PostWithFiles<DataResult<CaptchaImageUploadResponse>>(url, req, new List<string> { img.ImagePath1, img.ImagePath2 }, out httpStatus);
 
             logger.InfoFormat("upload catpcha task#{0}, result is {1}", img.Uuid, Jsons.ToJson(dr));

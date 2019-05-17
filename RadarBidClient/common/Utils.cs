@@ -200,7 +200,7 @@ namespace RadarBidClient
      * @param dr
      * @return
      */
-        public static bool isOk<T>(DataResult<T> dr)
+        public static bool IsOK<T>(DataResult<T> dr)
         {
             return dr != null && dr.Status == 0;
         }
@@ -210,9 +210,9 @@ namespace RadarBidClient
          * @param dr
          * @return
          */
-        public static bool isFail<T>(DataResult<T> dr)
+        public static bool IsFail<T>(DataResult<T> dr)
         {
-            return !isOk(dr);
+            return !IsOK(dr);
         }
 
         /**
@@ -221,7 +221,7 @@ namespace RadarBidClient
          * @param <T>
          * @return
          */
-        public static DataResult<T> ok<T>(T data)
+        public static DataResult<T> OK<T>(T data)
         {
             return new DataResult<T>(0, data, "");
         }
@@ -231,7 +231,7 @@ namespace RadarBidClient
          * @param message
          * @return
          */
-        public static DataResult<T> fail<T>(string message)
+        public static DataResult<T> Fail<T>(string message)
         {
             // System.Nullable<T>
             return new DataResult<T>(-1, default(T), message);
@@ -243,7 +243,7 @@ namespace RadarBidClient
          * @param message
          * @return
          */
-        public static DataResult<T> fail<T>(int status, String message)
+        public static DataResult<T> Fail<T>(int status, String message)
         {
             return new DataResult<T>(status, default(T), message);
         }

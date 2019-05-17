@@ -1,5 +1,8 @@
 ﻿using log4net;
+using RadarBidClient.bidding;
+using RadarBidClient.bidding.model;
 using RadarBidClient.command;
+using RadarBidClient.model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,94 +11,78 @@ using System.Text;
 namespace RadarBidClient.command
 {
 
-    // 
-
-    public class ExecuteResult<T>
+    public class CommandProcessorFactory
     {
-        public int status;
-
-        public string message;
-
-        public T data;
-    }
-
-    public class LocalCommandExecutor
-    {
-        public static readonly LocalCommandExecutor executor = new LocalCommandExecutor();
+        // public static readonly CommandProcessorFactory executor = new CommandProcessorFactory();
 
         // TODO: 这里使用泛型遇到了问题 - 没有 任意类型的泛型 ? - 例如没有 List<?> 。所以这里使用了Base
-        private static readonly Dictionary<string, BaseLocalCommand> commands = new Dictionary<string, BaseLocalCommand>();
+        private static readonly Dictionary<CommandEnum, BaseCommandProcessor> commands = new Dictionary<CommandEnum, BaseCommandProcessor>();
 
-        public void register(BaseLocalCommand command)
+        public static void Register(BaseCommandProcessor command)
         {
-            commands[command.commandName()] = command;
+            commands[command.CommandName()] = command;
         }
 
-        public LocalCommand<object> get(string commandName)
+        public static CommandProcessor<string> GetProcessor(CommandEnum commandName)
         {
             return commands[commandName];
         }
 
     }
 
-    public interface LocalCommand<T>
+    public abstract class BaseCommandProcessor : CommandProcessor<string>
     {
 
-        string commandName();
+        private static readonly ILog logger = LogManager.GetLogger(typeof(BaseCommandProcessor));
 
-        ExecuteResult<T> execute(String[] args);
-
-    }
-
-    public abstract class BaseLocalCommand : LocalCommand<object>
-    {
-
-        private static readonly ILog logger = LogManager.GetLogger(typeof(BaseLocalCommand));
-
-        public BaseLocalCommand()
+        public BaseCommandProcessor()
         {
             logger.InfoFormat("create local command process#{0}", this);
 
-            LocalCommandExecutor.executor.register(this);
+            CommandProcessorFactory.Register(this);
         }
 
-        public abstract string commandName();
-        public abstract ExecuteResult<object> execute(string[] args);
+        public abstract CommandEnum CommandName();
+
+        public abstract DataResult<string> Execute(string[] args);
+
     }
 
-
-    public class OpenIEBrowserCommand : BaseLocalCommand
+    public interface CommandProcessor<T>
     {
 
-        private BidActionManager bidManager;
+        CommandEnum CommandName();
 
-        public OpenIEBrowserCommand(BidActionManager bidManager)
+        DataResult<T> Execute(String[] args);
+
+    }
+
+    public class AccountLoginCommandProcessor : BaseCommandProcessor
+    {
+        public override CommandEnum CommandName()
         {
-            this.bidManager = bidManager;
+            return CommandEnum.ACCOUNT_LOGIN;
         }
 
-
-        public override string commandName()
+        public override DataResult<string> Execute(string[] args)
         {
-            return "reopenBiddingIEBrowser";
-        }
-
-        public override ExecuteResult<object> execute(string[] args)
-        {
-            string url = args[0];
-            bidManager.ReopenNewBidWindow();
-
-            return new ExecuteResult<object>();
+            // TODO: 
+            return DataResults.OK("");
         }
     }
 
+    public class PhaseOneBidCommandProcessor : BaseCommandProcessor
+    {
+        public override CommandEnum CommandName()
+        {
+            return CommandEnum.PHASE_ONE_OFFER_PRICE;
+        }
 
-    /**
-     * 初始化
-1.1 打开IE浏览器 - openIEBrowser(url, x, y)
-
-1.2 设置基准坐标（可选） - setBaseCoordinate(x, y)
-    */
-
+        public override DataResult<string> Execute(string[] args)
+        {
+            // TODO: 
+            return DataResults.OK("");
+        }
+    }
 
 }

@@ -124,7 +124,7 @@ namespace Butter.Update
             http.Load(remoteUri.AbsoluteUri);
             if (!http.Success)
             {
-                logger.InfoFormat("Fetch error: {0}", http.Response.StatusDescription);
+                logger.InfoFormat("Fetch error: ");
                 this._remoteConfig = null;
                 return;
             }
@@ -257,30 +257,23 @@ namespace Butter.Update
 
             // Restart.
             logger.InfoFormat("Spawning new process with FileName#{0}.", me);
-            // var spawn = Process.Start(me);
+            var spawn = Process.Start(me);
+
             var processStartInfo = new ProcessStartInfo
             {
                 FileName = me,
                 UseShellExecute = true,
                 // Arguments = arguments.ToString()
             };
-            // Application.ResourceAssembly.Location
-            var spawnProcess = Process.Start(processStartInfo);
 
+            // var spawnProcess = Process.Start(processStartInfo);
             // ReStart();
 
-            //System.Diagnostics.Process.Start(me);
-            //Application.Exit(0);
-
-            // System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
-            // Application.Current.Shutdown();
-
-            logger.InfoFormat("New process ID is {0}", spawnProcess.Id);
+            logger.InfoFormat("New process ID is {0}", spawn.Id);
             logger.InfoFormat("Closing old running process {0}.", thisprocess.Id);
-            Application.Current.Shutdown();
-            // thisprocess.CloseMainWindow();
-            // thisprocess.Close();
-            // thisprocess.Dispose();
+            thisprocess.CloseMainWindow();
+            thisprocess.Close();
+            thisprocess.Dispose();
         }
 
         private void ReStart()
