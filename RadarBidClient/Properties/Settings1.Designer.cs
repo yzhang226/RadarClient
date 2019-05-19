@@ -52,7 +52,7 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("/login.htm")]
+        [global::System.Configuration.DefaultSettingValueAttribute("/login.htm ")]
         public string BidLoginUrl {
             get {
                 return ((string)(this["BidLoginUrl"]));
