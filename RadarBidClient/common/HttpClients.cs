@@ -1,6 +1,6 @@
 ﻿using log4net;
 using Newtonsoft.Json;
-using RadarBidClient.model;
+using Radar.model;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +11,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RadarBidClient.common
+namespace Radar.Common
 {
     public class HttpClients
     {

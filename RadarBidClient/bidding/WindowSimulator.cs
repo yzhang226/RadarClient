@@ -1,14 +1,14 @@
 ﻿using log4net;
-using RadarBidClient.dm;
-using RadarBidClient.ioc;
-using RadarBidClient.model;
+using Radar.dm;
+using Radar.ioc;
+using Radar.model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RadarBidClient
+namespace Radar
 {
     /// <summary>
     /// 窗体模拟器 - 控制鼠标 键盘输入 截屏

@@ -1,8 +1,8 @@
 ﻿using log4net;
-using RadarBidClient.common;
-using RadarBidClient.ioc;
-using RadarBidClient.model;
-using RadarBidClient.utils;
+using Radar.Common;
+using Radar.ioc;
+using Radar.model;
+using Radar.utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
-namespace RadarBidClient.bidding
+namespace Radar.bidding
 {
     [Component]
     public class BiddingScreen : InitializingBean
@@ -156,7 +156,10 @@ namespace RadarBidClient.bidding
             {
                 this.webBro.Refresh();
             };
-            this.webBro.Dispatcher.BeginInvoke(action1);
+            if (this.webBro != null)
+            {
+                this.webBro.Dispatcher.BeginInvoke(action1);
+            }
         }
 
 
@@ -327,7 +330,11 @@ namespace RadarBidClient.bidding
 
             var strats = new Dictionary<int, PriceSubmitOperate>(biddingContext.GetSubmitOperateMap());
 
-            if (minute == 29)
+            // TODO: 临时改动
+            int baseMinute = 5;
+
+            // if (minute == 29)
+            if (minute > baseMinute)
             {
                 biddingContext.AddPrice(sec, pp.basePrice);
             }
@@ -340,7 +347,8 @@ namespace RadarBidClient.bidding
                 SubmitPriceSetting stra = oper.setting;
                 int fixMinute = stra.minute > 0 ? stra.minute : 29;
 
-                if (fixMinute != minute)
+                // if (fixMinute != minute)
+                if (fixMinute < baseMinute)
                 {
                     continue;
                 }

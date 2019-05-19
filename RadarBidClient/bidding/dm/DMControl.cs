@@ -1,6 +1,6 @@
-﻿using RadarBidClient.common;
-using RadarBidClient.ioc;
-using RadarBidClient.model;
+﻿using Radar.Common;
+using Radar.ioc;
+using Radar.model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RadarBidClient.dm
+namespace Radar.dm
 {
     public class DMCRef
     {

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RadarBidClient.common
+namespace Radar.Common
 {
     public class Ver
     {
-        public static readonly string ver = "0.6.8";
+        public static readonly string ver = "0.6.9";
 
     }
 }

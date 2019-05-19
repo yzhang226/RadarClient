@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using Butter.Update;
 using System.Windows.Threading;
-using RadarBidClient.common;
+using Radar.Common;
 
-namespace RadarBidClient
+namespace Radar
 {
     /// <summary>
     /// Interaction logic for App.xaml

@@ -1,13 +1,13 @@
 ﻿using log4net;
-using RadarBidClient.common;
-using RadarBidClient.ioc;
-using RadarBidClient.model;
+using Radar.Common;
+using Radar.ioc;
+using Radar.model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RadarBidClient.bidding
+namespace Radar.bidding
 {
     [Component]
     public class Phase2Manager

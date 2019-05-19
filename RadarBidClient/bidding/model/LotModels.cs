@@ -1,11 +1,11 @@
 ﻿using log4net;
-using RadarBidClient.bidding.model;
+using Radar.bidding.model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RadarBidClient.model
+namespace Radar.model
 {
 
     public class BiddingContext

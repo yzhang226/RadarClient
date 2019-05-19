@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Linq;
 
-namespace RadarBidClient.common
+namespace Radar.Common
 {
     public class CustomThreadPool
     {

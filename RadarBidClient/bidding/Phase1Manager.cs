@@ -1,10 +1,10 @@
-﻿using RadarBidClient.ioc;
+﻿using Radar.ioc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RadarBidClient.bidding
+namespace Radar.bidding
 {
     [Component]
     public class Phase1Manager

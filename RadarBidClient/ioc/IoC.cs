@@ -1,16 +1,16 @@
 ﻿using Autofac;
 using Autofac.Core;
 using log4net;
-using RadarBidClient.common;
-using RadarBidClient.dm;
-using RadarBidClient.model;
+using Radar.Common;
+using Radar.dm;
+using Radar.model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace RadarBidClient.ioc
+namespace Radar.ioc
 {
     public class IoC
     {

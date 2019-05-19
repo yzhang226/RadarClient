@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!-- Increment the version for each update. -->
-<Manifest version="3">
+<Manifest version="10">
   <!-- Your application will check for updates every (seconds) -->
-  <CheckInterval>35</CheckInterval>
+  <CheckInterval>85</CheckInterval>
 
   <!-- The URI to the remote manifest -->
   <RemoteConfigUri>http://119.3.64.205:8877/RadarBidClient/update.xml</RemoteConfigUri>

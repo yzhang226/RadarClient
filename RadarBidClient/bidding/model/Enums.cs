@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RadarBidClient.bidding.model
+namespace Radar.bidding.model
 {
     public class Enums
     {

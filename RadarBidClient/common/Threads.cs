@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace RadarBidClient.common
+namespace Radar.Common
 {
     public class SingleThread
     {

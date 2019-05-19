@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace RadarBidClient.Properties {
+namespace Radar.Properties {
     using System;
     
     

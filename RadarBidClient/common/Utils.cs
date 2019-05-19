@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32;
-using RadarBidClient.common;
-using RadarBidClient.model;
+using Radar.Common;
+using Radar.model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading;
 
-namespace RadarBidClient
+namespace Radar
 {
     class KK
     {

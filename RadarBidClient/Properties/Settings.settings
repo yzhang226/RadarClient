@@ -3,19 +3,19 @@
   <Profiles />
   <Settings>
     <Setting Name="BidAddressPrefix" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">http://119.3.64.205:3456</Value>
+      <Value Profile="(Default)">https://paimai2.alltobid.com</Value>
     </Setting>
     <Setting Name="CaptchaAddressPrefix" Type="System.String" Scope="Application">
       <Value Profile="(Default)">http://47.103.103.218:8866</Value>
     </Setting>
     <Setting Name="EnableAutoBidding" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="BidLoginUrl" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">/login.htm</Value>
+      <Value Profile="(Default)">/bid/921b37e877a843279394ee48585fdc48/login.htm</Value>
     </Setting>
     <Setting Name="BidBiddingUrl" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">/bid.html</Value>
+      <Value Profile="(Default)">/bid/921b37e877a843279394ee48585fdc48/bid.htm</Value>
     </Setting>
     <Setting Name="EnableAutoUpdate" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>

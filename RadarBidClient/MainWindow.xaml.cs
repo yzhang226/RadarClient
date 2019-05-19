@@ -2,12 +2,12 @@
 using Butter.Update;
 using log4net;
 using Microsoft.Win32;
-using RadarBidClient.bidding;
-using RadarBidClient.bidding.socket;
-using RadarBidClient.common;
-using RadarBidClient.ioc;
-using RadarBidClient.model;
-using RadarBidClient.utils;
+using Radar.bidding;
+using Radar.bidding.socket;
+using Radar.Common;
+using Radar.ioc;
+using Radar.model;
+using Radar.utils;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -18,7 +18,7 @@ using System.Windows.Controls;
 using System.Windows.Navigation;
 using System.Windows.Threading;
 
-namespace RadarBidClient
+namespace Radar
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

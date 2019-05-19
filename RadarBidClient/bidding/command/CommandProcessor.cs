@@ -1,14 +1,14 @@
 ﻿using log4net;
-using RadarBidClient.bidding;
-using RadarBidClient.bidding.model;
-using RadarBidClient.command;
-using RadarBidClient.model;
+using Radar.bidding;
+using Radar.bidding.model;
+using Radar.command;
+using Radar.model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RadarBidClient.command
+namespace Radar.command
 {
 
     public class CommandProcessorFactory

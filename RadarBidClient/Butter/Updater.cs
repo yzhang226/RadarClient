@@ -7,8 +7,8 @@ using System.Threading;
 using Ionic.Zip;
 using Butter.Net;
 using log4net;
-using RadarBidClient.bidding;
-using RadarBidClient;
+using Radar.bidding;
+using Radar;
 using System.Windows;
 
 namespace Butter.Update
