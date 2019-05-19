@@ -57,7 +57,7 @@
     <StartupObject>RadarBidClient.App</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>resource\icon-radar.ico</ApplicationIcon>
+    <ApplicationIcon>Resource\icon-radar.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -179,27 +179,28 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="bidding\BiddingScreen.cs" />
-    <Compile Include="bidding\BiddingAction.cs" />
-    <Compile Include="bidding\command\CommandProcessor.cs" />
-    <Compile Include="bidding\LoginManager.cs" />
-    <Compile Include="bidding\model\Enums.cs" />
-    <Compile Include="bidding\Phase2Manager.cs" />
-    <Compile Include="bidding\Phase1Manager.cs" />
-    <Compile Include="bidding\socket\MessageProcessors.cs" />
+    <Compile Include="Bidding\BiddingScreen.cs" />
+    <Compile Include="Bidding\BiddingAction.cs" />
+    <Compile Include="Bidding\command\CommandProcessor.cs" />
+    <Compile Include="Bidding\LoginManager.cs" />
+    <Compile Include="Bidding\model\Enums.cs" />
+    <Compile Include="Bidding\Phase2Manager.cs" />
+    <Compile Include="Bidding\Phase1Manager.cs" />
+    <Compile Include="Bidding\socket\MessageProcessors.cs" />
     <Compile Include="Butter\Fetch.cs" />
     <Compile Include="Butter\Manifest.cs" />
     <Compile Include="Butter\Updater.cs" />
-    <Compile Include="common\CustomThreadPool.cs" />
-    <Compile Include="common\Threads.cs" />
-    <Compile Include="common\HttpClients.cs" />
-    <Compile Include="common\Jsons.cs" />
-    <Compile Include="common\Versions.cs" />
-    <Compile Include="ioc\IoC.cs" />
-    <Compile Include="bidding\model\ProjectConfig.cs" />
-    <Compile Include="common\Utils.cs" />
-    <Compile Include="bidding\socket\RadarSocket.cs" />
-    <Compile Include="common\FileUtils.cs" />
+    <Compile Include="Common\CustomThreadPool.cs" />
+    <Compile Include="Common\Threads.cs" />
+    <Compile Include="Common\HttpClients.cs" />
+    <Compile Include="Common\Jsons.cs" />
+    <Compile Include="Common\Times.cs" />
+    <Compile Include="Common\Versions.cs" />
+    <Compile Include="Ioc\IoC.cs" />
+    <Compile Include="Bidding\model\ProjectConfig.cs" />
+    <Compile Include="Common\Utils.cs" />
+    <Compile Include="Bidding\socket\RadarSocket.cs" />
+    <Compile Include="Common\FileUtils.cs" />
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -212,10 +213,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="bidding\dm\DMControl.cs" />
-    <Compile Include="bidding\model\LotModels.cs" />
-    <Compile Include="common\SingleInstance.cs" />
-    <Compile Include="bidding\WindowSimulator.cs" />
+    <Compile Include="Bidding\dm\DMControl.cs" />
+    <Compile Include="Bidding\model\LotModels.cs" />
+    <Compile Include="Common\SingleInstance.cs" />
+    <Compile Include="Bidding\WindowSimulator.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -271,46 +272,46 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="resource\dict\dict-win2003.txt">
+    <Content Include="Resource\dict\dict-win2003.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="resource\dict\dict-win10.txt">
+    <Content Include="Resource\dict\dict-win10.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="resource\dict\dict-win7.txt">
+    <Content Include="Resource\dict\dict-win7.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="resource\dict\win10\dict-win10-1.txt">
+    <Content Include="Resource\dict\win10\dict-win10-1.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="resource\dict\win10\dict-win10-2.txt">
+    <Content Include="Resource\dict\win10\dict-win10-2.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="resource\dict\win10\dict-win10-3.txt">
+    <Content Include="Resource\dict\win10\dict-win10-3.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="resource\dict\win2003\dict-win2003-1.txt">
+    <Content Include="Resource\dict\win2003\dict-win2003-1.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="resource\dict\win2003\dict-win2003-2.txt">
+    <Content Include="Resource\dict\win2003\dict-win2003-2.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="resource\dict\win2003\dict-win2003-3.txt">
+    <Content Include="Resource\dict\win2003\dict-win2003-3.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="resource\dlls\dm.dll">
+    <Content Include="Resource\dlls\dm.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="resource\dlls\dmc.dll">
+    <Content Include="Resource\dlls\dmc.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Resource Include="resource\account.txt">
+    <Resource Include="Resource\account.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Content Include="resource\submitStrategy.txt">
+    <Content Include="Resource\submitStrategy.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Resource Include="resource\icon-radar.ico" />
+    <Resource Include="Resource\icon-radar.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
