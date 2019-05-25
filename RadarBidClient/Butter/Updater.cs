@@ -7,7 +7,7 @@ using System.Threading;
 using Ionic.Zip;
 using Butter.Net;
 using log4net;
-using Radar.bidding;
+using Radar.Bidding;
 using Radar;
 using System.Windows;
 
@@ -246,7 +246,7 @@ namespace Butter.Update
             // Stop Business Thread
             try
             {
-                BiddingScreen.StopCollectingWorkThread();
+                BiddingScreen.StopCollectingThread();
             }
             catch (Exception e)
             {

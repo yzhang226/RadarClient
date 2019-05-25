@@ -1,11 +1,11 @@
 ﻿using log4net;
-using Radar.bidding.model;
+using Radar.Bidding.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Radar.model
+namespace Radar.Model
 {
 
     public class BiddingContext
@@ -18,20 +18,7 @@ namespace Radar.model
     
         private Dictionary<DateTime, PagePrice> priceMap = new Dictionary<DateTime, PagePrice>();
 
-        /// <summary>
-        /// 最后一次 触发 时间
-        /// </summary>
-        // private DateTime LastTickTime;
 
-        public List<CaptchaAnswerImage> Answers = new List<CaptchaAnswerImage>();
-
-        // public CaptchaAnswerImage Phase2PreviewCaptcha;
-
-        // public CaptchaAnswerImage LastAnswer;
-
-        private List<CaptchaAnswerImage> ImagesOfAwaitAnswer = new List<CaptchaAnswerImage>();
-
-        private Dictionary<string, string> answerMap = new Dictionary<string, string>();
 
         /// <summary>
         /// 
@@ -40,7 +27,7 @@ namespace Radar.model
 
         private Dictionary<int, PriceSubmitOperate> submitOperateMap = new Dictionary<int, PriceSubmitOperate>();
 
-        private Dictionary<string, PriceSubmitOperate> uuidOfsubmitOperateMap = new Dictionary<string, PriceSubmitOperate>();
+        private static Dictionary<string, PriceSubmitOperate> uuidOfsubmitOperateMap = new Dictionary<string, PriceSubmitOperate>();
 
         public void AddPrice(int sec, int basePrice)
         {
@@ -90,6 +77,51 @@ namespace Radar.model
             submitOperateMap.Clear();
         }
 
+        public static PriceSubmitOperate GetSubmitOperateByUuid(string uuid)
+        {
+            if (!uuidOfsubmitOperateMap.ContainsKey(uuid))
+            {
+                return null;
+            }
+            return uuidOfsubmitOperateMap[uuid];
+        }
+
+
+        public void AddPagePrice(PagePrice price)
+        {
+            prices.Add(price);
+            priceMap[price.pageTime] = price;
+        }
+
+        public void PutAwaitImage(CaptchaAnswerImage image, PriceSubmitOperate oper)
+        {
+            CaptchaTaskContext.me.PutAwaitImage(image);
+            if (oper != null)
+            {
+                uuidOfsubmitOperateMap[image.Uuid] = oper;
+            }
+        }
+
+    }
+
+    public class CaptchaTaskContext
+    {
+        private static readonly ILog logger = LogManager.GetLogger(typeof(CaptchaTaskContext));
+
+        public static readonly CaptchaTaskContext me = new CaptchaTaskContext();
+
+        private CaptchaTaskContext()
+        {
+
+        }
+
+        public List<CaptchaAnswerImage> Answers = new List<CaptchaAnswerImage>();
+
+        private List<CaptchaAnswerImage> ImagesOfAwaitAnswer = new List<CaptchaAnswerImage>();
+
+        private Dictionary<string, string> answerMap = new Dictionary<string, string>();
+        
+
         public void PutAnswer(string uuid, string answer)
         {
             answerMap[uuid] = answer;
@@ -105,23 +137,10 @@ namespace Radar.model
             return answerMap[uuid];
         }
 
-        public void PutAwaitImage(CaptchaAnswerImage image, PriceSubmitOperate oper)
+        public void PutAwaitImage(CaptchaAnswerImage image)
         {
             ImagesOfAwaitAnswer.Add(image);
-            if (oper != null)
-            {
-                uuidOfsubmitOperateMap[image.Uuid] = oper;
-            }
             logger.InfoFormat("add task#{0} to await list", image.Uuid);
-        }
-
-        public PriceSubmitOperate GetSubmitOperateByUuid(string uuid)
-        {
-            if (!uuidOfsubmitOperateMap.ContainsKey(uuid))
-            {
-                return null;
-            }
-            return uuidOfsubmitOperateMap[uuid];
         }
 
         public void RemoveAwaitImage(string uuid)
@@ -158,12 +177,6 @@ namespace Radar.model
             }
 
             return true;
-        }
-
-        public void addPagePrice(PagePrice price)
-        {
-            prices.Add(price);
-            priceMap[price.pageTime] = price;
         }
 
     }

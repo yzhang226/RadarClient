@@ -1,13 +1,13 @@
 ﻿using log4net;
 using Radar.Common;
-using Radar.ioc;
-using Radar.model;
+using Radar.IoC;
+using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Radar.bidding
+namespace Radar.Bidding
 {
     [Component]
     public class Phase2ActManager
@@ -19,10 +19,10 @@ namespace Radar.bidding
         private BidActionManager actionManager;
 
         
-        public Phase2ActManager(ProjectConfig conf, BidActionManager ActionManager)
+        public Phase2ActManager(ProjectConfig conf, BidActionManager actionManager)
         {
             this.conf = conf;
-            this.actionManager = ActionManager;
+            this.actionManager = actionManager;
         }
 
         /// <summary>

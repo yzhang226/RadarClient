@@ -1,6 +1,6 @@
 ﻿using log4net;
 using Newtonsoft.Json;
-using Radar.model;
+using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;

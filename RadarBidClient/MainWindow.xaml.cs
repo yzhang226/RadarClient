@@ -2,11 +2,11 @@
 using Butter.Update;
 using log4net;
 using Microsoft.Win32;
-using Radar.bidding;
-using Radar.bidding.socket;
+using Radar.Bidding;
+using Radar.Bidding.socket;
 using Radar.Common;
-using Radar.ioc;
-using Radar.model;
+using Radar.IoC;
+using Radar.Model;
 using Radar.utils;
 using System;
 using System.Collections.Generic;
@@ -76,13 +76,13 @@ namespace Radar
         private void InitBizComponent()
         {
 
-            robot = IoC.me.Get<WindowSimulator>();
+            robot = ApplicationContext.me.Get<WindowSimulator>();
             // TODO: 开启异步会带来很多不一致，coding时必须实时注意 异步
             robot.SetEnableAsync(false);
 
-            actionManager = IoC.me.Get<BidActionManager>();
-            biddingScreen = IoC.me.Get<BiddingScreen>();
-            conf = IoC.me.Get<ProjectConfig>();
+            actionManager = ApplicationContext.me.Get<BidActionManager>();
+            biddingScreen = ApplicationContext.me.Get<BiddingScreen>();
+            conf = ApplicationContext.me.Get<ProjectConfig>();
 
             // 为了禁用js错误提示
             this.webBro.Navigated += new NavigatedEventHandler(wbMain_Navigated);
@@ -91,6 +91,9 @@ namespace Radar
             biddingScreen.SetWebBrowser(this.webBro);
             biddingScreen.SetShowUpBlock(this.RecoBlock);
 
+
+            var captchaTaskDaemon = ApplicationContext.me.Get<CaptchaTaskDaemon>();
+            captchaTaskDaemon.RestartInquiryThread();
 
             string osName = KK.GetFitOSName();
 

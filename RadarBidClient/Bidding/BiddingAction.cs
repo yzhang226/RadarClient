@@ -1,7 +1,7 @@
 ﻿using log4net;
 using Radar.Common;
-using Radar.ioc;
-using Radar.model;
+using Radar.IoC;
+using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
-namespace Radar
+namespace Radar.Bidding
 {
     [Component]
     public class BidActionManager : InitializingBean

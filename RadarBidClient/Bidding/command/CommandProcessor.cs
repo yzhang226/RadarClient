@@ -1,16 +1,16 @@
 ﻿using log4net;
-using Radar.bidding;
-using Radar.bidding.model;
-using Radar.command;
+using Radar.Bidding;
+using Radar.Bidding.Model;
+using Radar.Command;
 using Radar.Common;
-using Radar.ioc;
-using Radar.model;
+using Radar.IoC;
+using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Radar.command
+namespace Radar.Command
 {
 
     public class CommandProcessorFactory

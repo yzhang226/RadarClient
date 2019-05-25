@@ -1,14 +1,14 @@
 ﻿using log4net;
-using Radar.bidding.model;
-using Radar.command;
-using Radar.ioc;
-using Radar.model;
+using Radar.Bidding.Model;
+using Radar.Command;
+using Radar.IoC;
+using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Radar.bidding.socket
+namespace Radar.Bidding.socket
 {
 
     [Component]

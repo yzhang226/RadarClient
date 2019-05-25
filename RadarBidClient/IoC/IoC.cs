@@ -2,24 +2,24 @@
 using Autofac.Core;
 using log4net;
 using Radar.Common;
-using Radar.dm;
-using Radar.model;
+using Radar.DM;
+using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace Radar.ioc
+namespace Radar.IoC
 {
-    public class IoC
+    public class ApplicationContext
     {
 
-        private static readonly ILog logger = LogManager.GetLogger(typeof(IoC));
+        private static readonly ILog logger = LogManager.GetLogger(typeof(ApplicationContext));
 
-        public static readonly IoC me = new IoC();
+        public static readonly ApplicationContext me = new ApplicationContext();
 
-        private IoC()
+        private ApplicationContext()
         {
             initContainer();
         }

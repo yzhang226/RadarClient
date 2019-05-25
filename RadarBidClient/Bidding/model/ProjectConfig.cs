@@ -1,15 +1,17 @@
-﻿using Radar.ioc;
+﻿using Radar.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Radar.model
+namespace Radar.Model
 {
     [Component]
     public class ProjectConfig
     {
-        // 竞拍网站地址 - 包含 http://
+        /// <summary>
+        /// 竞拍网站地址 - 包含 http://
+        /// </summary>
         public string BidAddressPrefix
         {
             get
@@ -63,6 +65,22 @@ namespace Radar.model
             get
             {
                 return Properties.Settings.Default.EnableAutoUpdate;
+            }
+        }
+
+        public string RunEnv
+        {
+            get
+            {
+                return Properties.Settings.Default.RunEnv;
+            }
+        }
+
+        public bool EnvIsProd
+        {
+            get
+            {
+                return this.RunEnv == "prod";
             }
         }
 

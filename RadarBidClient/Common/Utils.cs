@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32;
 using Radar.Common;
-using Radar.model;
+using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -188,7 +188,16 @@ namespace Radar
             return numberStr;
         }
 
-        // public static string E
+        public static CaptchaImageAnswerRequest CreateImageAnswerRequest(string uuid)
+        {
+            var req = new CaptchaImageAnswerRequest();
+            req.from = "test";
+            req.token = "devJustTest";
+            req.uid = uuid;
+            req.timestamp = KK.CurrentMills();
+            return req;
+        }
+            
 
     }
 

@@ -76,5 +76,14 @@ namespace Radar.Properties {
                 return ((bool)(this["EnableAutoUpdate"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("dev")]
+        public string RunEnv {
+            get {
+                return ((string)(this["RunEnv"]));
+            }
+        }
     }
 }

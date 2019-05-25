@@ -182,6 +182,8 @@
   <ItemGroup>
     <Compile Include="Bidding\BiddingScreen.cs" />
     <Compile Include="Bidding\BiddingAction.cs" />
+    <Compile Include="Bidding\CaptchaTaskDaemon.cs" />
+    <Compile Include="Bidding\Phase1Screen.cs" />
     <Compile Include="Bidding\command\CommandProcessor.cs" />
     <Compile Include="Bidding\LoginManager.cs" />
     <Compile Include="Bidding\model\Enums.cs" />

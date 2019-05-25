@@ -1,10 +1,10 @@
-﻿using Radar.ioc;
+﻿using Radar.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Radar.bidding
+namespace Radar.Bidding
 {
     [Component]
     public class LoginManager

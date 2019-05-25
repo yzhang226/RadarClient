@@ -1,6 +1,6 @@
 ﻿using Radar.Common;
-using Radar.ioc;
-using Radar.model;
+using Radar.IoC;
+using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Radar.dm
+namespace Radar.DM
 {
     public class DMCRef
     {

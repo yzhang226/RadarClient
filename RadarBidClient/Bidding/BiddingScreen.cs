@@ -1,7 +1,7 @@
 ﻿using log4net;
 using Radar.Common;
-using Radar.ioc;
-using Radar.model;
+using Radar.IoC;
+using Radar.Model;
 using Radar.utils;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
-namespace Radar.bidding
+namespace Radar.Bidding
 {
     [Component]
     public class BiddingScreen : InitializingBean
@@ -27,9 +27,8 @@ namespace Radar.bidding
 
         public CaptchaAnswerImage Phase2PreviewCaptcha;
 
-        private static bool IsCollectingWork = true;
+        private static bool isCollectingWork = true;
         private static Thread collectingThread;
-        private static Thread inquiryAnswerThread;
 
         private bool IsPreviewDone = false;
 
@@ -72,36 +71,6 @@ namespace Radar.bidding
             this.actionManager = actionManager;
             this.phase2Manager = phase2Manager;
             this.strategyManager = strategyManager;
-        }
-
-        public static void StopCollectingWorkThread()
-        {
-            IsCollectingWork = false;
-            // DispatcherTimer
-            if (collectingThread != null)
-            {
-                KK.Sleep(1000);
-
-                if ( (collectingThread.ThreadState & ThreadState.Running) == ThreadState.Running)
-                {
-                    collectingThread.Abort();
-                }
-
-                logger.InfoFormat("collectingThread.ThreadState is {0}", collectingThread.ThreadState);
-            }
-
-            if (inquiryAnswerThread != null)
-            {
-                KK.Sleep(1000);
-
-                if ((inquiryAnswerThread.ThreadState & ThreadState.Running) == ThreadState.Running)
-                {
-                    inquiryAnswerThread.Abort();
-                }
-
-                logger.InfoFormat("inquiryAnswerThread.ThreadState is {0}", inquiryAnswerThread.ThreadState);
-            }
-
         }
 
         public void SetWebBrowser(WebBrowser webBro)
@@ -180,29 +149,16 @@ namespace Radar.bidding
         /// </summary>
         private void StartCollectingThread()
         {
-            if (collectingThread != null)
-            {
-                collectingThread.Abort();
-                IsCollectingWork = false;
-                KK.Sleep(1000);
-            }
+            StopCollectingThread();
 
-            if (inquiryAnswerThread != null)
-            {
-                inquiryAnswerThread.Abort();
-                IsCollectingWork = false;
-                KK.Sleep(1000);
-            }
+            isCollectingWork = true;
+            collectingThread = Threads.StartNewBackgroudThread(LoopDetectPriceAndTimeInScreen);
+        }
 
-
-            IsCollectingWork = true;
-            collectingThread = new Thread(loopDetectPriceAndTimeInScreen);
-            collectingThread.IsBackground = true;
-            collectingThread.Start();
-
-            inquiryAnswerThread = new Thread(loodInquiryCaptchaAnswer);
-            inquiryAnswerThread.IsBackground = true;
-            inquiryAnswerThread.Start();
+        public static void StopCollectingThread()
+        {
+            isCollectingWork = false;
+            Threads.TryStopThreadByWait(collectingThread, 60, 60, "collectingThread");
         }
 
         public void Reset()
@@ -211,13 +167,13 @@ namespace Radar.bidding
         }
 
 
-        private void loopDetectPriceAndTimeInScreen()
+        private void LoopDetectPriceAndTimeInScreen()
         {
             logger.InfoFormat("begin loopDetectPriceAndTimeInScreen");
             int i = 0;
 
             PageTimePriceResult LastResultx = null;
-            while (IsCollectingWork)
+            while (isCollectingWork)
             {
                 long ss = KK.CurrentMills();
 
@@ -390,7 +346,7 @@ namespace Radar.bidding
                     // 2. 检查提交价格策略
                     int OfferedPrice = stra.GetOfferedPrice();
                     int PriceAt50 = biddingContext.GetPrice(50);
-                    string answer = biddingContext.GetAnswer(oper.answerUuid);
+                    string answer = CaptchaTaskContext.me.GetAnswer(oper.answerUuid);
 
                     // logger.InfoFormat("try target second#{0}, offer-price#{1}, delta#{2}. delta ", fixSec, OfferedPrice, (pp.basePrice + 300));
 
@@ -521,86 +477,6 @@ namespace Radar.bidding
 
         }
 
-
-        /// <summary>
-        /// 循环询问验证码图片的答案
-        /// </summary>
-        private void loodInquiryCaptchaAnswer()
-        {
-            while (IsCollectingWork)
-            {
-                long ss = KK.CurrentMills();
-                try
-                {
-                    long s1 = KK.CurrentMills();
-                    if (biddingContext.IsAllImagesAnswered())
-                    {
-                        KK.Sleep(100);
-                        continue;
-                    }
-
-                    var images = new List<CaptchaAnswerImage>(biddingContext.GetImagesOfAwaitAnswer());
-
-                    logger.DebugFormat("inquiry answer, image size is {0}. First Uuid is {1}", images.Count, images[0].Uuid);
-
-                    foreach (var img in images)
-                    {
-                        if (img == null)
-                        {
-                            continue;
-                        }
-                        if (img.Answer == null || img.Answer.Length == 0)
-                        {
-                            var req = new CaptchaImageAnswerRequest();
-                            req.from = "test";
-                            req.token = "devJustTest";
-                            req.uid = img.Uuid;
-                            req.timestamp = KK.CurrentMills();
-
-                            DataResult<CaptchaImageAnswerResponse> dr = HttpClients
-                                .PostAsJson<DataResult<CaptchaImageAnswerResponse>>(conf.CaptchaAddressPrefix + "/v1/biding/captcha-answer", req);
-
-                            if (DataResults.IsOK(dr) && dr.Data?.answer?.Length > 0)
-                            {
-                                biddingContext.PutAnswer(img.Uuid, dr.Data.answer);
-                                biddingContext.RemoveAwaitImage(img.Uuid);
-
-                                logger.InfoFormat("GET task#{0}'s answer is {1}", img.Uuid, dr.Data.answer);
-
-                                // 尝试提前输入答案
-                                var oper = biddingContext.GetSubmitOperateByUuid(img.Uuid);
-                                if (oper != null && oper.status != 99)
-                                {
-                                    phase2Manager.InputCaptchForSubmit(dr.Data.answer);
-                                    logger.InfoFormat("task#{0}'s answer#{1} is inputted", img.Uuid, dr.Data.answer);
-
-                                    oper.status = 21;
-                                }
-                                
-                            }
-                        }
-                        else
-                        {
-                            biddingContext.RemoveAwaitImage(img.Uuid);
-                        }
-                    }
-
-
-                }
-                catch (Exception e)
-                {
-                    logger.Error("detect price and time error", e);
-                }
-                finally
-                {
-                    KK.Sleep(50);
-                }
-
-            }
-
-            logger.InfoFormat("END loodInquiryCaptchaAnswer ");
-
-        }
 
 
         public CaptchaAnswerImage PreviewPhase2Captcha(PagePrice pp)
