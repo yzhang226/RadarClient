@@ -37,7 +37,7 @@ namespace Radar.bidding.socket
             CommandRequest co = parse(command);
 
             // LocalCommandExecutor.executor.
-            CommandProcessor<string> processor = CommandProcessorFactory.GetProcessor(co.CommandName);
+            ICommand<string> processor = CommandProcessorFactory.GetProcessor(co.CommandName);
             if (processor == null)
             {
 
@@ -106,7 +106,7 @@ namespace Radar.bidding.socket
                 req.args = new string[0];
             }
 
-            req.CommandName = (CommandEnum) Enum.ToObject(typeof(CommandEnum), int.Parse(req.action));
+            req.CommandName = (ControlDirective) Enum.ToObject(typeof(ControlDirective), int.Parse(req.action));
 
             return req;
         }

@@ -243,9 +243,6 @@
     <Content Include="Captures\.gitkeep">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Captures\debug\.gitkeep">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <None Include="lib\.gitkeep">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

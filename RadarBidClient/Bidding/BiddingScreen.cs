@@ -39,7 +39,7 @@ namespace Radar.bidding
 
         private WebBrowser webBro;
 
-        private Phase2Manager phase2Manager;
+        private Phase2ActManager phase2Manager;
 
 
         private static TimeSpan PreviewStartTime = new TimeSpan(11, 29, 15);
@@ -66,7 +66,7 @@ namespace Radar.bidding
 
         // private CaptchaAnswerImage LastImage;
 
-        public BiddingScreen(ProjectConfig conf, BidActionManager actionManager, Phase2Manager phase2Manager, SubmitStrategyManager strategyManager)
+        public BiddingScreen(ProjectConfig conf, BidActionManager actionManager, Phase2ActManager phase2Manager, SubmitStrategyManager strategyManager)
         {
             this.conf = conf;
             this.actionManager = actionManager;
@@ -219,11 +219,11 @@ namespace Radar.bidding
             PageTimePriceResult LastResultx = null;
             while (IsCollectingWork)
             {
-                long ss = KK.currentTs();
+                long ss = KK.CurrentMills();
 
                 try
                 {
-                    long s1 = KK.currentTs();
+                    long s1 = KK.CurrentMills();
                     PageTimePriceResult LastResult = actionManager.DetectPriceAndTimeInScreen(LastResultx);
 
                     // 重复检测
@@ -245,7 +245,7 @@ namespace Radar.bidding
 
                     PagePrice pp = LastResult.data;
 
-                    logger.DebugFormat("detectPriceAndTimeInScreen elapsed {0}ms", KK.currentTs() - s1);
+                    logger.DebugFormat("detectPriceAndTimeInScreen elapsed {0}ms", KK.CurrentMills() - s1);
 
                     if (pp != null)
                     {
@@ -265,9 +265,9 @@ namespace Radar.bidding
                             }
                         }
 
-                        s1 = KK.currentTs();
+                        s1 = KK.CurrentMills();
                         AfterSuccessDetect(pp);
-                        logger.DebugFormat("afterDetect elapsed {0}ms", KK.currentTs() - s1);
+                        logger.DebugFormat("afterDetect elapsed {0}ms", KK.CurrentMills() - s1);
                     }
 
                 }
@@ -281,7 +281,7 @@ namespace Radar.bidding
                     KK.Sleep(100);
                 }
 
-                logger.DebugFormat("round {0} loopDetectPriceAndTimeInScreen elapsed {1}ms", i++, KK.currentTs() - ss);
+                logger.DebugFormat("round {0} loopDetectPriceAndTimeInScreen elapsed {1}ms", i++, KK.CurrentMills() - ss);
             }
 
             logger.InfoFormat("END loopDetectPriceAndTimeInScreen ");
@@ -320,7 +320,7 @@ namespace Radar.bidding
                 return;
             }
 
-            long s1 = KK.currentTs();
+            long s1 = KK.CurrentMills();
 
             int minute = pp.pageTime.Minute;
             int sec = pp.pageTime.Second;
@@ -473,7 +473,7 @@ namespace Radar.bidding
 
             }
 
-            logger.InfoFormat("afterDetect elapsed {0}ms", KK.currentTs() - s1);
+            logger.InfoFormat("afterDetect elapsed {0}ms", KK.CurrentMills() - s1);
 
         }
 
@@ -529,10 +529,10 @@ namespace Radar.bidding
         {
             while (IsCollectingWork)
             {
-                long ss = KK.currentTs();
+                long ss = KK.CurrentMills();
                 try
                 {
-                    long s1 = KK.currentTs();
+                    long s1 = KK.CurrentMills();
                     if (biddingContext.IsAllImagesAnswered())
                     {
                         KK.Sleep(100);
@@ -555,7 +555,7 @@ namespace Radar.bidding
                             req.from = "test";
                             req.token = "devJustTest";
                             req.uid = img.Uuid;
-                            req.timestamp = KK.currentTs();
+                            req.timestamp = KK.CurrentMills();
 
                             DataResult<CaptchaImageAnswerResponse> dr = HttpClients
                                 .PostAsJson<DataResult<CaptchaImageAnswerResponse>>(conf.CaptchaAddressPrefix + "/v1/biding/captcha-answer", req);

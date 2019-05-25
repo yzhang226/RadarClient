@@ -29,7 +29,7 @@ namespace Radar.ioc
 
         private void initContainer()
         {
-            long s1 = KK.currentTs();
+            long s1 = KK.CurrentMills();
 
             var builder = new ContainerBuilder();
             
@@ -80,7 +80,7 @@ namespace Radar.ioc
 
             Container = builder.Build();
 
-            logger.InfoFormat("init IoC Container done. Components count#{0}. version is {1}. elasped {2}ms.", componentClasses.Count, Ver.ver, KK.currentTs() - s1);
+            logger.InfoFormat("init IoC Container done. Components count#{0}. version is {1}. elasped {2}ms.", componentClasses.Count, Ver.ver, KK.CurrentMills() - s1);
             
             // 初始化 InitializingBean
             foreach (var t in componentClasses)

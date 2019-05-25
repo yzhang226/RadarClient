@@ -77,7 +77,7 @@ namespace Radar
 
             msg.setTotalLength(tLen);
             msg.setMagic(B.MAGIC_NUMBER);
-            msg.setOccurMills(KK.currentTs());
+            msg.setOccurMills(KK.CurrentMills());
 
             msg.setClientNo(clientNo);
             msg.setMessageType(messageType);

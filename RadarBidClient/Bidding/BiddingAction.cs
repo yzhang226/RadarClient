@@ -14,20 +14,18 @@ using System.Windows.Controls;
 namespace Radar
 {
     [Component]
-    public class BidActionManager
+    public class BidActionManager : InitializingBean
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(BidActionManager));
-
 
         private WindowSimulator robot;
 
         private ProjectConfig conf;
 
-        private CoordPoint Datum;
+        private CoordPoint _datum;
 
         // IE进程句柄
         private int ieHwdn;
-
 
         private string processClassName = "IEFrame";
 
@@ -35,15 +33,38 @@ namespace Radar
 
         private bool debugModeOpen = false;
 
-        // private string bidingWebsiteAddress = "http://127.0.0.1:8888/bid.htm";
+        /// <summary>
+        /// 坐标 of 目前时间
+        /// </summary>
+        private CoordPoint coordOfCurrentTime;
 
-        
+        /// <summary>
+        /// 坐标 of 价格区间
+        /// </summary>
+        private CoordPoint coordOfPriceSection;
 
-        // 坐标 of 目前时间
-        private CoordPoint coordOfCurrentTime { get; set; }
 
-        // 坐标 of 价格区间
-        private CoordPoint coordOfPriceSection { get; set; }
+        private List<CoordPoint> fenceEndPoints = new List<CoordPoint>();
+
+        private List<CoordPoint> fenceEndPointsReverse = new List<CoordPoint>();
+
+
+        public CoordPoint Datum
+        {
+            get
+            {
+                if (_datum != null)
+                {
+                    return _datum;
+                }
+
+                this.PrepareDatumPoint();
+
+                return _datum;
+            }
+
+        }
+
 
         public BidActionManager(WindowSimulator robot, ProjectConfig conf)
         {
@@ -96,15 +117,8 @@ namespace Radar
 
         public PageTimePriceResult DetectPriceAndTimeInScreen(PageTimePriceResult LastResult)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             string uuid = KK.uuid();
-            // PagePrice pp = new PagePrice();
-
-
-            if (this.Datum == null)
-            {
-                setBenchPoint();
-            }
 
             if (this.coordOfCurrentTime == null || coordOfCurrentTime.x <= 0 || coordOfCurrentTime.y <= 0)
             {
@@ -114,20 +128,13 @@ namespace Radar
             var p = this.coordOfCurrentTime;
 
             // 11:29:57
-            // int x1 = p.x + 55, y1 = p.y, x2 = p.x + 55 + 75, y2 = p.y + 18;
             int x1 = p.x + 20, y1 = p.y, x2 = p.x + 20 + 150, y2 = p.y + 18;
-            //if (debugModeOpen)
-            //{
-            //    robot.CaptureJpg(x1, y1, x2, y2, "" + uuid + "-01.jpg", 80);
-            //    KK.Sleep(900);
-            //}
 
-            // ff0000-ff0000  ff0000-101010
-            long s1 = KK.currentTs();
+            long s1 = KK.CurrentMills();
             robot.UseDict(DictIndex.INDEX_NUMBER);
             string ret1 = robot.Ocr(x1, y1, x2, y2, "ff0000-000000", 0.8);
             // string ret1 = robot.Ocr(x1, y1, x2, y2, "0066cc-101010", 0.8);
-            logger.DebugFormat("目前时间 - OCR内容 {0}, {1}, {2}, {3}. elapsed {4}ms, {5}, {6}", x1, y1, x2, y2, KK.currentTs() - s1, ret1, uuid);
+            logger.DebugFormat("目前时间 - OCR内容 {0}, {1}, {2}, {3}. elapsed {4}ms, {5}, {6}", x1, y1, x2, y2, KK.CurrentMills() - s1, ret1, uuid);
 
 
             if (ret1 == null || ret1.Length == 0 || ret1.Length < 6)
@@ -137,36 +144,22 @@ namespace Radar
 
             DateTime no = DateTime.Now;
 
-            char[] cs1 = ret1.ToCharArray();
-            string[] arr1 = new string[3] { "", "", "" };
-            int idx1 = 0;
-            foreach (char c in cs1)
-            {
-                if (c >= '0' && c <= '9')
-                {
-                    int mod = idx1 / 2;
-                    string st = arr1[mod] + c.ToString();
-                    arr1[mod] = st;
-                    idx1 += 1;
-                }
-            }
+            string td = KK.ExtractDigits(ret1);
 
-            if (arr1[0].Length < 2 || arr1[1].Length < 2 || arr1[2].Length < 2)
+            if (td == null || td.Length != 6)
             {
                 return PageTimePriceResult.ErrorTime();
             }
 
-            logger.DebugFormat(" datetime arr is {0}, {1}, {2}.", arr1[0], arr1[1], arr1[2]);
+            logger.DebugFormat("Parsed time is {0}.", td);
 
-            DateTime dt = new DateTime(no.Year, no.Month, no.Day, int.Parse(arr1[0]), int.Parse(arr1[1]), int.Parse(arr1[2]));
+            DateTime dt = new DateTime(no.Year, no.Month, no.Day, int.Parse(td.Substring(0, 2)), int.Parse(td.Substring(2, 2)), int.Parse(td.Substring(4, 2)));
             
             // 检测是否已经拿到过该秒的数据，则可以忽略不检测价格了
             if (LastResult?.data != null && dt == LastResult.data.pageTime)
             {
                 return PageTimePriceResult.RepeatedTime();
             }
-
-            //logger.InfoFormat(" datetime parsed is {0}, arr is {1}", dt, arr1);
 
             // 找到坐标 of 价格区间
             if (this.coordOfPriceSection == null || coordOfPriceSection.x <= 0 || coordOfPriceSection.y <= 0)
@@ -175,31 +168,24 @@ namespace Radar
             }
 
             var p2 = this.coordOfPriceSection;
-            logger.DebugFormat("价格区间 - 坐标是 - {0}. {1}", p2.ToString(), KK.currentTs() - t1);
+            logger.DebugFormat("价格区间 - 坐标是 - {0}. {1}", p2.ToString(), KK.CurrentMills() - t1);
 
             // 11:29:57
-            // int x21 = p2.x + 55, y21 = p2.y, x22 = p2.x + 55 + 170, y22 = p2.y + 18;
             int x21 = p2.x + 20, y21 = p2.y, x22 = p2.x + 20 + 250, y22 = p2.y + 18;
-            if (debugModeOpen)
-            {
-                robot.CaptureJpg(x21, y21, x22, y22, getImageDirPath() + "debug\\" + uuid + "-02.jpg", 80);
-                KK.Sleep(900);
-            }
 
             // ff0000-101010 
-            s1 = KK.currentTs();
+            s1 = KK.CurrentMills();
             robot.UseDict(DictIndex.INDEX_NUMBER);
             string ret2 = robot.Ocr(x21, y21, x22, y22, "ff0000-000000", 0.8);
-            // string ret2 = robot.Ocr(x21, y21, x22, y22, "0066cc-101010", 0.8);
-            
-            logger.InfoFormat("价格区间 - OCR内容, {0} @ {1}, elapsed {2}ms",ret2, dt, KK.currentTs() - s1);
+
+            logger.InfoFormat("价格区间 - OCR内容, {0} @ {1}, elapsed {2}ms",ret2, dt, KK.CurrentMills() - s1);
 
             if (ret2 == null || ret2.Length == 0 || ret2.Length < 10)
             {
                 return PageTimePriceResult.ErrorPrice();
             }
 
-            string numberStr = KK.ExtractNumber(ret2);
+            string numberStr = KK.ExtractDigits(ret2);
             if (numberStr.Length < 10)
             {
                 logger.WarnFormat("识别到 错误的 价格 - {0}. 数字的位数不对.", numberStr);
@@ -280,82 +266,17 @@ namespace Radar
             }
         }
 
-        public PagePrice detectTimeOfPhase02(int targetPrice)
-        {
-            
-            
-            //pp.currentPrice = currentPrice;
-
-
-            //if (currentPrice == targetPrice)
-            //{
-            //    pp.status = 0;
-            //} else if (currentPrice > targetPrice)
-            //{
-            //    pp.status = 1;
-            //} else
-            //{
-            //    pp.status = -1;
-            //}
-
-            return null;
-        }
-
-        private static List<CoordPoint> FenceEndPoints = new List<CoordPoint>();
-
-        private static List<CoordPoint> FenceEndPointsReverse = new List<CoordPoint>();
-
-        public void setBenchPoint()
-        {
-            Datum = this.detectBenchPoint();
-            // 设置 验证码区域的 确认/取消 按钮 的 栅栏
-            // 440 438
-            // 按钮长宽 114 x 27
-            // 栅栏 起始点 delta(440, 448) 长宽 422 x 87
-            // 假设 每一个cell 长宽是  55 x 21
-            var startPoint = Datum.AddDelta(440, 448);
-            // int areaLen = 425, areaWidth = 87;
-            int columns = 4;
-            int rows = 3;
-
-            logger.InfoFormat("fence startPoint is {0}.", startPoint.ToString());
-
-            // int cellLen = areaLen / columns, cellWidth = areaWidth / rows;
-            int cellLen = 113, cellWidth = 29;
-
-            for (int c = 1; c <= columns; c++) 
-            {
-                for (int r = 1; r <= rows; r++)
-                {
-                    var fence = startPoint.AddDelta(c * cellLen, r * cellWidth);
-                    logger.InfoFormat("fence is row={0} column={1}, point is {2}.", r, c, fence.ToString());
-                    FenceEndPoints.Add(fence);
-                }
-            }
-
-            FenceEndPointsReverse = new List<CoordPoint>(FenceEndPoints);
-            FenceEndPointsReverse.Reverse();
-
-            logger.InfoFormat("init FenceEndPoints, size {0}", FenceEndPoints.Count);
-
-        }
-
 
         public void MockLogin()
         {
-
-            this.setBenchPoint();
-
             Task.Factory.StartNew(() =>
             {
                 // 首屏 确定 按钮
                 var p11 = Datum.AddDelta(741, 507);
-                // Task task1 = 
-                this.clickConfirmAtIndex(p11);
 
                 // 首屏 同意 按钮
                 var p12 = Datum.AddDelta(730, 509);
-                this.clickAgreeAtIndex(p11);
+                this.ClickAgreeAtIndex(p11);
 
                 // 登录页
                 var p21 = Datum.AddDelta(610, 200);
@@ -376,22 +297,19 @@ namespace Radar
         public void MockLoginAndPhase1()
         {
 
-            this.setBenchPoint();
-
-
             Task.Factory.StartNew(() => {
 
 
                 // 首屏 确定 按钮
                 var p11 = Datum.AddDelta(741, 507);
                 // Task task1 = 
-                this.clickConfirmAtIndex(p11);
+                this.ClickConfirmAtIndex(p11);
                 // Task.WaitAll(task1);
 
                 // 首屏 同意 按钮
                 var p12 = Datum.AddDelta(730, 509);
                 // Task task2 = 
-                this.clickAgreeAtIndex(p11);
+                this.ClickAgreeAtIndex(p11);
                 // Task.WaitAll(task2);
 
                 // 登录页
@@ -440,176 +358,22 @@ namespace Radar
             var p41 = Datum.AddDelta(676, 417);
             var p42 = Datum.AddDelta(800, 415);
 
-            this.inputPriceAtPhase2(p41, 89000);
-            this.ClickOfferBtn(p42);
+            this.InputTextAtPoint(p41, 89000.ToString(), true, "模拟第二阶段出价");
+            this.ClickButtonAtPoint(p42, true, "模拟第二阶段出价");
 
             var p43 = Datum.AddDelta(734, 416);
             var p44 = Datum.AddDelta(553, 500);
 
-            this.InputCaptchAtPoint(p43, "0282");
-            this.ClickBtnUseFenceFromLeftToRight(p44);
+            this.InputTextAtPoint(p43, "0282", true, "phase2 submit验证码");
+            this.ClickButtonByFenceWayLToR(p44);
 
             // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
             Thread.Sleep(2 * 1000);
             var p36 = Datum.AddDelta(661, 478);
-            this.ClickBtnOnceAtPoint(p36);
+            this.ClickButtonAtPoint(p36, false, null);
         }
 
-        public CoordPoint MockPhase2AtCaptcha(int bidPrice)
-        {
-            logger.InfoFormat("第二阶段 使用基准点 {0}", Datum);
-
-            // 第二阶段
-            var p41 = Datum.AddDelta(676, 417);
-            var p42 = Datum.AddDelta(800, 415);
-
-            this.inputPriceAtPhase2(p41, bidPrice);
-            this.ClickOfferBtn(p42);
-
-            return p41;
-        }
-
-        public void MockCancelPhase2AtCaptcha()
-        {
-            logger.InfoFormat("第二阶段 使用基准点 {0}", Datum);
-
-            // 第二阶段 742 502
-            var p42 = Datum.AddDelta(742, 502);
-
-            // TODO: 取消按钮的可能会变化，所以这里使用全点击的方式
-            // 按钮长宽 114 x 27
-            // 空闲长宽 421 x 76
-
-            foreach (var p in FenceEndPointsReverse)
-            {
-                robot.MoveTo(p.x, p.y);
-                robot.LeftClick();
-                // KK.Sleep(50);
-            }
-
-
-            // this.clickCancelButtonAtPhase2(p42);
-
-        }
-
-        public void MockPhase022(int targetPrice)
-        {
-            logger.InfoFormat("第二阶段修改 - 使用基准点 {0}", Datum);
-
-            // 第二阶段
-            var p41 = Datum.AddDelta(676, 417);
-            var p42 = Datum.AddDelta(800, 415);
-
-            this.inputPriceAtPhase2(p41, targetPrice);
-            KK.Sleep(10);
-            this.ClickOfferBtn(p42);
-            KK.Sleep(10);
-
-            var p43 = Datum.AddDelta(734, 416);
-            var p44 = Datum.AddDelta(553, 500);
-
-            // TODO: 检测 enter 键
-
-            // 上传验证码 
-
-            this.InputCaptchAtPoint(p43, "0282");
-            this.ClickBtnUseFenceFromLeftToRight(p44);
-
-            // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
-            KK.Sleep(1500);
-            var p36 = Datum.AddDelta(661, 478);
-            this.ClickBtnOnceAtPoint(p36);
-
-            // TODO: 确定按钮的位置 可能 会变化, 则检测 
-
-
-        }
-
-
-        public void MockPhase022(int targetPrice, BiddingContext context)
-        {
-            logger.InfoFormat("第二阶段修改 - 使用基准点 {0}", Datum);
-
-            // 第二阶段
-            var p41 = Datum.AddDelta(676, 417);
-            var p42 = Datum.AddDelta(800, 415);
-
-            this.inputPriceAtPhase2(p41, targetPrice);
-            KK.Sleep(2);
-            this.ClickOfferBtn(p42);
-            KK.Sleep(2);
-
-            var p43 = Datum.AddDelta(734, 416);
-            var p44 = Datum.AddDelta(553, 500);
-
-            // TODO: 检测 enter 键
-
-            // 对验证码区域截屏且上传 
-            KK.Sleep(100);
-            CaptchaAnswerImage img = CaptureCaptchaAndUploadTask();
-            context.PutAwaitImage(img, null);
-
-            string answer = "";
-            while (true)
-            {
-                try
-                {
-                    answer = context.GetAnswer(img.Uuid);
-                    // TODO: 是否考虑超时
-                    if (answer?.Length > 0)
-                    {
-                        break;
-                    }
-                }
-                catch (Exception e)
-                {
-                    logger.Error("", e);
-                }
-                finally
-                {
-                    KK.Sleep(50);
-                }
-
-            }
-
-            logger.InfoFormat("get answer#{0} for task#{1}", answer, img.Uuid);
-            this.InputCaptchAtPoint(p43, answer);
-            this.ClickBtnUseFenceFromLeftToRight(p44);
-
-            // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
-            // TODO: 应该检测 区域 是否有 出价有效
-            KK.Sleep(800);
-            var p36 = Datum.AddDelta(661, 478);
-            this.ClickBtnOnceAtPoint(p36);
-
-            // 清除以前输入的价格
-            this.CleanPriceAtPoint(p41, true);
-
-
-        }
-
-
-
-        public CaptchaAnswerImage CaptureCaptchaAndUploadTask()
-        {   
-            CaptchaAnswerImage img = CaptureCaptchaImageAtPoint();
-            // UploadPhase2CaptchaImage(img);
-
-            return img;
-        }
-
-        // 点掉 可能的 弹出框 上的 确定 按钮
-        private void clickPossiblePopupSureButton()
-        {
-            long t1 = KK.currentTs();
-            int x = Datum.x + 655;
-            int y = Datum.y + 450;
-            int ret = robot.MoveTo(x, y);
-            robot.LeftClick();
-            logger.InfoFormat("第二阶段 尝试点击 - 出价结果 确认 按钮 - {0}, {1}, {2}", x, y, KK.currentTs() - t1);
-        }
-
-        private CoordPoint getScreenResolution()
+        private CoordPoint GetScreenResolution()
         {
             int screenWidth = Convert.ToInt32(System.Windows.SystemParameters.PrimaryScreenWidth);
             int screenHeight = Convert.ToInt32(System.Windows.SystemParameters.PrimaryScreenHeight);
@@ -617,9 +381,14 @@ namespace Radar
             return new CoordPoint(screenWidth, screenHeight);
         }
 
-        private CoordPoint detectBenchPoint()
+        private void PrepareDatumPoint()
         {
-            long t1 = KK.currentTs();
+            DetectAndSetDatum();
+        }
+
+        private void DetectAndSetDatum()
+        {
+            long t1 = KK.CurrentMills();
             // 尝试使用 相对位置 - 上海市个人非营业性客车额度投标拍卖
             // 个人非营业性客车
             // 您使用的是
@@ -627,13 +396,12 @@ namespace Radar
 
             var checkPoint = robot.searchTextCoordXYInScreen("0074bf-101010|9c4800-101010|ffdf9c-101010|df9c48-101010|489cdf-101010|000000-101010|9cdfff-101010|00489c-101010", "用的是");
             // 
-            logger.InfoFormat("检查点坐标是 - {0}. {1}", checkPoint.ToString(), KK.currentTs() - t1);
+            logger.InfoFormat("检查点坐标是 - {0}. {1}", checkPoint.ToString(), KK.CurrentMills() - t1);
 
             // 204, 287
             var bench = checkPoint.AddDelta(-206, -286);
             // 719, 364 - = 513，78 ， (510, 78)
             logger.InfoFormat("基准点坐标是 - {0}", bench.ToString());
-
 
             // 900 x 700
             int w = 900;
@@ -641,7 +409,7 @@ namespace Radar
 
             if (bench.x <= 0 || bench.y <= 0)
             {
-                var re = getScreenResolution();
+                var re = GetScreenResolution();
                 logger.InfoFormat("降级使用 - 屏幕分辨率 - {0}", re.ToString());
 
                 //bench.y = 79;
@@ -667,19 +435,20 @@ namespace Radar
                 logger.InfoFormat("降级使用 - 新的基准点坐标是 - {0}", bench.ToString());
             }
 
-            return bench;
+            _datum = bench;
+
         }
 
         // 首屏 确定 按钮
-        private void clickConfirmAtIndex(CoordPoint p1)
+        private void ClickConfirmAtIndex(CoordPoint p1)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             if (p1.x > 0 && p1.y > 0)
             {
                 logger.InfoFormat("找到 - 确认按钮 - {0}, {1}", p1.x, p1.y);
                 robot.MoveTo(p1.x, p1.y);
                 robot.LeftClick();
-                logger.InfoFormat("点击了 - 确认按钮 - {0}, {1}, {2}", p1.x, p1.y, KK.currentTs() - t1);
+                logger.InfoFormat("点击了 - 确认按钮 - {0}, {1}, {2}", p1.x, p1.y, KK.CurrentMills() - t1);
             }
             //return 1;
 
@@ -687,16 +456,16 @@ namespace Radar
         }
 
         // 首屏 同意 按钮
-        private void clickAgreeAtIndex(CoordPoint p2)
+        private void ClickAgreeAtIndex(CoordPoint p2)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             if (p2.x > 0 && p2.y > 0)
             {
                 logger.InfoFormat("找到 - 我同意拍卖须知按钮 - {0}, {1}", p2.x, p2.y);
                 robot.MoveTo(p2.x, p2.y);
                 robot.LeftClick();
                 robot.LeftClick();
-                logger.InfoFormat("点击了 - 我同意拍卖须知按钮 - {0}, {1}, {2}", p2.x, p2.y, KK.currentTs() - t1);
+                logger.InfoFormat("点击了 - 我同意拍卖须知按钮 - {0}, {1}, {2}", p2.x, p2.y, KK.CurrentMills() - t1);
             }
             //return Task.Factory.StartNew(() => {
                 
@@ -707,300 +476,266 @@ namespace Radar
         // 登录页  投标号 输入框
         private void inputBidNumberAtLogin(CoordPoint p3, string bidNumber)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             if (p3.x > 0 && p3.y > 0)
             {
                 logger.InfoFormat("找到 - 投标号输入框 - {0}, {1}", p3.x, p3.y);
                 robot.MoveTo(p3.x, p3.y);
                 robot.LeftClick();
                 robot.KeyPressString(bidNumber);
-                logger.InfoFormat("输入了 - 投标号输入框 - {0}, {1}, {2}", p3.x, p3.y, KK.currentTs() - t1);
+                logger.InfoFormat("输入了 - 投标号输入框 - {0}, {1}, {2}", p3.x, p3.y, KK.CurrentMills() - t1);
             }
         }
 
         // 登录页   密码 输入框
         private void inputPasswordAtLogin(CoordPoint p4, string password)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             if (p4.x > 0 && p4.y > 0)
             {
                 logger.InfoFormat("找到 - 密码输入框 - {0}, {1}", p4.x, p4.y);
                 robot.MoveTo(p4.x, p4.y);
                 robot.LeftClick();
                 robot.KeyPressString(password);
-                logger.InfoFormat("输入了 - 密码输入框 - {0}, {1}, {2}", p4.x, p4.y, KK.currentTs() - t1);
+                logger.InfoFormat("输入了 - 密码输入框 - {0}, {1}, {2}", p4.x, p4.y, KK.CurrentMills() - t1);
             }
         }
 
         // 登录页   图像校验码 输入框
         private void inputCaptchaAtLogin(CoordPoint p5, string captcha)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             if (p5.x > 0 && p5.y > 0)
             {
                 logger.InfoFormat("找到 - 图像校验码 输入框 - {0}, {1}", p5.x, p5.y);
                 robot.MoveTo(p5.x, p5.y);
                 robot.LeftClick();
                 robot.KeyPressString(captcha);
-                logger.InfoFormat("输入了 - 图像校验码 输入框 - {0}, {1}, {2}", p5.x, p5.y, KK.currentTs() - t1);
+                logger.InfoFormat("输入了 - 图像校验码 输入框 - {0}, {1}, {2}", p5.x, p5.y, KK.CurrentMills() - t1);
             }
         }
 
         // 登录页 参加投标竞买 按钮
         private void clickLoginAtLogin(CoordPoint p6)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             if (p6.x > 0 && p6.y > 0)
             {
                 logger.InfoFormat("找到 - 参加投标竞买 按钮 - {0}, {1}", p6.x, p6.y);
                 robot.MoveTo(p6.x + 10, p6.y + 2);
                 robot.LeftClick();
-                logger.InfoFormat("点击了 - 参加投标竞买 按钮 - {0}, {1}, {2}", p6.x, p6.y, KK.currentTs() - t1);
+                logger.InfoFormat("点击了 - 参加投标竞买 按钮 - {0}, {1}, {2}", p6.x, p6.y, KK.CurrentMills() - t1);
             }
         }
 
         // 第一阶段页 输入价格 输入框
         private void inputPriceAtPhase1(CoordPoint p11, int price)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             if (p11.x > 0 && p11.y > 0)
             {
                 logger.InfoFormat("找到 - 输入价格 输入框 - {0}, {1}", p11.x, p11.y);
                 robot.MoveTo(p11.x, p11.y);
                 robot.LeftClick();
                 robot.KeyPressString(price.ToString());
-                logger.InfoFormat("第一阶段 输入 - 输入价格 输入框 - {0}, {1}, {2}", p11.x, p11.y, KK.currentTs() - t1);
+                logger.InfoFormat("第一阶段 输入 - 输入价格 输入框 - {0}, {1}, {2}", p11.x, p11.y, KK.CurrentMills() - t1);
             }
         }
 
         // 第一阶段页 再次输入价格 输入框
         private void inputPrice2AtPhase1(CoordPoint p12, int price)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             if (p12.x > 0 && p12.y > 0)
             {
                 logger.InfoFormat("找到 - 再次输入价格 输入框 - {0}, {1}", p12.x, p12.y);
                 robot.MoveTo(p12.x, p12.y);
                 robot.LeftClick();
                 robot.KeyPressString(price.ToString());
-                logger.InfoFormat("第一阶段 输入 - 再次输入价格 输入框 - {0}, {1}, {2}", p12.x, p12.y, KK.currentTs() - t1);
+                logger.InfoFormat("第一阶段 输入 - 再次输入价格 输入框 - {0}, {1}, {2}", p12.x, p12.y, KK.CurrentMills() - t1);
             }
         }
 
         // 第一阶段页 出价 按钮
         private void clickBidButtonAtPhase1(CoordPoint p12)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             int ret = robot.MoveTo(p12.x, p12.y);
             robot.LeftClick();
-            logger.InfoFormat("第一阶段 尝试点击 - 出价 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.currentTs() - t1);
+            logger.InfoFormat("第一阶段 尝试点击 - 出价 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.CurrentMills() - t1);
         }
 
         // 第一阶段页 弹框 验证码 输入框
         private void inputCaptchAtPhase1(CoordPoint p13, string captcha)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             if (p13.x > 0 && p13.y > 0)
             {
                 robot.MoveTo(p13.x, p13.y);
                 robot.LeftClick();
                 robot.KeyPressString(captcha);
-                logger.InfoFormat("第一阶段 尝试输入 - 验证码 输入框 - {0}, {1}, {2}", p13.x, p13.y, KK.currentTs() - t1);
+                logger.InfoFormat("第一阶段 尝试输入 - 验证码 输入框 - {0}, {1}, {2}", p13.x, p13.y, KK.CurrentMills() - t1);
             }
         }
 
         // 第一阶段页 弹框 验证码 确认 按钮
         private void clickConfirmCaptchaAtPhase1(CoordPoint p12)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             int ret = robot.MoveTo(p12.x, p12.y);
             robot.LeftClick();
-            logger.InfoFormat("第一阶段 尝试点击 - 验证码 确认 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.currentTs() - t1);
+            logger.InfoFormat("第一阶段 尝试点击 - 验证码 确认 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.CurrentMills() - t1);
         }
 
         // 第一阶段页 弹框 出价结果 确认 按钮
         private void clickConfirmBidOkAtPhase1(CoordPoint p12)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             int ret = robot.MoveTo(p12.x, p12.y);
             robot.LeftClick();
-            logger.InfoFormat("第一阶段 尝试点击 - 出价结果 确认 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.currentTs() - t1);
+            logger.InfoFormat("第一阶段 尝试点击 - 出价结果 确认 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.CurrentMills() - t1);
         }
 
-        // 第二阶段页 自行输入价格 输入框
-        private void inputPriceAtPhase2(CoordPoint p13, int price)
+        public void CleanTextAtPoint(CoordPoint p13, int textLength, bool needMoveTo)
         {
-            long t1 = KK.currentTs();
-            if (p13.x > 0 && p13.y > 0)
-            {
-                
-                robot.MoveTo(p13.x, p13.y);
-                robot.LeftClick();
-
-                CleanPriceAtPoint(p13, false);
-
-                robot.KeyPressString(price.ToString());
-                logger.InfoFormat("第二阶段 尝试输入 - 自行输入价格 输入框 - {0}, {1} {2}. {3}", p13.x, p13.y, price, KK.currentTs() - t1);
-            }
+            this.CleanTextAtPoint(p13, textLength, needMoveTo, null);
         }
 
-        public void InputPriceAtPoint(CoordPoint coord, int price)
+        public void CleanTextAtPoint(CoordPoint p13, int textLength, bool needMoveTo, string memo)
         {
-            long t1 = KK.currentTs();
-            robot.MoveTo(coord.x, coord.y);
-            robot.LeftClick();
-
-            CleanPriceAtPoint(coord, false);
-
-            robot.KeyPressString(price.ToString());
-
-            logger.DebugFormat("输入 - 自行输入价格 输入框 - {0}, {1}, elapsed {2}", coord.ToString(), price, KK.currentTs() - t1);
-        }
-
-        public void CleanPriceAtPoint(CoordPoint p13, bool NeedMoveTo)
-        {
-            if (NeedMoveTo)
+            long s1 = KK.CurrentMills();
+            if (needMoveTo)
             {
                 robot.MoveTo(p13.x, p13.y);
                 robot.LeftClick();
             }
-            
-            // 先清空已输入的价格
-            for (int i = 0; i < 6; i++)
+
+            for (int i = 0; i < textLength; i++)
             {
                 robot.PressBackspacKey();
                 robot.PressDeleteKey();
             }
-        }
 
-        // 第二阶段页 出价 按钮 
-        public void ClickOfferBtn(CoordPoint p13)
-        {
-            long t1 = KK.currentTs();
-            robot.MoveTo(p13.x, p13.y);
-            robot.LeftClick();
-            robot.LeftClick();
-            logger.InfoFormat("点击 出价 按钮 - {0}, elapsed {1}.", p13.ToString(), KK.currentTs() - t1);
-        }
-
-        // 第二阶段页 出价 按钮 
-        private void clickCancelButtonAtPhase2(CoordPoint p13)
-        {
-            long t1 = KK.currentTs();
-            if (p13.x > 0 && p13.y > 0)
+            if (memo?.Length > 0)
             {
-                robot.MoveTo(p13.x, p13.y);
-                robot.LeftClick();
-                logger.InfoFormat("第二阶段 尝试点击 - 出价 按钮 - {0}, {1}. {2}", p13.x, p13.y, KK.currentTs() - t1);
+                logger.InfoFormat("{0}#删除文本: {1} @ {2}, elapsed {3}ms", memo, textLength, p13, KK.CurrentMills() - s1);
             }
         }
 
-        // 第二阶段页 弹框 验证码 输入框
-        public void InputCaptchAtPoint(CoordPoint p13, string captcha)
+        public void ClickButtonAtPoint(CoordPoint p13, bool needMoreOnceClick, string memo)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
+            robot.MoveTo(p13.x, p13.y);
+            robot.LeftClick();
+            if (needMoreOnceClick)
+            {
+                robot.LeftClick();
+            }
+
+            logger.InfoFormat("{0}#点击按钮 @ {1} with more#{2}, elapsed {3}.", memo, p13.ToString(), needMoreOnceClick, KK.CurrentMills() - t1);
+        }
+
+        public void InputTextAtPoint(CoordPoint p13, string text, bool needClearFirst, string memo)
+        {
+            long t1 = KK.CurrentMills();
             robot.MoveTo(p13.x, p13.y);
             robot.LeftClick();
 
             // 先清空已输入的验证码
-            for (int i = 0; i < 4; i++)
+            if (needClearFirst)
             {
-                robot.PressBackspacKey();
-                robot.PressDeleteKey();
+                for (int i = 0; i < text.Length; i++)
+                {
+                    robot.PressBackspacKey();
+                    robot.PressDeleteKey();
+                }
             }
 
-            robot.KeyPressString(captcha);
-            logger.InfoFormat("输入 - 验证码 - {0}, {1}, elapsed {2}.", p13.ToString(), captcha, KK.currentTs() - t1);
+            robot.KeyPressString(text);
+            logger.InfoFormat("{0}#输入: {1} @ {2}, Elapsed {3}.", memo, text, p13.ToString(), KK.CurrentMills() - t1);
         }
 
         // 第二阶段页 弹框 验证码 确认 按钮
-        public void ClickBtnUseFenceFromLeftToRight(CoordPoint p12)
+        public void ClickButtonByFenceWayLToR(CoordPoint pot)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
 
             // 按钮的位置 可能 会变化, 这里使用 栅栏模式多次点击
-            foreach (var p in FenceEndPoints)
+            foreach (var p in fenceEndPoints)
             {
                 robot.MoveTo(p.x, p.y);
                 robot.LeftClick();
             }
 
-            logger.DebugFormat("栅栏模式（从右到左） 点击 - 按钮 - {0}, elpased {1}.", p12.ToString(), KK.currentTs() - t1);
+            logger.DebugFormat("栅栏模式（从右到左） 点击 - 按钮 - {0}, elpased {1}.", pot.ToString(), KK.CurrentMills() - t1);
         }
 
-        public void ClickBtnUseFenceFromRightToLeft(CoordPoint p12)
+        public void ClickButtonByFenceWayRToL(CoordPoint pot)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
 
             // 按钮的位置 可能 会变化, 这里使用 栅栏模式多次点击
-            foreach (var p in FenceEndPointsReverse)
+            foreach (var p in fenceEndPointsReverse)
             {
                 robot.MoveTo(p.x, p.y);
                 robot.LeftClick();
             }
 
-            logger.DebugFormat("栅栏模式（从左到右） 点击 - 按钮 - {0}, elpased {1}.", p12.ToString(), KK.currentTs() - t1);
+            logger.DebugFormat("栅栏模式（从左到右） 点击 - 按钮 - {0}, elpased {1}.", pot.ToString(), KK.CurrentMills() - t1);
         }
 
         // 第二阶段页 弹框 出价结果 确认 按钮
         public void ClickBtnOnceAtPoint(CoordPoint p12)
         {
-            long t1 = KK.currentTs();
+            long t1 = KK.CurrentMills();
             int ret = robot.MoveTo(p12.x, p12.y);
             robot.LeftClick();
-            logger.InfoFormat("点击 - 按钮（一次） - {0}, elapsed {1}.", p12.ToString(), KK.currentTs() - t1);
+            logger.InfoFormat("点击 - 按钮（一次） - {0}, elapsed {1}.", p12.ToString(), KK.CurrentMills() - t1);
         }
 
-        /// <summary>
-        /// 第二阶段 - 截图验证码区域 且 上传验证码图片
-        /// </summary>
-        /// <returns></returns>
-        public CaptchaAnswerImage CaptureCaptchaImageAtPoint()
-        {
-            var Datum = GetDatum();
-
-            DateTime dt = DateTime.Now;
-            var uuid = KK.uuid();
-            CaptchaAnswerImage img = new CaptchaAnswerImage();
-            img.Uuid = uuid;
-            img.CaptureTime = dt;
-
-            // 442 338 ， 380 53
-            int x11 = Datum.x + 442, y11 = Datum.y + 338;
-            int x21 = x11 + 380, y21 = y11 + 53;
-            var img01Path = getImageDirPath() + "" + uuid + "-" + dt.ToString("HHmmss") + "-phase02-01.jpg";
-            int ret1 = robot.CaptureJpg(x11, y11, x21, y21, img01Path, 80);
-            img.ImagePath1 = img01Path;
-
-            // 基准点偏移 445 390, 240 85
-            int x1 = Datum.x + 445, y1 = Datum.y + 390;
-            int x2 = x1 + 230, y2 = y1 + 90;
-            var img02Path = getImageDirPath() + "" + uuid + "-" + dt.ToString("HHmmss") + "-phase02-02.jpg";
-            int ret2 = robot.CaptureJpg(x1, y1, x2, y2, img02Path, 80);
-
-            img.ImagePath2 = img02Path;
-
-            return img;
-        }
 
         public int CaptureImage(CoordRectangle rect, string filePath)
         {
             return robot.CaptureJpg(rect.x1, rect.y1, rect.x2, rect.y2, filePath, 90);
         }
 
-
-        public string getImageDirPath()
+        private void InitFencePoint()
         {
-            // d:\work\bid\radarbid\radarbidclient\radarbidclient\bin\x86\debug\resource\dlls\
-            string path = robot.GetBasePath();
-            int idx = path.LastIndexOf("\\resource\\");
-            return path.Substring(0, idx) + "\\Captures\\";
+            // 设置 验证码区域的 确认/取消 按钮 的 栅栏
+            // 440 438
+            // 按钮长宽 114 x 27
+            // 栅栏 起始点 delta(440, 448) 长宽 422 x 87
+            // 假设 每一个cell 长宽是  55 x 21
+            var startPoint = this.Datum.AddDelta(440, 448);
+            // int areaLen = 425, areaWidth = 87;
+            int columns = 4;
+            int rows = 3;
+
+            logger.InfoFormat("fence startPoint is {0}.", startPoint.ToString());
+
+            // int cellLen = areaLen / columns, cellWidth = areaWidth / rows;
+            int cellLen = 113, cellWidth = 29;
+
+            for (int c = 1; c <= columns; c++)
+            {
+                for (int r = 1; r <= rows; r++)
+                {
+                    var fence = startPoint.AddDelta(c * cellLen, r * cellWidth);
+                    logger.InfoFormat("fence is row={0} column={1}, point is {2}.", r, c, fence.ToString());
+                    fenceEndPoints.Add(fence);
+                }
+            }
+
+            fenceEndPointsReverse = new List<CoordPoint>(fenceEndPoints);
+            fenceEndPointsReverse.Reverse();
+
+            logger.InfoFormat("init FenceEndPoints, size {0}", fenceEndPoints.Count);
         }
 
-        public CoordPoint GetDatum()
-        {
-            return this.Datum;
-        }
 
+        public void AfterPropertiesSet()
+        {
+            InitFencePoint();
+        }
     }
 }

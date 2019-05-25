@@ -373,7 +373,7 @@ namespace Radar.model
     {
         public int messageType;
 
-        public CommandEnum CommandName;
+        public ControlDirective CommandName;
 
         public string action;
 

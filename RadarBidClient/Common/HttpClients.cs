@@ -204,7 +204,7 @@ namespace Radar.Common
         public static T PostWithFiles<T>(string url, object postData, List<string> filePaths, out int statusCode) where T : class, new()
         {
             // WebKitFormBoundaryafkSRjSyccnJC6ED
-            string boundary = "------WebKitFormBoundary" + KK.currentTs();
+            string boundary = "------WebKitFormBoundary" + KK.CurrentMills();
 
 
             using (var httpContent = new MultipartFormDataContent(boundary))

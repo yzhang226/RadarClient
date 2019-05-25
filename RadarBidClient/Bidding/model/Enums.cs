@@ -9,7 +9,10 @@ namespace Radar.bidding.model
     {
     }
 
-    public enum CommandEnum
+    /// <summary>
+    /// 控制指定
+    /// </summary>
+    public enum ControlDirective
     {
 
         /// <summary>
@@ -27,6 +30,19 @@ namespace Radar.bidding.model
         /// </summary>
         PHASE_TWO_OFFER_PRICE = 210,
 
+        /// <summary>
+        /// 同步NTP服务器时间
+        /// </summary>
+        SYNC_SYSTEM_TIME = 90100,
+
+        /// <summary>
+        /// 截图且上传flash屏幕
+        /// </summary>
+        CAPTURE_UPLOAD_BID_SCREEN = 90200,
+
     }
+
+
+
 
 }

@@ -24,7 +24,7 @@ namespace Radar
         private const string Windows10 = "10.0";
 
         // 
-        public static long currentTs()
+        public static long CurrentMills()
         {
             long currentTicks = DateTime.Now.Ticks;
             DateTime dtFrom = new DateTime(1970, 1, 1, 0, 0, 0, 0);
@@ -173,7 +173,7 @@ namespace Radar
             return osName;
         }
 
-        public static string ExtractNumber(string text)
+        public static string ExtractDigits(string text)
         {
             char[] cs2 = text.ToCharArray();
             string numberStr = "";
@@ -187,6 +187,8 @@ namespace Radar
             }
             return numberStr;
         }
+
+        // public static string E
 
     }
 
