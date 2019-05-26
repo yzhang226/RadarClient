@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using System.IO;
 using log4net;
 
-namespace Radar.utils
+namespace Radar.Common
 {
     class FileUtils
     {
-        private static readonly ILog logger = LogManager.GetLogger(typeof(FileUtils));
+        private static readonly ILog logger = LogManager.GetLogger(typeof( FileUtils));
 
         public static string readTxtFile(string path)
         {

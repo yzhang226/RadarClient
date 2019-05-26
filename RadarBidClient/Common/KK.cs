@@ -1,6 +1,4 @@
-﻿using Microsoft.Win32;
 using Radar.Common;
-using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +8,9 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading;
 
-namespace Radar
+namespace Radar.Common
 {
-    class KK
+    public class KK
     {
 
         private const string Windows2000 = "5.0";
@@ -75,7 +73,7 @@ namespace Radar
         {
             // 999999,  99999
             string text = intValue.ToString();
-            if (intValue <100000)
+            if (intValue < 100000)
             {
                 text = "0" + text;
             }
@@ -123,7 +121,7 @@ namespace Radar
 
         public static int RandomInt(int n, int m)
         {
-            Random r = new Random(); 
+            Random r = new Random();
             return r.Next(n, m);
         }
 
@@ -188,77 +186,16 @@ namespace Radar
             return numberStr;
         }
 
-        public static CaptchaImageAnswerRequest CreateImageAnswerRequest(string uuid)
+        public static Radar.Bidding.Model.CaptchaImageAnswerRequest CreateImageAnswerRequest(string uuid)
         {
-            var req = new CaptchaImageAnswerRequest();
+            var req = new Radar.Bidding.Model.CaptchaImageAnswerRequest();
             req.from = "test";
             req.token = "devJustTest";
             req.uid = uuid;
             req.timestamp = KK.CurrentMills();
             return req;
         }
-            
+
 
     }
-
-    public class DataResults
-    {
-
-        // private
-
-    /**
-     * 判断 <code>DataResult</code> 是否成功, null表示失败
-     * @param dr
-     * @return
-     */
-        public static bool IsOK<T>(DataResult<T> dr)
-        {
-            return dr != null && dr.Status == 0;
-        }
-
-        /**
-         * 判断 <code>DataResult</code> 是否失败, null表示失败
-         * @param dr
-         * @return
-         */
-        public static bool IsFail<T>(DataResult<T> dr)
-        {
-            return !IsOK(dr);
-        }
-
-        /**
-         *
-         * @param data
-         * @param <T>
-         * @return
-         */
-        public static DataResult<T> OK<T>(T data)
-        {
-            return new DataResult<T>(0, data, "");
-        }
-
-        /**
-         *
-         * @param message
-         * @return
-         */
-        public static DataResult<T> Fail<T>(string message)
-        {
-            // System.Nullable<T>
-            return new DataResult<T>(-1, default(T), message);
-        }
-
-        /**
-         *
-         * @param status
-         * @param message
-         * @return
-         */
-        public static DataResult<T> Fail<T>(int status, String message)
-        {
-            return new DataResult<T>(status, default(T), message);
-        }
-
-    }
-
 }

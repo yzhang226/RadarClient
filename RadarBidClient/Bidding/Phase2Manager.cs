@@ -31,7 +31,7 @@ namespace Radar.Bidding
         /// 2. 点击出价按钮 - 移动到按钮位置，点击
         /// 3. 对验证码区域截图 且 上传
         /// </summary>
-        public CaptchaAnswerImage OfferPrice(int targetPrice, bool enableCancelFirst)
+        public Radar.Bidding.Model.CaptchaAnswerImage OfferPrice(int targetPrice, bool enableCancelFirst)
         {
             var Datum = actionManager.Datum;
 
@@ -49,13 +49,13 @@ namespace Radar.Bidding
 
             // 2. 对验证码区域截屏且上传 
             KK.Sleep(500);
-            CaptchaAnswerImage img = CaptureCaptchaImage();
+            Radar.Bidding.Model.CaptchaAnswerImage img = CaptureCaptchaImage();
             UploadCaptchaImage(img);
 
             return img;
         }
 
-        private CaptchaAnswerImage CaptureCaptchaImage()
+        private Radar.Bidding.Model.CaptchaAnswerImage CaptureCaptchaImage()
         {
             var Datum = actionManager.Datum;
 
@@ -63,16 +63,16 @@ namespace Radar.Bidding
             var uuid = KK.uuid();
             
             // 1. 验证码 - 提示语
-            CoordRectangle rect1 = CoordRectangle.From(Datum.AddDelta(442, 338), 380, 53);
+            Radar.Bidding.Model.CoordRectangle rect1 = Radar.Bidding.Model.CoordRectangle.From(Datum.AddDelta(442, 338), 380, 53);
             var img01Path = KK.CapturesDir() + "\\" + uuid + "-" + dt.ToString("HHmmss") + "-p21.jpg";
             actionManager.CaptureImage(rect1, img01Path);
 
             // 2. 验证码 - 图形区域
-            CoordRectangle rect2 = CoordRectangle.From(Datum.AddDelta(445, 390), 230, 90);
+            Radar.Bidding.Model.CoordRectangle rect2 = Radar.Bidding.Model.CoordRectangle.From(Datum.AddDelta(445, 390), 230, 90);
             var img02Path = KK.CapturesDir() + "\\" + uuid + "-" + dt.ToString("HHmmss") + "-p22.jpg";
             actionManager.CaptureImage(rect2, img02Path);
 
-            CaptchaAnswerImage img = new CaptchaAnswerImage();
+            Radar.Bidding.Model.CaptchaAnswerImage img = new Radar.Bidding.Model.CaptchaAnswerImage();
             img.Uuid = uuid;
             img.CaptureTime = dt;
             img.ImagePath1 = img01Path;
@@ -81,18 +81,18 @@ namespace Radar.Bidding
             return img;
         }
 
-        private void UploadCaptchaImage(CaptchaAnswerImage img)
+        private void UploadCaptchaImage(Radar.Bidding.Model.CaptchaAnswerImage img)
         {
             string url = conf.UploadCaptchaTaskUrl;
-            CaptchaImageUploadRequest req = new CaptchaImageUploadRequest();
+            Radar.Bidding.Model.CaptchaImageUploadRequest req = new Radar.Bidding.Model.CaptchaImageUploadRequest();
             req.token = "devJustTest";
             req.uid = img.Uuid;
             req.timestamp = KK.CurrentMills();
             req.from = "test";
 
             int httpStatus;
-            DataResult<CaptchaImageUploadResponse> dr = HttpClients
-                .PostWithFiles<DataResult<CaptchaImageUploadResponse>>(url, req, new List<string> { img.ImagePath1, img.ImagePath2 }, out httpStatus);
+            Radar.Bidding.Model.DataResult<Radar.Bidding.Model.CaptchaImageUploadResponse> dr = HttpClients
+                .PostWithFiles<Radar.Bidding.Model.DataResult<Radar.Bidding.Model.CaptchaImageUploadResponse>>(url, req, new List<string> { img.ImagePath1, img.ImagePath2 }, out httpStatus);
 
             logger.InfoFormat("upload catpcha task#{0}, result is {1}", img.Uuid, Jsons.ToJson(dr));
         }

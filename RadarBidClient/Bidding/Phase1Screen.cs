@@ -29,7 +29,7 @@ namespace Radar.Bidding
         {
             logger.InfoFormat("第一阶段出价 - 开始");
 
-            CaptchaAnswerImage img = phase1Manager.OfferPrice(price, true);
+            Radar.Bidding.Model.CaptchaAnswerImage img = phase1Manager.OfferPrice(price, true);
             StartAwaitAnswerToSubmit(img.Uuid);
 
             logger.InfoFormat("第一阶段出价 - 等待验证码提交");
@@ -40,7 +40,7 @@ namespace Radar.Bidding
             StopAwaitThread();
 
             isAwaitWork = true;
-            awaitThread = Threads.StartNewBackgroudThread(() =>
+            awaitThread = Radar.Common.Threads.Threads.StartNewBackgroudThread(() =>
             {
                 LoopAwaitAnswer(imageUuid);
             });
@@ -56,7 +56,7 @@ namespace Radar.Bidding
                 long ss = KK.CurrentMills();
                 try
                 {
-                    var taskContext = CaptchaTaskContext.me;
+                    var taskContext = Radar.Bidding.Model.CaptchaTaskContext.me;
                     var answer = taskContext.GetAnswer(imageUuid);
                     if (answer?.Length > 0)
                     {
@@ -81,7 +81,7 @@ namespace Radar.Bidding
         public void StopAwaitThread()
         {
             isAwaitWork = false;
-            Threads.TryStopThreadByWait(awaitThread, 100, 100, "phase1-awaitThread");
+            Radar.Common.Threads.Threads.TryStopThreadByWait(awaitThread, 100, 100, "phase1-awaitThread");
         }
 
         public void AfterPropertiesSet()

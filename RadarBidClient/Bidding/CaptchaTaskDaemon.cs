@@ -36,14 +36,14 @@ namespace Radar.Bidding
             this.StopInquiryThread();
 
             isInquiryWork = true;
-            inquiryThread = Threads.StartNewBackgroudThread(LoopInquiryCaptchaAnswer);
+            inquiryThread = Radar.Common.Threads.Threads.StartNewBackgroudThread(LoopInquiryCaptchaAnswer);
             logger.InfoFormat("Restart CaptchaTask to Inquiry Answer");
         }
 
         public void StopInquiryThread()
         {
             isInquiryWork = false;
-            Threads.TryStopThreadByWait(inquiryThread, 60, 30, "inquiryThread");
+            Radar.Common.Threads.Threads.TryStopThreadByWait(inquiryThread, 60, 30, "inquiryThread");
         }
 
         /// <summary>
@@ -56,15 +56,15 @@ namespace Radar.Bidding
                 long ss = KK.CurrentMills();
                 try
                 {
-                    var taskContext = CaptchaTaskContext.me;
+                    var taskContext = Radar.Bidding.Model.CaptchaTaskContext.me;
                     long s1 = KK.CurrentMills();
-                    if (CaptchaTaskContext.me.IsAllImagesAnswered())
+                    if (Radar.Bidding.Model.CaptchaTaskContext.me.IsAllImagesAnswered())
                     {
                         KK.Sleep(30);
                         continue;
                     }
 
-                    var images = new List<CaptchaAnswerImage>(taskContext.GetImagesOfAwaitAnswer());
+                    var images = new List<Radar.Bidding.Model.CaptchaAnswerImage>(taskContext.GetImagesOfAwaitAnswer());
 
                     logger.DebugFormat("inquiry answer, image size is {0}. First Uuid is {1}", images.Count, images[0].Uuid);
 
@@ -79,8 +79,8 @@ namespace Radar.Bidding
                         {
                             var req = KK.CreateImageAnswerRequest(img.Uuid);
 
-                            DataResult<CaptchaImageAnswerResponse> dr = HttpClients
-                                .PostAsJson<DataResult<CaptchaImageAnswerResponse>>(conf.CaptchaAddressPrefix + "/v1/biding/captcha-answer", req);
+                            Radar.Bidding.Model.DataResult<Radar.Bidding.Model.CaptchaImageAnswerResponse> dr = HttpClients
+                                .PostAsJson<Radar.Bidding.Model.DataResult<Radar.Bidding.Model.CaptchaImageAnswerResponse>>(conf.CaptchaAddressPrefix + "/v1/biding/captcha-answer", req);
 
                             if (DataResults.IsOK(dr) && dr.Data?.answer?.Length > 0)
                             {
@@ -123,7 +123,7 @@ namespace Radar.Bidding
         /// <param name="answer"></param>
         private void TryInputAnswerAhead(string imageUuid, string answer)
         {
-            var oper = BiddingContext.GetSubmitOperateByUuid(imageUuid);
+            var oper = Radar.Bidding.Model.BiddingContext.GetSubmitOperateByUuid(imageUuid);
             if (oper != null && oper.status != 99)
             {
                 phase2ActManager.InputCaptchForSubmit(answer);

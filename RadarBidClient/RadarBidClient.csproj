@@ -181,28 +181,61 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bidding\BiddingScreen.cs" />
-    <Compile Include="Bidding\BiddingAction.cs" />
+    <Compile Include="Bidding\BidActionManager.cs" />
     <Compile Include="Bidding\CaptchaTaskDaemon.cs" />
+    <Compile Include="Bidding\Command\BaseCommand.cs" />
+    <Compile Include="Bidding\Command\CommandProcessorFactory.cs" />
+    <Compile Include="Bidding\Command\ICommand.cs" />
+    <Compile Include="Bidding\Command\SystemTimeSyncCommand.cs" />
+    <Compile Include="Bidding\DM\DMCRef.cs" />
+    <Compile Include="Bidding\Messages\IMessageProcessor.cs" />
+    <Compile Include="Bidding\Model\BiddingContext.cs" />
+    <Compile Include="Bidding\Model\CaptchaAnswerImage.cs" />
+    <Compile Include="Bidding\Model\CaptchaImageAnswerRequest.cs" />
+    <Compile Include="Bidding\Model\CaptchaImageAnswerResponse.cs" />
+    <Compile Include="Bidding\Model\CaptchaImageUploadRequest.cs" />
+    <Compile Include="Bidding\Model\CaptchaImageUploadResponse.cs" />
+    <Compile Include="Bidding\Model\CaptchaTaskContext.cs" />
+    <Compile Include="Bidding\Model\CommandRequest.cs" />
+    <Compile Include="Bidding\Model\CoordPoint.cs" />
+    <Compile Include="Bidding\Model\CoordRectangle.cs" />
+    <Compile Include="Bidding\Model\DataResult.cs" />
+    <Compile Include="Bidding\Model\PagePrice.cs" />
+    <Compile Include="Bidding\Model\PageTimePriceResult.cs" />
+    <Compile Include="Bidding\Model\PriceSubmitOperate.cs" />
+    <Compile Include="Bidding\Model\ReceiveDirective.cs" />
+    <Compile Include="Bidding\Model\SubmitPriceSetting.cs" />
+    <Compile Include="Bidding\Model\TellDirective.cs" />
     <Compile Include="Bidding\Phase1Screen.cs" />
-    <Compile Include="Bidding\command\CommandProcessor.cs" />
+    <Compile Include="Bidding\Command\CaptureUploadBidScreenCommand.cs" />
     <Compile Include="Bidding\LoginManager.cs" />
-    <Compile Include="Bidding\model\Enums.cs" />
+    <Compile Include="Bidding\Model\Enums.cs" />
     <Compile Include="Bidding\Phase2Manager.cs" />
     <Compile Include="Bidding\Phase1Manager.cs" />
-    <Compile Include="Bidding\socket\MessageProcessors.cs" />
+    <Compile Include="Bidding\Service\ClientService.cs" />
+    <Compile Include="Bidding\Messages\MessageDispatcher.cs" />
+    <Compile Include="Bidding\Messages\RawMessageProcessor.cs" />
     <Compile Include="Butter\Fetch.cs" />
     <Compile Include="Butter\Manifest.cs" />
     <Compile Include="Butter\Updater.cs" />
-    <Compile Include="Common\CustomThreadPool.cs" />
-    <Compile Include="Common\Threads.cs" />
+    <Compile Include="Common\ByteUtils.cs" />
+    <Compile Include="Common\DataResults.cs" />
+    <Compile Include="Common\KK.cs" />
+    <Compile Include="Common\Raw\RawMessage.cs" />
+    <Compile Include="Common\Threads\CustomThreadPool.cs" />
+    <Compile Include="Common\Raw\MessageUtils.cs" />
+    <Compile Include="Common\Threads\SingleThread.cs" />
+    <Compile Include="Common\Threads\Threads.cs" />
     <Compile Include="Common\HttpClients.cs" />
     <Compile Include="Common\Jsons.cs" />
-    <Compile Include="Common\Times.cs" />
-    <Compile Include="Common\Versions.cs" />
+    <Compile Include="Common\Times\SystemTimeUpdater.cs" />
+    <Compile Include="Common\Times\NtpTime.cs" />
+    <Compile Include="Common\Times\TimeSynchronizer.cs" />
+    <Compile Include="Common\Ver.cs" />
     <Compile Include="Ioc\IoC.cs" />
-    <Compile Include="Bidding\model\ProjectConfig.cs" />
-    <Compile Include="Common\Utils.cs" />
-    <Compile Include="Bidding\socket\RadarSocket.cs" />
+    <Compile Include="Bidding\Model\ProjectConfig.cs" />
+    <Compile Include="Common\Raw\RawMessageEncoder.cs" />
+    <Compile Include="Bidding\Net\SocketClient.cs" />
     <Compile Include="Common\FileUtils.cs" />
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -216,8 +249,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Bidding\dm\DMControl.cs" />
-    <Compile Include="Bidding\model\LotModels.cs" />
+    <Compile Include="Bidding\DM\DMControl.cs" />
+    <Compile Include="Bidding\Model\DictIndex.cs" />
     <Compile Include="Common\SingleInstance.cs" />
     <Compile Include="Bidding\WindowSimulator.cs" />
     <Compile Include="MainWindow.xaml.cs">

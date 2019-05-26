@@ -22,7 +22,7 @@ namespace Radar.Bidding
 
         private ProjectConfig conf;
 
-        private CoordPoint _datum;
+        private Radar.Bidding.Model.CoordPoint _datum;
 
         // IE进程句柄
         private int ieHwdn;
@@ -36,20 +36,20 @@ namespace Radar.Bidding
         /// <summary>
         /// 坐标 of 目前时间
         /// </summary>
-        private CoordPoint coordOfCurrentTime;
+        private Radar.Bidding.Model.CoordPoint coordOfCurrentTime;
 
         /// <summary>
         /// 坐标 of 价格区间
         /// </summary>
-        private CoordPoint coordOfPriceSection;
+        private Radar.Bidding.Model.CoordPoint coordOfPriceSection;
 
 
-        private List<CoordPoint> fenceEndPoints = new List<CoordPoint>();
+        private List<Radar.Bidding.Model.CoordPoint> fenceEndPoints = new List<Radar.Bidding.Model.CoordPoint>();
 
-        private List<CoordPoint> fenceEndPointsReverse = new List<CoordPoint>();
+        private List<Radar.Bidding.Model.CoordPoint> fenceEndPointsReverse = new List<Radar.Bidding.Model.CoordPoint>();
 
 
-        public CoordPoint Datum
+        public Radar.Bidding.Model.CoordPoint Datum
         {
             get
             {
@@ -115,14 +115,14 @@ namespace Radar.Bidding
             robot.UseDict(0);
         }
 
-        public PageTimePriceResult DetectPriceAndTimeInScreen(PageTimePriceResult LastResult)
+        public Radar.Bidding.Model.PageTimePriceResult DetectPriceAndTimeInScreen(Radar.Bidding.Model.PageTimePriceResult LastResult)
         {
             long t1 = KK.CurrentMills();
             string uuid = KK.uuid();
 
             if (this.coordOfCurrentTime == null || coordOfCurrentTime.x <= 0 || coordOfCurrentTime.y <= 0)
             {
-                return PageTimePriceResult.ErrorCoordTime();
+                return Radar.Bidding.Model.PageTimePriceResult.ErrorCoordTime();
             }
 
             var p = this.coordOfCurrentTime;
@@ -131,7 +131,7 @@ namespace Radar.Bidding
             int x1 = p.x + 20, y1 = p.y, x2 = p.x + 20 + 150, y2 = p.y + 18;
 
             long s1 = KK.CurrentMills();
-            robot.UseDict(DictIndex.INDEX_NUMBER);
+            robot.UseDict(Radar.Bidding.Model.DictIndex.INDEX_NUMBER);
             string ret1 = robot.Ocr(x1, y1, x2, y2, "ff0000-000000", 0.8);
             // string ret1 = robot.Ocr(x1, y1, x2, y2, "0066cc-101010", 0.8);
             logger.DebugFormat("目前时间 - OCR内容 {0}, {1}, {2}, {3}. elapsed {4}ms, {5}, {6}", x1, y1, x2, y2, KK.CurrentMills() - s1, ret1, uuid);
@@ -139,7 +139,7 @@ namespace Radar.Bidding
 
             if (ret1 == null || ret1.Length == 0 || ret1.Length < 6)
             {
-                return PageTimePriceResult.ErrorTime();
+                return Radar.Bidding.Model.PageTimePriceResult.ErrorTime();
             }
 
             DateTime no = DateTime.Now;
@@ -148,7 +148,7 @@ namespace Radar.Bidding
 
             if (td == null || td.Length != 6)
             {
-                return PageTimePriceResult.ErrorTime();
+                return Radar.Bidding.Model.PageTimePriceResult.ErrorTime();
             }
 
             logger.DebugFormat("Parsed time is {0}.", td);
@@ -158,13 +158,13 @@ namespace Radar.Bidding
             // 检测是否已经拿到过该秒的数据，则可以忽略不检测价格了
             if (LastResult?.data != null && dt == LastResult.data.pageTime)
             {
-                return PageTimePriceResult.RepeatedTime();
+                return Radar.Bidding.Model.PageTimePriceResult.RepeatedTime();
             }
 
             // 找到坐标 of 价格区间
             if (this.coordOfPriceSection == null || coordOfPriceSection.x <= 0 || coordOfPriceSection.y <= 0)
             {
-                return PageTimePriceResult.ErrorCoordPrice();
+                return Radar.Bidding.Model.PageTimePriceResult.ErrorCoordPrice();
             }
 
             var p2 = this.coordOfPriceSection;
@@ -175,21 +175,21 @@ namespace Radar.Bidding
 
             // ff0000-101010 
             s1 = KK.CurrentMills();
-            robot.UseDict(DictIndex.INDEX_NUMBER);
+            robot.UseDict(Radar.Bidding.Model.DictIndex.INDEX_NUMBER);
             string ret2 = robot.Ocr(x21, y21, x22, y22, "ff0000-000000", 0.8);
 
             logger.InfoFormat("价格区间 - OCR内容, {0} @ {1}, elapsed {2}ms",ret2, dt, KK.CurrentMills() - s1);
 
             if (ret2 == null || ret2.Length == 0 || ret2.Length < 10)
             {
-                return PageTimePriceResult.ErrorPrice();
+                return Radar.Bidding.Model.PageTimePriceResult.ErrorPrice();
             }
 
             string numberStr = KK.ExtractDigits(ret2);
             if (numberStr.Length < 10)
             {
                 logger.WarnFormat("识别到 错误的 价格 - {0}. 数字的位数不对.", numberStr);
-                return PageTimePriceResult.ErrorPrice();
+                return Radar.Bidding.Model.PageTimePriceResult.ErrorPrice();
             }
             
             int[] arr2 = ParsePrice(numberStr);
@@ -199,18 +199,18 @@ namespace Radar.Bidding
             if (priceHigh < 70000 || priceHigh < 70000 || priceHigh > 200000 || priceLow > 200000)
             {
                 logger.WarnFormat("识别到 错误的 价格 - {0}, {1}.", priceLow, priceHigh);
-                return PageTimePriceResult.ErrorPrice();
+                return Radar.Bidding.Model.PageTimePriceResult.ErrorPrice();
             }
 
             logger.InfoFormat("price parsed priceLow is {0}, pricHigh is {1}", priceLow, priceHigh);
 
             int currentPrice = (priceLow + priceHigh) / 2;
 
-            var pp = new PagePrice(dt, currentPrice);
+            var pp = new Radar.Bidding.Model.PagePrice(dt, currentPrice);
             pp.low = priceLow;
             pp.high = priceHigh;
 
-            return PageTimePriceResult.Ok(pp);
+            return Radar.Bidding.Model.PageTimePriceResult.Ok(pp);
         }
 
         private int[] ParsePrice(string numberStr)
@@ -244,7 +244,7 @@ namespace Radar.Bidding
 
         public void FindAndSetCoordOfCurrentTime()
         {
-            robot.UseDict(DictIndex.INDEX_CURRENT_TIME);
+            robot.UseDict(Radar.Bidding.Model.DictIndex.INDEX_CURRENT_TIME);
             var p = robot.SearchTextCoordXYInFlashScreen(Datum.x + 20, Datum.y + 365, 370, 190, "0066cc-101010", "目前时间");
             if (p != null && p.x > 0 && p.y > 0)
             {
@@ -256,7 +256,7 @@ namespace Radar.Bidding
         public void FindAndSetCoordOfPriceSection()
         {
             // 找到坐标 of 价格区间
-            robot.UseDict(DictIndex.INDEX_PRICE_SECTION);
+            robot.UseDict(Radar.Bidding.Model.DictIndex.INDEX_PRICE_SECTION);
             var p = robot.SearchTextCoordXYInFlashScreen(Datum.x + 20, Datum.y + 365, 371, 190, "0066cc-101010", "价格区间");
             if (p != null && p.x > 0 && p.y > 0)
             {
@@ -373,12 +373,12 @@ namespace Radar.Bidding
             this.ClickButtonAtPoint(p36, false, null);
         }
 
-        private CoordPoint GetScreenResolution()
+        private Radar.Bidding.Model.CoordPoint GetScreenResolution()
         {
             int screenWidth = Convert.ToInt32(System.Windows.SystemParameters.PrimaryScreenWidth);
             int screenHeight = Convert.ToInt32(System.Windows.SystemParameters.PrimaryScreenHeight);
 
-            return new CoordPoint(screenWidth, screenHeight);
+            return new Radar.Bidding.Model.CoordPoint(screenWidth, screenHeight);
         }
 
         private void PrepareDatumPoint()
@@ -404,8 +404,8 @@ namespace Radar.Bidding
             logger.InfoFormat("基准点坐标是 - {0}", bench.ToString());
 
             // 900 x 700
-            int w = 900;
-            int h = 700;
+            // int w = 900;
+            // int h = 700;
 
             if (bench.x <= 0 || bench.y <= 0)
             {
@@ -440,7 +440,7 @@ namespace Radar.Bidding
         }
 
         // 首屏 确定 按钮
-        private void ClickConfirmAtIndex(CoordPoint p1)
+        private void ClickConfirmAtIndex(Radar.Bidding.Model.CoordPoint p1)
         {
             long t1 = KK.CurrentMills();
             if (p1.x > 0 && p1.y > 0)
@@ -456,7 +456,7 @@ namespace Radar.Bidding
         }
 
         // 首屏 同意 按钮
-        private void ClickAgreeAtIndex(CoordPoint p2)
+        private void ClickAgreeAtIndex(Radar.Bidding.Model.CoordPoint p2)
         {
             long t1 = KK.CurrentMills();
             if (p2.x > 0 && p2.y > 0)
@@ -474,7 +474,7 @@ namespace Radar.Bidding
         }
 
         // 登录页  投标号 输入框
-        private void inputBidNumberAtLogin(CoordPoint p3, string bidNumber)
+        private void inputBidNumberAtLogin(Radar.Bidding.Model.CoordPoint p3, string bidNumber)
         {
             long t1 = KK.CurrentMills();
             if (p3.x > 0 && p3.y > 0)
@@ -488,7 +488,7 @@ namespace Radar.Bidding
         }
 
         // 登录页   密码 输入框
-        private void inputPasswordAtLogin(CoordPoint p4, string password)
+        private void inputPasswordAtLogin(Radar.Bidding.Model.CoordPoint p4, string password)
         {
             long t1 = KK.CurrentMills();
             if (p4.x > 0 && p4.y > 0)
@@ -502,7 +502,7 @@ namespace Radar.Bidding
         }
 
         // 登录页   图像校验码 输入框
-        private void inputCaptchaAtLogin(CoordPoint p5, string captcha)
+        private void inputCaptchaAtLogin(Radar.Bidding.Model.CoordPoint p5, string captcha)
         {
             long t1 = KK.CurrentMills();
             if (p5.x > 0 && p5.y > 0)
@@ -516,7 +516,7 @@ namespace Radar.Bidding
         }
 
         // 登录页 参加投标竞买 按钮
-        private void clickLoginAtLogin(CoordPoint p6)
+        private void clickLoginAtLogin(Radar.Bidding.Model.CoordPoint p6)
         {
             long t1 = KK.CurrentMills();
             if (p6.x > 0 && p6.y > 0)
@@ -529,7 +529,7 @@ namespace Radar.Bidding
         }
 
         // 第一阶段页 输入价格 输入框
-        private void inputPriceAtPhase1(CoordPoint p11, int price)
+        private void inputPriceAtPhase1(Radar.Bidding.Model.CoordPoint p11, int price)
         {
             long t1 = KK.CurrentMills();
             if (p11.x > 0 && p11.y > 0)
@@ -543,7 +543,7 @@ namespace Radar.Bidding
         }
 
         // 第一阶段页 再次输入价格 输入框
-        private void inputPrice2AtPhase1(CoordPoint p12, int price)
+        private void inputPrice2AtPhase1(Radar.Bidding.Model.CoordPoint p12, int price)
         {
             long t1 = KK.CurrentMills();
             if (p12.x > 0 && p12.y > 0)
@@ -557,7 +557,7 @@ namespace Radar.Bidding
         }
 
         // 第一阶段页 出价 按钮
-        private void clickBidButtonAtPhase1(CoordPoint p12)
+        private void clickBidButtonAtPhase1(Radar.Bidding.Model.CoordPoint p12)
         {
             long t1 = KK.CurrentMills();
             int ret = robot.MoveTo(p12.x, p12.y);
@@ -566,7 +566,7 @@ namespace Radar.Bidding
         }
 
         // 第一阶段页 弹框 验证码 输入框
-        private void inputCaptchAtPhase1(CoordPoint p13, string captcha)
+        private void inputCaptchAtPhase1(Radar.Bidding.Model.CoordPoint p13, string captcha)
         {
             long t1 = KK.CurrentMills();
             if (p13.x > 0 && p13.y > 0)
@@ -579,7 +579,7 @@ namespace Radar.Bidding
         }
 
         // 第一阶段页 弹框 验证码 确认 按钮
-        private void clickConfirmCaptchaAtPhase1(CoordPoint p12)
+        private void clickConfirmCaptchaAtPhase1(Radar.Bidding.Model.CoordPoint p12)
         {
             long t1 = KK.CurrentMills();
             int ret = robot.MoveTo(p12.x, p12.y);
@@ -588,7 +588,7 @@ namespace Radar.Bidding
         }
 
         // 第一阶段页 弹框 出价结果 确认 按钮
-        private void clickConfirmBidOkAtPhase1(CoordPoint p12)
+        private void clickConfirmBidOkAtPhase1(Radar.Bidding.Model.CoordPoint p12)
         {
             long t1 = KK.CurrentMills();
             int ret = robot.MoveTo(p12.x, p12.y);
@@ -596,12 +596,12 @@ namespace Radar.Bidding
             logger.InfoFormat("第一阶段 尝试点击 - 出价结果 确认 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.CurrentMills() - t1);
         }
 
-        public void CleanTextAtPoint(CoordPoint p13, int textLength, bool needMoveTo)
+        public void CleanTextAtPoint(Radar.Bidding.Model.CoordPoint p13, int textLength, bool needMoveTo)
         {
             this.CleanTextAtPoint(p13, textLength, needMoveTo, null);
         }
 
-        public void CleanTextAtPoint(CoordPoint p13, int textLength, bool needMoveTo, string memo)
+        public void CleanTextAtPoint(Radar.Bidding.Model.CoordPoint p13, int textLength, bool needMoveTo, string memo)
         {
             long s1 = KK.CurrentMills();
             if (needMoveTo)
@@ -622,7 +622,7 @@ namespace Radar.Bidding
             }
         }
 
-        public void ClickButtonAtPoint(CoordPoint p13, bool needMoreOnceClick, string memo)
+        public void ClickButtonAtPoint(Radar.Bidding.Model.CoordPoint p13, bool needMoreOnceClick, string memo)
         {
             long t1 = KK.CurrentMills();
             robot.MoveTo(p13.x, p13.y);
@@ -635,7 +635,7 @@ namespace Radar.Bidding
             logger.InfoFormat("{0}#点击按钮 @ {1} with more#{2}, elapsed {3}.", memo, p13.ToString(), needMoreOnceClick, KK.CurrentMills() - t1);
         }
 
-        public void InputTextAtPoint(CoordPoint p13, string text, bool needClearFirst, string memo)
+        public void InputTextAtPoint(Radar.Bidding.Model.CoordPoint p13, string text, bool needClearFirst, string memo)
         {
             long t1 = KK.CurrentMills();
             robot.MoveTo(p13.x, p13.y);
@@ -656,7 +656,7 @@ namespace Radar.Bidding
         }
 
         // 第二阶段页 弹框 验证码 确认 按钮
-        public void ClickButtonByFenceWayLToR(CoordPoint pot)
+        public void ClickButtonByFenceWayLToR(Radar.Bidding.Model.CoordPoint pot)
         {
             long t1 = KK.CurrentMills();
 
@@ -670,7 +670,7 @@ namespace Radar.Bidding
             logger.DebugFormat("栅栏模式（从右到左） 点击 - 按钮 - {0}, elpased {1}.", pot.ToString(), KK.CurrentMills() - t1);
         }
 
-        public void ClickButtonByFenceWayRToL(CoordPoint pot)
+        public void ClickButtonByFenceWayRToL(Radar.Bidding.Model.CoordPoint pot)
         {
             long t1 = KK.CurrentMills();
 
@@ -685,7 +685,7 @@ namespace Radar.Bidding
         }
 
         // 第二阶段页 弹框 出价结果 确认 按钮
-        public void ClickBtnOnceAtPoint(CoordPoint p12)
+        public void ClickBtnOnceAtPoint(Radar.Bidding.Model.CoordPoint p12)
         {
             long t1 = KK.CurrentMills();
             int ret = robot.MoveTo(p12.x, p12.y);
@@ -694,7 +694,7 @@ namespace Radar.Bidding
         }
 
 
-        public int CaptureImage(CoordRectangle rect, string filePath)
+        public int CaptureImage(Radar.Bidding.Model.CoordRectangle rect, string filePath)
         {
             return robot.CaptureJpg(rect.x1, rect.y1, rect.x2, rect.y2, filePath, 90);
         }
@@ -726,7 +726,7 @@ namespace Radar.Bidding
                 }
             }
 
-            fenceEndPointsReverse = new List<CoordPoint>(fenceEndPoints);
+            fenceEndPointsReverse = new List<Radar.Bidding.Model.CoordPoint>(fenceEndPoints);
             fenceEndPointsReverse.Reverse();
 
             logger.InfoFormat("init FenceEndPoints, size {0}", fenceEndPoints.Count);

@@ -1,5 +1,5 @@
 ﻿using log4net;
-using Radar.DM;
+
 using Radar.IoC;
 using Radar.Model;
 using System;
@@ -14,7 +14,7 @@ namespace Radar
     /// 窗体模拟器 - 控制鼠标 键盘输入 截屏
     /// </summary>
     [Component]
-    public class WindowSimulator : DMControl
+    public class WindowSimulator : Radar.Bidding.DM.DMControl
     {
 
         private static readonly ILog logger = LogManager.GetLogger(typeof(WindowSimulator));
@@ -23,6 +23,7 @@ namespace Radar
 
         public WindowSimulator()
         {
+            
         }
 
 
@@ -59,12 +60,12 @@ namespace Radar
             return base.KeyPress(8);
         }
 
-        public CoordPoint searchTextCoordXYInScreen(string colorForamt, string target)
+        public Radar.Bidding.Model.CoordPoint searchTextCoordXYInScreen(string colorForamt, string target)
         {
             string ret = this.OcrEx(0, 0, 2000, 2000, colorForamt, 0.8);
             logger.InfoFormat(" 2000 OCR 识别的内容是 {0}", ret);
 
-            CoordPoint point = new CoordPoint();
+            Radar.Bidding.Model.CoordPoint point = new Radar.Bidding.Model.CoordPoint();
 
             if (ret == null || ret.Length == 0)
             {
@@ -91,18 +92,18 @@ namespace Radar
             return point;
         }
 
-        public CoordPoint SearchTextCoordXYInFlashScreen(int x1, int y1, string colorForamt, string target)
+        public Radar.Bidding.Model.CoordPoint SearchTextCoordXYInFlashScreen(int x1, int y1, string colorForamt, string target)
         {
             return SearchTextCoordXYInFlashScreen(x1, y1, 900, 700, colorForamt, target);
         }
 
-        public CoordPoint SearchTextCoordXYInFlashScreen(int x1, int y1, int width, int height, string colorForamt, string target)
+        public Radar.Bidding.Model.CoordPoint SearchTextCoordXYInFlashScreen(int x1, int y1, int width, int height, string colorForamt, string target)
         {
-            long s1 = KK.CurrentMills();
+            long s1 = Radar.Common.KK.CurrentMills();
             string ret = this.OcrEx(x1, y1, x1 + width, y1 + height, colorForamt, 0.8);
-            logger.DebugFormat("Search {0} OCR 识别的内容是 {1}, {2}. elapsed {3}ms, ret is {4}", width, x1, y1, KK.CurrentMills() - s1, ret);
+            logger.DebugFormat("Search {0} OCR 识别的内容是 {1}, {2}. elapsed {3}ms, ret is {4}", width, x1, y1, Radar.Common.KK.CurrentMills() - s1, ret);
 
-            CoordPoint point = new CoordPoint();
+            Radar.Bidding.Model.CoordPoint point = new Radar.Bidding.Model.CoordPoint();
 
             if (ret == null || ret.Length == 0)
             {

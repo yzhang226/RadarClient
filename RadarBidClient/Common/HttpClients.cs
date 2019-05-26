@@ -184,7 +184,7 @@ namespace Radar.Common
 
         private static HttpContent BuildStringJsonContent(object obj)
         {
-            string data = KK.ToText(obj);
+            string data = Radar.Common.KK.ToText(obj);
 
             HttpContent httpContent = new StringContent(data);
             httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -204,7 +204,7 @@ namespace Radar.Common
         public static T PostWithFiles<T>(string url, object postData, List<string> filePaths, out int statusCode) where T : class, new()
         {
             // WebKitFormBoundaryafkSRjSyccnJC6ED
-            string boundary = "------WebKitFormBoundary" + KK.CurrentMills();
+            string boundary = "------WebKitFormBoundary" + Radar.Common.KK.CurrentMills();
 
 
             using (var httpContent = new MultipartFormDataContent(boundary))
@@ -219,7 +219,7 @@ namespace Radar.Common
                     foreach (var item in dict)
                     {
                         //Content-Disposition: form-data; name="json"
-                        var stringContent = new StringContent(KK.ToText(item.Value));
+                        var stringContent = new StringContent(Radar.Common.KK.ToText(item.Value));
                         stringContent.Headers.Add("Content-Disposition", "form-data; name=\"" + item.Key + "\"");
                         httpContent.Add(stringContent, item.Key);
                     }

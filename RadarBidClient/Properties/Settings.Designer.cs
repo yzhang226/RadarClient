@@ -85,5 +85,23 @@ namespace Radar.Properties {
                 return ((string)(this["RunEnv"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("127.0.0.1:9966")]
+        public string SaberServerAddress {
+            get {
+                return ((string)(this["SaberServerAddress"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool EnableSaberRobot {
+            get {
+                return ((bool)(this["EnableSaberRobot"]));
+            }
+        }
     }
 }

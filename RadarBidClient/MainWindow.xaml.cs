@@ -3,11 +3,12 @@ using Butter.Update;
 using log4net;
 using Microsoft.Win32;
 using Radar.Bidding;
-using Radar.Bidding.socket;
+using Radar.Bidding.Net;
 using Radar.Common;
 using Radar.IoC;
 using Radar.Model;
-using Radar.utils;
+
+
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -35,6 +36,8 @@ namespace Radar
         private BidActionManager actionManager;
 
         private BiddingScreen biddingScreen;
+
+        private SocketClient socketClient;
 
         private ProjectConfig conf;
 
@@ -91,6 +94,11 @@ namespace Radar
             biddingScreen.SetWebBrowser(this.webBro);
             biddingScreen.SetShowUpBlock(this.RecoBlock);
 
+            if (conf.EnableSaberRobot)
+            {
+                socketClient = ApplicationContext.me.Get<SocketClient>();
+                socketClient.StartClient();
+            }
 
             var captchaTaskDaemon = ApplicationContext.me.Get<CaptchaTaskDaemon>();
             captchaTaskDaemon.RestartInquiryThread();
@@ -102,7 +110,7 @@ namespace Radar
             string fullDictPath = "resource/dict/dict-" +  osName + ".txt";
 
             robot.SetDict(0, fullDictPath);
-            foreach (int dictIdx in Enum.GetValues(typeof(DictIndex)))
+            foreach (int dictIdx in Enum.GetValues(typeof(Radar.Bidding.Model.DictIndex)))
             {
                 robot.SetDict(dictIdx, "resource/dict/" + osName + "/dict-" + osName + "-" + dictIdx + ".txt");
             }
@@ -161,7 +169,7 @@ namespace Radar
         public void JustTest(object sender, RoutedEventArgs e)
         {
 
-            PagePrice pp = new PagePrice();
+            Radar.Bidding.Model.PagePrice pp = new Radar.Bidding.Model.PagePrice();
             pp.basePrice = 8900;
             // KK.Sleep(100);
             biddingScreen.PreviewPhase2Captcha(pp);

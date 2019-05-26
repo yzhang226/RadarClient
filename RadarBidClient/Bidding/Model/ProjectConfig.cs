@@ -84,5 +84,21 @@ namespace Radar.Model
             }
         }
 
+        public string SaberServerAddress
+        {
+            get
+            {
+                return Properties.Settings.Default.SaberServerAddress;
+            }
+        }
+
+        public bool EnableSaberRobot
+        {
+            get
+            {
+                return Properties.Settings.Default.EnableSaberRobot;
+            }
+        }
+
     }
 }

@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Linq;
+using log4net;
 
-namespace Radar.Common
+// D:\work\bid\RadarClient\RadarBidClient\Common\Threads\
+namespace Radar.Common.Threads
 {
     public class CustomThreadPool
     {
+
+        private static readonly ILog logger = LogManager.GetLogger(typeof(CustomThreadPool));
+
         #region configurable items - for demo let's have these as constants
         private const int MAX = 1;
         private const int MIN = 1;
@@ -118,7 +123,7 @@ namespace Radar.Common
                 TaskItem ti = new TaskItem() { taskState = TaskState.notstarted };
                 ti.taskHandle = new TaskHandle() { task = (state) => { return null; } };
                 ti.taskHandle.callback = (taskStatus) => { };
-                ti.taskHandle.Token = new ClientHandle() { ID = Guid.NewGuid() };
+                ti.taskHandle.Token = new  ClientHandle() { ID = Guid.NewGuid() };
                 AddTaskToPool(ti);
             }
         }
@@ -145,7 +150,7 @@ namespace Radar.Common
                     }
                     if (Enter)
                     {
-                        TaskStatus taskStatus = new TaskStatus();
+                         TaskStatus taskStatus = new  TaskStatus();
                         try
                         {
                             object state = taskItem.taskHandle.state;
@@ -210,7 +215,10 @@ namespace Radar.Common
                         taskItem.handler.Priority = ThreadPriority.Lowest;
                         taskItem.handler.IsBackground = true;
                     }
-                    catch { }
+                    catch (Exception e)
+                    {
+                        logger.Error("", e);
+                    }
                     Pool.Remove(taskItem);
                 }
                 int total = Pool.Count;
@@ -230,7 +238,7 @@ namespace Radar.Common
                 {
                     TaskItem ti = new TaskItem() { taskState = TaskState.notstarted };
                     ti.taskHandle = new TaskHandle() { task = (state) => { return null; } };
-                    ti.taskHandle.Token = new ClientHandle() { ID = Guid.NewGuid() };
+                    ti.taskHandle.Token = new  ClientHandle() { ID = Guid.NewGuid() };
                     ti.taskHandle.callback = (taskStatus) => { };
                     AddTaskToPool(ti);
                 }
@@ -239,14 +247,14 @@ namespace Radar.Common
 
         #region public interface
 
-        public ClientHandle QueueUserTask(UserTask task, object state, Action<TaskStatus> callback)
+        public  ClientHandle QueueUserTask(UserTask task, object state, Action< TaskStatus> callback)
         {
             
             TaskHandle th = new TaskHandle()
             {
                 task = task,
                 state = state,
-                Token = new ClientHandle()
+                Token = new  ClientHandle()
                 {
                     ID = Guid.NewGuid()
                 },
@@ -259,19 +267,21 @@ namespace Radar.Common
             return th.Token;
         }
 
-        public ClientHandle QueueUserTask(UserTask task, object state)
+        public  ClientHandle QueueUserTask(UserTask task, object state)
         {
             return this.QueueUserTask(task, state, (taskStatus) => { });
         }
 
-        public ClientHandle QueueUserTask(UserTask task)
+        public  ClientHandle QueueUserTask(UserTask task)
         {
             return this.QueueUserTask(task, null, (taskStatus) => { });
         }
 
-        public static void CancelUserTask(ClientHandle clientToken)
+        public static void CancelUserTask( ClientHandle clientToken)
         {
-            lock (Instance.syncLock)
+            var l1 = Instance.syncLock;
+            lock (l1)
+            //lock(_instance)
             {
                 var thandle = Instance.ReadyQueue.FirstOrDefault((th) => th.Token.ID == clientToken.ID);
                 if (thandle != null) // in case task is still in queue only
@@ -284,7 +294,8 @@ namespace Radar.Common
                 {
                     int itemCount = Instance.ReadyQueue.Count;
                     TaskItem taskItem = null;
-                    lock (Instance.criticalLock)
+                    var l2 = Instance.criticalLock;
+                    lock (l2)
                     {
                         taskItem = Instance.Pool.FirstOrDefault(task => task.taskHandle.Token.ID == clientToken.ID);
                     }
@@ -305,7 +316,10 @@ namespace Radar.Common
                                     taskItem.handler.Priority = ThreadPriority.BelowNormal;
                                     taskItem.handler.IsBackground = true;
                                 }
-                                catch { }
+                                catch (Exception e)
+                                {
+                                    logger.Error("", e);
+                                }
                             }
                         }
                     }
@@ -324,10 +338,10 @@ namespace Radar.Common
         }
         class TaskHandle // Item in waiting queue
         {
-            public ClientHandle Token; // generate this everytime an usertask is queued and return to the caller as a reference. 
+            public  ClientHandle Token; // generate this everytime an usertask is queued and return to the caller as a reference. 
             public UserTask task; // the item to be queued - supplied by the caller
             public object state;
-            public Action<TaskStatus> callback; // optional - in case user want's a notification of completion
+            public Action< TaskStatus> callback; // optional - in case user want's a notification of completion
         }
         class TaskItem // running items in the pool - TaskHandle gets a thread to execute it 
         {
@@ -340,11 +354,13 @@ namespace Radar.Common
     }
 
     public delegate object UserTask(object state);
+
     public class ClientHandle
     {
         public Guid ID;
         public bool IsSimpleTask = false;
     }
+
     public class TaskStatus
     {
         public bool Success = true;

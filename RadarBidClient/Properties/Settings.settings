@@ -23,5 +23,11 @@
     <Setting Name="RunEnv" Type="System.String" Scope="Application">
       <Value Profile="(Default)">dev</Value>
     </Setting>
+    <Setting Name="SaberServerAddress" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">127.0.0.1:9966</Value>
+    </Setting>
+    <Setting Name="EnableSaberRobot" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
