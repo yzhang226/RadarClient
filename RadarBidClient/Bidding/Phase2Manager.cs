@@ -91,8 +91,8 @@ namespace Radar.Bidding
             req.from = "test";
 
             int httpStatus;
-            Radar.Bidding.Model.DataResult<Radar.Bidding.Model.CaptchaImageUploadResponse> dr = HttpClients
-                .PostWithFiles<Radar.Bidding.Model.DataResult<Radar.Bidding.Model.CaptchaImageUploadResponse>>(url, req, new List<string> { img.ImagePath1, img.ImagePath2 }, out httpStatus);
+            Radar.Common.Model.DataResult<Radar.Bidding.Model.CaptchaImageUploadResponse> dr = HttpClients
+                .PostWithFiles<Radar.Common.Model.DataResult<Radar.Bidding.Model.CaptchaImageUploadResponse>>(url, req, new List<string> { img.ImagePath1, img.ImagePath2 }, out httpStatus);
 
             logger.InfoFormat("upload catpcha task#{0}, result is {1}", img.Uuid, Jsons.ToJson(dr));
         }

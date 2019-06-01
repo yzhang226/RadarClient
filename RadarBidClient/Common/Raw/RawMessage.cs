@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Radar.Common
+namespace Radar.Common.Raw
 {
     public class RawMessage
     {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Radar.Bidding.Model
+namespace Radar.Common.Enums
 {
     /// <summary>
     /// 控制指定 - 下发指令

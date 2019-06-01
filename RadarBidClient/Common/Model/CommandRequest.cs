@@ -1,14 +1,15 @@
+using Radar.Common.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Radar.Bidding.Model
+namespace Radar.Common.Model
 {
     public class CommandRequest
     {
-        public int messageType;
+        public int MessageType { get; set; }
 
-        public ReceiveDirective CommandName;
+        public CommandDirective CommandName { get; set; }
 
         public string action;
 

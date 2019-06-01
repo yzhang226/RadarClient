@@ -6,6 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Radar.Common.Raw;
+using Radar.Common.Utils;
+using Radar.Common.Enums;
 
 namespace Radar.Bidding.Messages
 {
@@ -13,11 +16,11 @@ namespace Radar.Bidding.Messages
 
     public class MessageDispatcher
     {
-        private static readonly ILog logger = LogManager.GetLogger(typeof(Radar.Bidding.Messages.MessageDispatcher));
+        private static readonly ILog logger = LogManager.GetLogger(typeof(MessageDispatcher));
 
-        private static readonly Dictionary<int, Radar.Bidding.Messages.IMessageProcessor> processors = new Dictionary<int, Radar.Bidding.Messages.IMessageProcessor>();
+        private static readonly Dictionary<int, IMessageProcessor> processors = new Dictionary<int, IMessageProcessor>();
 
-        public static readonly Radar.Bidding.Messages.MessageDispatcher me = new Radar.Bidding.Messages.MessageDispatcher();
+        public static readonly MessageDispatcher me = new MessageDispatcher();
 
         private MessageDispatcher()
         {
@@ -26,7 +29,7 @@ namespace Radar.Bidding.Messages
 
         public void Dispatch(RawMessage message)
         {
-            Radar.Bidding.Messages.IMessageProcessor processor = processors[message.messageType];
+            IMessageProcessor processor = processors[message.messageType];
             if (processor != null)
             {
                 processor.Handle(message);
@@ -37,10 +40,11 @@ namespace Radar.Bidding.Messages
             }
         }
 
-        public void Register(Radar.Bidding.Messages.IMessageProcessor processor)
+        public void Register(IMessageProcessor processor)
         {
-            processors[processor.MessageType()] = processor;
-            logger.InfoFormat("register message-type#{0} with processor#{1}", processor.MessageType(), processor);
+            int mType = EnumHelper.ToValue<RawMessageType>(processor.MessageType());
+            processors[mType] = processor;
+            logger.InfoFormat("register message-type#{0}({1}) with processor#{2}", processor.MessageType(), mType, processor);
         }
 
     }

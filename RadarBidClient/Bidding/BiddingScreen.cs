@@ -1,4 +1,5 @@
 ﻿using log4net;
+using Radar.Bidding.Model;
 using Radar.Common;
 using Radar.IoC;
 using Radar.Model;
@@ -23,9 +24,9 @@ namespace Radar.Bidding
         private ProjectConfig conf;
         private BidActionManager actionManager;
 
-        private Radar.Bidding.Model.BiddingContext biddingContext = new Radar.Bidding.Model.BiddingContext();
+        private BiddingContext biddingContext = new BiddingContext();
 
-        public Radar.Bidding.Model.CaptchaAnswerImage Phase2PreviewCaptcha;
+        public CaptchaAnswerImage Phase2PreviewCaptcha;
 
         private static bool isCollectingWork = true;
         private static Thread collectingThread;
@@ -101,7 +102,7 @@ namespace Radar.Bidding
         {
             RefreshBiddingPage();
 
-            biddingContext = new Radar.Bidding.Model.BiddingContext();
+            biddingContext = new BiddingContext();
             ResetStrategyByReload();
 
             IsPreviewDone = false;
@@ -112,8 +113,8 @@ namespace Radar.Bidding
         {
             biddingContext.CleanSubmitOperate();
 
-            List<Radar.Bidding.Model.SubmitPriceSetting> settings = this.strategyManager.LoadStrategies();
-            foreach (Radar.Bidding.Model.SubmitPriceSetting sps in settings)
+            List<SubmitPriceSetting> settings = this.strategyManager.LoadStrategies();
+            foreach (SubmitPriceSetting sps in settings)
             {
                 biddingContext.AddPriceSetting(sps);
             }
@@ -163,7 +164,7 @@ namespace Radar.Bidding
 
         public void Reset()
         {
-            biddingContext = new Radar.Bidding.Model.BiddingContext();
+            biddingContext = new BiddingContext();
         }
 
 
@@ -172,7 +173,7 @@ namespace Radar.Bidding
             logger.InfoFormat("begin loopDetectPriceAndTimeInScreen");
             int i = 0;
 
-            Radar.Bidding.Model.PageTimePriceResult LastResultx = null;
+            PageTimePriceResult LastResultx = null;
             while (isCollectingWork)
             {
                 long ss = KK.CurrentMills();
@@ -180,7 +181,7 @@ namespace Radar.Bidding
                 try
                 {
                     long s1 = KK.CurrentMills();
-                    Radar.Bidding.Model.PageTimePriceResult LastResult = actionManager.DetectPriceAndTimeInScreen(LastResultx);
+                    PageTimePriceResult LastResult = actionManager.DetectPriceAndTimeInScreen(LastResultx);
 
                     // 重复检测
                     if (LastResult.status == 300)
@@ -199,7 +200,7 @@ namespace Radar.Bidding
 
                     LastResultx = LastResult;
 
-                    Radar.Bidding.Model.PagePrice pp = LastResult.data;
+                    PagePrice pp = LastResult.data;
 
                     logger.DebugFormat("detectPriceAndTimeInScreen elapsed {0}ms", KK.CurrentMills() - s1);
 
@@ -243,23 +244,23 @@ namespace Radar.Bidding
             logger.InfoFormat("END loopDetectPriceAndTimeInScreen ");
         }
 
-        private string ToShowUpText(Radar.Bidding.Model.PageTimePriceResult LastResult)
+        private string ToShowUpText(PageTimePriceResult LastResult)
         {
-            string prefix = "本机时间：" + DateTime.Now.ToString("HH:mm:ss") + "。\n解析的内容是：";
+            string prefix = string.Format("本机时间：{0:HH:mm:ss}。\n解析的内容是：", DateTime.Now);
 
             if (LastResult.status != 0)
             {
-                return prefix + "ERROR: " + LastResult.status;
+                return string.Format("{0}ERROR: {1}", prefix, LastResult.status);
             }
             
-            Radar.Bidding.Model.PagePrice pp = LastResult.data;
+            PagePrice pp = LastResult.data;
 
-            return prefix + pp.pageTime.ToString("HH:mm:ss") + ".\n" + pp.low + " - " + pp.high + ".";
+            return string.Format("{0}{1:HH:mm:ss}.\n{2} - {3}.", prefix, pp.pageTime, pp.low, pp.high);
         }
 
         private TimeSpan FinalTime = new TimeSpan(11, 29, 57);
 
-        private void AfterSuccessDetect(Radar.Bidding.Model.PagePrice pp)
+        private void AfterSuccessDetect(PagePrice pp)
         {
 
             // 1. 11:29:15 获取验证码 用于预览
@@ -284,7 +285,7 @@ namespace Radar.Bidding
             
             DateTime now = DateTime.Now;
 
-            var strats = new Dictionary<int, Radar.Bidding.Model.PriceSubmitOperate>(biddingContext.GetSubmitOperateMap());
+            var strats = new Dictionary<int, PriceSubmitOperate>(biddingContext.GetSubmitOperateMap());
 
             // TODO: 临时改动
             int baseMinute = 5;
@@ -300,7 +301,7 @@ namespace Radar.Bidding
                 int fixSec = item.Key;
 
                 var oper = item.Value;
-                Radar.Bidding.Model.SubmitPriceSetting stra = oper.setting;
+                SubmitPriceSetting stra = oper.setting;
                 int fixMinute = stra.minute > 0 ? stra.minute : 29;
 
                 // if (fixMinute != minute)
@@ -331,7 +332,7 @@ namespace Radar.Bidding
                     logger.InfoFormat("find target second#{0}, delta#{1}, base-price#{2}, offer-price#{3}", fixSec, stra.deltaPrice, pp.basePrice, stra.GetOfferedPrice());
 
                     // 1. 此处直接出价
-                    Radar.Bidding.Model.CaptchaAnswerImage ansImg = phase2Manager.OfferPrice(stra.GetOfferedPrice(), true);
+                    CaptchaAnswerImage ansImg = phase2Manager.OfferPrice(stra.GetOfferedPrice(), true);
                     biddingContext.PutAwaitImage(ansImg, oper);
 
                     oper.answerUuid = ansImg.Uuid;
@@ -346,7 +347,7 @@ namespace Radar.Bidding
                     // 2. 检查提交价格策略
                     int OfferedPrice = stra.GetOfferedPrice();
                     int PriceAt50 = biddingContext.GetPrice(50);
-                    string answer = Radar.Bidding.Model.CaptchaTaskContext.me.GetAnswer(oper.answerUuid);
+                    string answer = CaptchaTaskContext.me.GetAnswer(oper.answerUuid);
 
                     // logger.InfoFormat("try target second#{0}, offer-price#{1}, delta#{2}. delta ", fixSec, OfferedPrice, (pp.basePrice + 300));
 
@@ -433,7 +434,7 @@ namespace Radar.Bidding
 
         }
 
-        private int SubmitOfferedPrice(int fixSec, Radar.Bidding.Model.PriceSubmitOperate oper, string answer)
+        private int SubmitOfferedPrice(int fixSec, PriceSubmitOperate oper, string answer)
         {
             if (oper.status == 21)
             {
@@ -456,7 +457,7 @@ namespace Radar.Bidding
             return 0;
         }
 
-        private void ProcessErrorDetect(Radar.Bidding.Model.PageTimePriceResult ret)
+        private void ProcessErrorDetect(PageTimePriceResult ret)
         {
             if (ret.status == -1)
             {
@@ -479,12 +480,12 @@ namespace Radar.Bidding
 
 
 
-        public Radar.Bidding.Model.CaptchaAnswerImage PreviewPhase2Captcha(Radar.Bidding.Model.PagePrice pp)
+        public CaptchaAnswerImage PreviewPhase2Captcha(PagePrice pp)
         {
             // TODO: 这里使用异步处理，否则出现不能显示验证码。
             // TODO: 这里可以归为一类问题：模拟时，必须等到所有操作才能显示页面。需要解决。
 
-            Radar.Bidding.Model.CaptchaAnswerImage img = null;
+            CaptchaAnswerImage img = null;
             Task.Factory.StartNew(() =>
             {
                 img = phase2Manager.OfferPrice(pp.basePrice + 1500, false);
@@ -525,11 +526,11 @@ namespace Radar.Bidding
             this.WatchStragetyFile();
         }
 
-        public List<Radar.Bidding.Model.SubmitPriceSetting> LoadStrategies()
+        public List<SubmitPriceSetting> LoadStrategies()
         {
             string lines = FileUtils.readTxtFile(StrategyPath);
 
-            List<Radar.Bidding.Model.SubmitPriceSetting> settings = new List<Radar.Bidding.Model.SubmitPriceSetting>();
+            List<SubmitPriceSetting> settings = new List<SubmitPriceSetting>();
             string[] lis = lines.Split('\n');
             foreach (string li in lis)
             {
@@ -540,7 +541,7 @@ namespace Radar.Bidding
                     continue;
                 }
 
-                var sps = Radar.Bidding.Model.SubmitPriceSetting.fromLine(li.Trim());
+                var sps = SubmitPriceSetting.fromLine(li.Trim());
                 if (sps != null)
                 {
                     settings.Add(sps);

@@ -5,7 +5,7 @@ using System.Threading;
 using System.Linq;
 using log4net;
 
-// D:\work\bid\RadarClient\RadarBidClient\Common\Threads\
+
 namespace Radar.Common.Threads
 {
     public class CustomThreadPool

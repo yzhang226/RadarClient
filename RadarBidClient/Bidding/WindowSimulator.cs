@@ -1,5 +1,5 @@
 ﻿using log4net;
-
+using Radar.Bidding.DM;
 using Radar.IoC;
 using Radar.Model;
 using System;
@@ -14,7 +14,7 @@ namespace Radar
     /// 窗体模拟器 - 控制鼠标 键盘输入 截屏
     /// </summary>
     [Component]
-    public class WindowSimulator : Radar.Bidding.DM.DMControl
+    public class WindowSimulator : DMControl
     {
 
         private static readonly ILog logger = LogManager.GetLogger(typeof(WindowSimulator));

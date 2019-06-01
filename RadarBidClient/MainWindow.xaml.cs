@@ -3,7 +3,9 @@ using Butter.Update;
 using log4net;
 using Microsoft.Win32;
 using Radar.Bidding;
+using Radar.Bidding.Model;
 using Radar.Bidding.Net;
+using Radar.Bidding.Service;
 using Radar.Common;
 using Radar.IoC;
 using Radar.Model;
@@ -38,6 +40,8 @@ namespace Radar
         private BiddingScreen biddingScreen;
 
         private SocketClient socketClient;
+
+        private ClientService clientService;
 
         private ProjectConfig conf;
 
@@ -99,6 +103,8 @@ namespace Radar
                 socketClient = ApplicationContext.me.Get<SocketClient>();
                 socketClient.StartClient();
             }
+
+            clientService = ApplicationContext.me.Get<ClientService>();
 
             var captchaTaskDaemon = ApplicationContext.me.Get<CaptchaTaskDaemon>();
             captchaTaskDaemon.RestartInquiryThread();
@@ -169,10 +175,13 @@ namespace Radar
         public void JustTest(object sender, RoutedEventArgs e)
         {
 
-            Radar.Bidding.Model.PagePrice pp = new Radar.Bidding.Model.PagePrice();
-            pp.basePrice = 8900;
+            // PagePrice pp = PagePrice();
+            // pp.basePrice = 8900;
             // KK.Sleep(100);
-            biddingScreen.PreviewPhase2Captcha(pp);
+            // biddingScreen.PreviewPhase2Captcha(pp);
+
+            clientService.DoClientLogin();
+
         }
 
         public void AutoLoginPhase1(object sender, RoutedEventArgs e)

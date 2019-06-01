@@ -1,21 +1,25 @@
-using Radar.Bidding.Model;
 using Radar.Common;
+using Radar.Common.Enums;
+using Radar.Common.Model;
+using Radar.Common.Times;
+using Radar.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Radar.Bidding.Command
 {
-    public class SystemTimeSyncCommand : Radar.Bidding.Command.BaseCommand
+    [Component]
+    public class SystemTimeSyncCommand : BaseCommand<string>
     {
-        public override ReceiveDirective GetDirective()
+        public override CommandDirective GetDirective()
         {
-            return ReceiveDirective.SYNC_SYSTEM_TIME;
+            return CommandDirective.SYNC_SYSTEM_TIME;
         }
 
-        public override DataResult<string> Execute(string[] args)
+        protected override DataResult<string> DoExecute(string args)
         {
-            bool bo = Radar.Common.Times.TimeSynchronizer.SyncFromNtpServer();
+            bool bo = TimeSynchronizer.SyncFromNtpServer();
             return DataResults.OK(bo.ToString());
         }
     }

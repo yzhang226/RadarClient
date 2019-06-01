@@ -1,4 +1,6 @@
+using Radar.Bidding.Command;
 using Radar.Bidding.Model;
+using Radar.Common.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,16 +12,16 @@ namespace Radar.Bidding.Command
         // public static readonly CommandProcessorFactory executor = new CommandProcessorFactory();
 
         // TODO: 这里使用泛型遇到了问题 - 没有 任意类型的泛型 ? - 例如没有 List<?> 。所以这里使用了Base
-        private static readonly Dictionary<ReceiveDirective, Radar.Bidding.Command.BaseCommand> commands = new Dictionary<ReceiveDirective, Radar.Bidding.Command.BaseCommand>();
+        private static readonly Dictionary<CommandDirective, ICommand<string>> commands = new Dictionary<CommandDirective, ICommand<string>>();
 
-        public static void Register(Radar.Bidding.Command.BaseCommand command)
+        public static void Register(ICommand<string> comm)
         {
-            commands[command.GetDirective()] = command;
+            commands[comm.GetDirective()] = comm;
         }
 
-        public static Radar.Bidding.Command.ICommand<string> GetProcessor(ReceiveDirective commandName)
+        public static ICommand<string> GetProcessor(CommandDirective directive)
         {
-            return commands[commandName];
+            return commands[directive];
         }
 
     }

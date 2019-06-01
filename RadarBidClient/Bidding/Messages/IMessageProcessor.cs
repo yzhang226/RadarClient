@@ -1,5 +1,7 @@
-using Radar.Common;
-using Radar.Model;
+using Radar.Bidding.Model;
+using Radar.Common.Enums;
+using Radar.Common.Model;
+using Radar.Common.Raw;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +11,9 @@ namespace Radar.Bidding.Messages
     public interface IMessageProcessor
     {
 
-        Radar.Bidding.Model.DataResult<string> Handle(RawMessage message);
+        DataResult<string> Handle(RawMessage message);
 
-        int MessageType();
+        RawMessageType MessageType();
 
     }
 }

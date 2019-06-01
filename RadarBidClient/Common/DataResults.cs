@@ -14,7 +14,7 @@ namespace Radar.Common
          * @param dr
          * @return
          */
-        public static bool IsOK<T>(Radar.Bidding.Model.DataResult<T> dr)
+        public static bool IsOK<T>(Radar.Common.Model.DataResult<T> dr)
         {
             return dr != null && dr.Status == 0;
         }
@@ -24,7 +24,7 @@ namespace Radar.Common
          * @param dr
          * @return
          */
-        public static bool IsFail<T>(Radar.Bidding.Model.DataResult<T> dr)
+        public static bool IsFail<T>(Radar.Common.Model.DataResult<T> dr)
         {
             return !IsOK(dr);
         }
@@ -35,9 +35,9 @@ namespace Radar.Common
          * @param <T>
          * @return
          */
-        public static Radar.Bidding.Model.DataResult<T> OK<T>(T data)
+        public static Radar.Common.Model.DataResult<T> OK<T>(T data)
         {
-            return new Radar.Bidding.Model.DataResult<T>(0, data, "");
+            return new Radar.Common.Model.DataResult<T>(0, data, "");
         }
 
         /**
@@ -45,10 +45,10 @@ namespace Radar.Common
          * @param message
          * @return
          */
-        public static Radar.Bidding.Model.DataResult<T> Fail<T>(string message)
+        public static Radar.Common.Model.DataResult<T> Fail<T>(string message)
         {
             // System.Nullable<T>
-            return new Radar.Bidding.Model.DataResult<T>(-1, default(T), message);
+            return new Radar.Common.Model.DataResult<T>(-1, default(T), message);
         }
 
         /**
@@ -57,9 +57,9 @@ namespace Radar.Common
          * @param message
          * @return
          */
-        public static Radar.Bidding.Model.DataResult<T> Fail<T>(int status, String message)
+        public static Radar.Common.Model.DataResult<T> Fail<T>(int status, String message)
         {
-            return new Radar.Bidding.Model.DataResult<T>(status, default(T), message);
+            return new Radar.Common.Model.DataResult<T>(status, default(T), message);
         }
 
     }

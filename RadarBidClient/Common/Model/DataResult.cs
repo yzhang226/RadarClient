@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Radar.Bidding.Model
+namespace Radar.Common.Model
 {
     public class DataResult<T>
     {
-        public int Status;
+        public int Status { get; set; }
 
-        public int HttpStatus;
+        public int HttpStatus { get; set; }
 
-        public string Message;
+        public string Message { get; set; }
 
-        public T Data;
+        public T Data { get; set; }
 
         public DataResult()
         {

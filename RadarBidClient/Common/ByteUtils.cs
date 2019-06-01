@@ -69,15 +69,24 @@ namespace Radar.Common
         public static int readInt(byte[] bs, int offset)
         {
             byte[] seg = read4Bytes(bs, offset);
-            int ret = (seg[0] << 24) + (seg[1] << 16) + (seg[2] << 8) + seg[3];
+            int ret = ((int)seg[0] & 0xFF) << 24 |
+                    ((int)seg[1] & 0xFF) << 16 |
+                    ((int)seg[2] & 0xFF) << 8 |
+                    ((int)seg[3] & 0xFF);
             return ret;
         }
 
         public static long readLong(byte[] bs, int offset)
         {
             byte[] seg = readFixLength(bs, offset, 8);
-            long ret = ((long)seg[0] << 56) + ((long)seg[1] << 48) + ((long)seg[2] << 40) + ((long)seg[3] << 32) +
-                    ((long)seg[4] << 24) + (seg[5] << 16) + (seg[6] << 8) + seg[7]
+            long ret = ((long)seg[0] & 0xFF) << 56 |
+                    ((long)seg[1] & 0xFF) << 48 |
+                    ((long)seg[2] & 0xFF) << 40 |
+                    ((long)seg[3] & 0xFF) << 32 |
+                    ((long)seg[4] & 0xFF) << 24 |
+                    ((long)seg[5] & 0xFF) << 16 |
+                    ((long)seg[6] & 0xFF) << 8 |
+                    ((long)seg[7] & 0xFF)
                     ;
             return ret;
         }

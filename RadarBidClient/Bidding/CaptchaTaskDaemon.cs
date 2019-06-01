@@ -79,8 +79,8 @@ namespace Radar.Bidding
                         {
                             var req = KK.CreateImageAnswerRequest(img.Uuid);
 
-                            Radar.Bidding.Model.DataResult<Radar.Bidding.Model.CaptchaImageAnswerResponse> dr = HttpClients
-                                .PostAsJson<Radar.Bidding.Model.DataResult<Radar.Bidding.Model.CaptchaImageAnswerResponse>>(conf.CaptchaAddressPrefix + "/v1/biding/captcha-answer", req);
+                            Radar.Common.Model.DataResult<Radar.Bidding.Model.CaptchaImageAnswerResponse> dr = HttpClients
+                                .PostAsJson<Radar.Common.Model.DataResult<Radar.Bidding.Model.CaptchaImageAnswerResponse>>(conf.CaptchaAddressPrefix + "/v1/biding/captcha-answer", req);
 
                             if (DataResults.IsOK(dr) && dr.Data?.answer?.Length > 0)
                             {

@@ -184,6 +184,7 @@
     <Compile Include="Bidding\BidActionManager.cs" />
     <Compile Include="Bidding\CaptchaTaskDaemon.cs" />
     <Compile Include="Bidding\Command\BaseCommand.cs" />
+    <Compile Include="Bidding\Command\ClientLoginResponseCommand.cs" />
     <Compile Include="Bidding\Command\CommandProcessorFactory.cs" />
     <Compile Include="Bidding\Command\ICommand.cs" />
     <Compile Include="Bidding\Command\SystemTimeSyncCommand.cs" />
@@ -196,16 +197,19 @@
     <Compile Include="Bidding\Model\CaptchaImageUploadRequest.cs" />
     <Compile Include="Bidding\Model\CaptchaImageUploadResponse.cs" />
     <Compile Include="Bidding\Model\CaptchaTaskContext.cs" />
-    <Compile Include="Bidding\Model\CommandRequest.cs" />
+    <Compile Include="Bidding\Model\Dto\BidderLoginRequest.cs" />
+    <Compile Include="Bidding\Model\Dto\BidderLoginResponse.cs" />
+    <Compile Include="Common\Model\CommandRequest.cs" />
     <Compile Include="Bidding\Model\CoordPoint.cs" />
     <Compile Include="Bidding\Model\CoordRectangle.cs" />
-    <Compile Include="Bidding\Model\DataResult.cs" />
+    <Compile Include="Common\Model\DataResult.cs" />
     <Compile Include="Bidding\Model\PagePrice.cs" />
     <Compile Include="Bidding\Model\PageTimePriceResult.cs" />
     <Compile Include="Bidding\Model\PriceSubmitOperate.cs" />
-    <Compile Include="Bidding\Model\ReceiveDirective.cs" />
+    <Compile Include="Common\Enums\RawMessageType.cs" />
+    <Compile Include="Common\Enums\CommandDirective.cs" />
     <Compile Include="Bidding\Model\SubmitPriceSetting.cs" />
-    <Compile Include="Bidding\Model\TellDirective.cs" />
+    <Compile Include="Common\Enums\TellDirective.cs" />
     <Compile Include="Bidding\Phase1Screen.cs" />
     <Compile Include="Bidding\Command\CaptureUploadBidScreenCommand.cs" />
     <Compile Include="Bidding\LoginManager.cs" />
@@ -214,7 +218,7 @@
     <Compile Include="Bidding\Phase1Manager.cs" />
     <Compile Include="Bidding\Service\ClientService.cs" />
     <Compile Include="Bidding\Messages\MessageDispatcher.cs" />
-    <Compile Include="Bidding\Messages\RawMessageProcessor.cs" />
+    <Compile Include="Bidding\Messages\JsonCommandMessageProcessor.cs" />
     <Compile Include="Butter\Fetch.cs" />
     <Compile Include="Butter\Manifest.cs" />
     <Compile Include="Butter\Updater.cs" />
@@ -222,6 +226,7 @@
     <Compile Include="Common\DataResults.cs" />
     <Compile Include="Common\KK.cs" />
     <Compile Include="Common\Raw\RawMessage.cs" />
+    <Compile Include="Common\Model\JsonCommand.cs" />
     <Compile Include="Common\Threads\CustomThreadPool.cs" />
     <Compile Include="Common\Raw\MessageUtils.cs" />
     <Compile Include="Common\Threads\SingleThread.cs" />
@@ -231,6 +236,9 @@
     <Compile Include="Common\Times\SystemTimeUpdater.cs" />
     <Compile Include="Common\Times\NtpTime.cs" />
     <Compile Include="Common\Times\TimeSynchronizer.cs" />
+    <Compile Include="Common\Utils\Enums.cs" />
+    <Compile Include="Common\Utils\JsonCommands.cs" />
+    <Compile Include="Common\Utils\RequestSequence.cs" />
     <Compile Include="Common\Ver.cs" />
     <Compile Include="Ioc\IoC.cs" />
     <Compile Include="Bidding\Model\ProjectConfig.cs" />
@@ -368,7 +376,9 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Bidding\Model\Enums\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />
   <Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == ''">

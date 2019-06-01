@@ -1,9 +1,8 @@
 ﻿using log4net;
-using Radar.Bidding;
-using Radar.Bidding.Model;
 using Radar.Common;
+using Radar.Common.Enums;
+using Radar.Common.Model;
 using Radar.IoC;
-using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,14 +11,16 @@ using System.Text;
 namespace Radar.Bidding.Command
 {
 
-    public class CaptureUploadBidScreenCommand : Radar.Bidding.Command.BaseCommand
+    [Component]
+    public class CaptureUploadBidScreenCommand : BaseCommand<string>
     {
-        public override ReceiveDirective GetDirective()
+
+        public override CommandDirective GetDirective()
         {
-            return ReceiveDirective.CAPTURE_UPLOAD_BID_SCREEN;
+            return CommandDirective.CAPTURE_UPLOAD_BID_SCREEN;
         }
 
-        public override DataResult<string> Execute(string[] args)
+        protected override DataResult<string> DoExecute(string args)
         {
             
             return DataResults.OK(false.ToString());

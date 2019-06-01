@@ -9,6 +9,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using Radar.Common.Threads;
+using Radar.Common.Raw;
+using Radar.Bidding.Messages;
 
 namespace Radar.Bidding.Net
 {
@@ -16,7 +19,7 @@ namespace Radar.Bidding.Net
     [Component]
     public class SocketClient : IDisposable
     {
-        private static readonly ILog logger = LogManager.GetLogger(typeof(Radar.Bidding.Net.SocketClient));
+        private static readonly ILog logger = LogManager.GetLogger(typeof(SocketClient));
 
         private string ip;
  
@@ -81,7 +84,7 @@ namespace Radar.Bidding.Net
                 logger.InfoFormat("end socket-client connect with address#{0}:{1}, _client#{2}", ip, port, _client);
 
                 // 初始化线程
-                bytesReceiveThread = Radar.Common.Threads.Threads.StartNewBackgroudThread(StartReceiveForEver);
+                bytesReceiveThread = Threads.StartNewBackgroudThread(ReceiveForEver);
             }
             catch (Exception e)
             {
@@ -115,7 +118,7 @@ namespace Radar.Bidding.Net
             }
         }
 
-        private void StartReceiveForEver()
+        private void ReceiveForEver()
         {
             while (isReceiveWork)
             {
@@ -127,10 +130,10 @@ namespace Radar.Bidding.Net
                     byte[] data = new byte[bytesRec];
                     ByteUtils.arraycopy(bytes, 0, data, 0, bytesRec);
 
-                    var raw = RawMessageEncoder.me.decode(data);
+                    RawMessage raw = RawMessageEncoder.me.decode(data);
                     logger.InfoFormat("receive data is {0}, {1}, {2}", raw.totalLength, raw.messageType, raw.bodyText);
 
-                    Radar.Bidding.Messages.MessageDispatcher.me.Dispatch(raw);
+                    MessageDispatcher.me.Dispatch(raw);
 
                     this.anotherRecvCallback?.Invoke(raw);
 
@@ -145,22 +148,24 @@ namespace Radar.Bidding.Net
 
         public void Send(RawMessage raw)
         { 
-            byte[] byteData = RawMessageEncoder.me.encode(raw);//  Encoding.ASCII.GetBytes(data);
+            byte[] byteData = RawMessageEncoder.me.encode(raw);
 
             // Begin sending the data to the remote device.  
-            _client.BeginSend(byteData, 0, byteData.Length, 0, new AsyncCallback(SendCallback), _client);
+            _client.BeginSend(byteData, 0, byteData.Length, SocketFlags.None, new AsyncCallback(SendCallback), _client);
         }
 
         private void SendCallback(IAsyncResult ar)
         {
             try
             {
+                logger.InfoFormat("SendCallback in");
+
                 // Retrieve the socket from the state object.  
                 Socket client = (Socket) ar.AsyncState;
 
                 // Complete sending the data to the remote device.  
                 int bytesSent = client.EndSend(ar);
-                logger.DebugFormat("Sent {0} bytes to server.", bytesSent);
+                logger.InfoFormat("Sent {0} bytes to server.", bytesSent);
 
                 // Signal that all bytes have been sent.  
                 sendDone.Set();
@@ -174,7 +179,7 @@ namespace Radar.Bidding.Net
         public void Shutdown()
         {
             isReceiveWork = false;
-            Radar.Common.Threads.Threads.TryStopThreadByWait(bytesReceiveThread, 100, 100, "SocketClient");
+            Threads.TryStopThreadByWait(bytesReceiveThread, 100, 100, "SocketClient");
 
             _client.Shutdown(SocketShutdown.Both);
             _client.Close();

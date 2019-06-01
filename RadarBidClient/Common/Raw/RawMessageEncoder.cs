@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32;
 using Radar.Common;
-using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +9,7 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading;
 
-namespace Radar.Common
+namespace Radar.Common.Raw
 {
 
 

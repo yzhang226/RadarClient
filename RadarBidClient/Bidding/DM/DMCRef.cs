@@ -9,7 +9,7 @@ namespace Radar.Bidding.DM
     {
         const string DMC_REF_PATH = "resource/dlls/dmc.dll";
 
-        static readonly Radar.Bidding.DM.DMCRef me = new Radar.Bidding.DM.DMCRef();
+        static readonly DMCRef me = new DMCRef();
 
         private DMCRef()
         {

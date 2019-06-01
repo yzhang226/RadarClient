@@ -2,13 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Radar.Bidding.Model
+namespace Radar.Common.Enums
 {
     /// <summary>
-    /// 控制指定 - 接收指令
+    /// 控制指定 
     /// </summary>
-    public enum ReceiveDirective
+    public enum CommandDirective
     {
+        /// <summary>
+        /// 客户端登录 - 请求
+        /// </summary>
+        CLIENT_LOGIN = 60060,
+
+        /// <summary>
+        /// 客户端登录 - 响应
+        /// </summary>
+        RESP_CLIENT_LOGIN = 60061,
+
+
         /// <summary>
         /// 同步NTP服务器时间
         /// </summary>
@@ -28,6 +39,7 @@ namespace Radar.Bidding.Model
         /// 截图且上传flash屏幕
         /// </summary>
         CAPTURE_UPLOAD_BID_SCREEN = 90203,
+
 
     }
 }
