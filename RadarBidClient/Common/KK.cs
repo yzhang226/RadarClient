@@ -140,10 +140,15 @@ namespace Radar.Common
             return WorkingBaseDir() + "\\Captures";
         }
 
+        public static string FlashScreenDir()
+        {
+            return CapturesDir() + "\\Screen";
+        }
+
         public static string GetFitOSName()
         {
             string osName = "";
-            switch (System.Environment.OSVersion.Version.Major + "." + System.Environment.OSVersion.Version.Minor)
+            switch (Environment.OSVersion.Version.Major + "." + Environment.OSVersion.Version.Minor)
             {
                 case Windows2000:
                     osName = "win2000";

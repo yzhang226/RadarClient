@@ -184,6 +184,7 @@
     <Compile Include="Bidding\BidActionManager.cs" />
     <Compile Include="Bidding\CaptchaTaskDaemon.cs" />
     <Compile Include="Bidding\Command\BaseCommand.cs" />
+    <Compile Include="Bidding\Command\CaptureBidScreenCommand.cs" />
     <Compile Include="Bidding\Command\ClientLoginResponseCommand.cs" />
     <Compile Include="Bidding\Command\CommandProcessorFactory.cs" />
     <Compile Include="Bidding\Command\ICommand.cs" />
@@ -284,6 +285,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Captures\.gitkeep">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Captures\Screen\.gitkeep">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="lib\.gitkeep">

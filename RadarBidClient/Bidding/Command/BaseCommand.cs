@@ -16,16 +16,31 @@ namespace Radar.Bidding.Command
 
         private static readonly ILog logger = LogManager.GetLogger(typeof(BaseCommand<REQ>));
 
+        private Type reqType;
+
         public BaseCommand()
         {
-
+            Type selfType = this.GetType();
+            Type genericT = selfType.BaseType;
+            reqType = genericT.GetGenericArguments()[0];
+            logger.InfoFormat("command#{0} 's request type is {1}.", genericT, reqType);
         }
 
         public abstract CommandDirective GetDirective();
 
         public DataResult<string> Execute(JsonCommand command)
         {
-            REQ req = Jsons.FromJson<REQ>(command.data);
+            REQ req;
+            if (typeof(string).IsAssignableFrom(reqType))
+            {
+                // req = (REQ) command.data;
+                req = (REQ) Convert.ChangeType(command.data, typeof(REQ));
+            }
+            else
+            {
+                req = Jsons.FromJson<REQ>(command.data);
+            }
+            
             DataResult<string> dr = DoExecute(req);
             return dr;
         }

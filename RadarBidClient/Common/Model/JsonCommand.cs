@@ -12,7 +12,7 @@ namespace Radar.Common.Model
     public class JsonCommand
     {
 
-        public int requestId;
+        public long requestId;
 
         public int clientNo;
 
@@ -36,6 +36,7 @@ namespace Radar.Common.Model
             this.status = status;
             this.data = data;
             this.message = message;
+            this.requestId = RequestSequence.me.Next();
         }
 
         [JsonIgnore]
