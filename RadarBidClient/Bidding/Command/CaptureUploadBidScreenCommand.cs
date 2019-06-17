@@ -20,10 +20,10 @@ namespace Radar.Bidding.Command
             return CommandDirective.CAPTURE_UPLOAD_BID_SCREEN;
         }
 
-        protected override DataResult<string> DoExecute(string args)
+        protected override JsonCommand DoExecute(string args)
         {
             
-            return DataResults.OK(false.ToString());
+            return null;
         }
     }
     

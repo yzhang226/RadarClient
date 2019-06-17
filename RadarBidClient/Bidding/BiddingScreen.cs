@@ -1,6 +1,7 @@
 ﻿using log4net;
 using Radar.Bidding.Model;
 using Radar.Common;
+using Radar.Common.Threads;
 using Radar.IoC;
 using Radar.Model;
 
@@ -61,8 +62,11 @@ namespace Radar.Bidding
         private int Delay3Start = 500;
         private int Delay3End = 900;
 
-        private int ForceStart = 500;
-        private int ForceEnd = 1500;
+        private int delayOneS = 0;
+        private int delayOneE = 600;
+
+        private int ForceStart = 200;
+        private int ForceEnd = 1200;
 
         // private CaptchaAnswerImage LastImage;
 
@@ -126,6 +130,7 @@ namespace Radar.Bidding
             {
                 this.webBro.Refresh();
             };
+
             if (this.webBro != null)
             {
                 this.webBro.Dispatcher.BeginInvoke(action1);
@@ -153,13 +158,13 @@ namespace Radar.Bidding
             StopCollectingThread();
 
             isCollectingWork = true;
-            collectingThread = Radar.Common.Threads.Threads.StartNewBackgroudThread(LoopDetectPriceAndTimeInScreen);
+            collectingThread = ThreadUtils.StartNewBackgroudThread(LoopDetectPriceAndTimeInScreen);
         }
 
         public static void StopCollectingThread()
         {
             isCollectingWork = false;
-            Radar.Common.Threads.Threads.TryStopThreadByWait(collectingThread, 60, 60, "collectingThread");
+            ThreadUtils.TryStopThreadByWait(collectingThread, 60, 60, "collectingThread");
         }
 
         public void Reset()
@@ -173,7 +178,7 @@ namespace Radar.Bidding
             logger.InfoFormat("begin loopDetectPriceAndTimeInScreen");
             int i = 0;
 
-            PageTimePriceResult LastResultx = null;
+            PageTimePriceResult lastResultx = null;
             while (isCollectingWork)
             {
                 long ss = KK.CurrentMills();
@@ -181,26 +186,30 @@ namespace Radar.Bidding
                 try
                 {
                     long s1 = KK.CurrentMills();
-                    PageTimePriceResult LastResult = actionManager.DetectPriceAndTimeInScreen(LastResultx);
+                    PageTimePriceResult lastResult = actionManager.DetectPriceAndTimeInScreen(lastResultx);
 
                     // 重复检测
-                    if (LastResult.status == 300)
+                    if (lastResult.status == 300)
                     {
                         continue;
                     }
 
-                    SetShowUpText(ToShowUpText(LastResult));
+                    SetShowUpText(ToShowUpText(lastResult));
 
                     // 处理异常情况
-                    if (LastResult.status != 0)
+                    if (lastResult.status != 0)
                     {
-                        ProcessErrorDetect(LastResult);
+                        ProcessErrorDetect(lastResult);
+
+                        // TODO: 这里也需要处理 可能需要的提交，因为远程会下发一个可能的当前秒数
+                        // 目的是防止出现卡秒现象
+
                         continue;
                     }                    
 
-                    LastResultx = LastResult;
+                    lastResultx = lastResult;
 
-                    PagePrice pp = LastResult.data;
+                    PagePrice pp = lastResult.data;
 
                     logger.DebugFormat("detectPriceAndTimeInScreen elapsed {0}ms", KK.CurrentMills() - s1);
 
@@ -226,6 +235,11 @@ namespace Radar.Bidding
                         AfterSuccessDetect(pp);
                         logger.DebugFormat("afterDetect elapsed {0}ms", KK.CurrentMills() - s1);
                     }
+                    else
+                    {
+                        // TODO: 
+
+                    }
 
                 }
                 catch (Exception e)
@@ -234,8 +248,10 @@ namespace Radar.Bidding
                 }
                 finally
                 {
-                    actionManager.ResetDictIndex();
-                    KK.Sleep(100);
+                    // TODO: 这里可能不需要每次重置dict
+                    // actionManager.ResetDictIndex();
+
+                    KK.Sleep(12);
                 }
 
                 logger.DebugFormat("round {0} loopDetectPriceAndTimeInScreen elapsed {1}ms", i++, KK.CurrentMills() - ss);
@@ -288,10 +304,10 @@ namespace Radar.Bidding
             var strats = new Dictionary<int, PriceSubmitOperate>(biddingContext.GetSubmitOperateMap());
 
             // TODO: 临时改动
-            int baseMinute = 5;
+            int baseMinute = 28;
 
-            // if (minute == 29)
-            if (minute > baseMinute)
+            if (minute == 29)
+            // if (minute > baseMinute)
             {
                 biddingContext.AddPrice(sec, pp.basePrice);
             }
@@ -304,8 +320,8 @@ namespace Radar.Bidding
                 SubmitPriceSetting stra = oper.setting;
                 int fixMinute = stra.minute > 0 ? stra.minute : 29;
 
-                // if (fixMinute != minute)
-                if (fixMinute < baseMinute)
+                if (fixMinute != minute)
+                // if (fixMinute < baseMinute)
                 {
                     continue;
                 }
@@ -345,15 +361,15 @@ namespace Radar.Bidding
                 if (sec >= fixSec && (oper.status != 1 && oper.status != 99 && oper.status != -1))
                 {
                     // 2. 检查提交价格策略
-                    int OfferedPrice = stra.GetOfferedPrice();
+                    int offeredPrice = stra.GetOfferedPrice();
                     int PriceAt50 = biddingContext.GetPrice(50);
                     string answer = CaptchaTaskContext.me.GetAnswer(oper.answerUuid);
 
                     // logger.InfoFormat("try target second#{0}, offer-price#{1}, delta#{2}. delta ", fixSec, OfferedPrice, (pp.basePrice + 300));
 
-                    if (OfferedPrice <= (pp.basePrice + 300))
+                    if (offeredPrice <= (pp.basePrice + 300))
                     {
-                        logger.InfoFormat("submit target second#{0}, offer-price#{1}, delta#{2}.", fixSec, OfferedPrice, stra.deltaPrice);
+                        logger.InfoFormat("N10 submit target second#{0}, offer-price#{1}, delta#{2}.", fixSec, offeredPrice, stra.deltaPrice);
 
                         if (answer?.Length > 0)
                         {
@@ -363,7 +379,7 @@ namespace Radar.Bidding
                         {
                             // TODO: 到价时，依然未有验证码
                             // oper.status = 20;
-                            logger.WarnFormat("target second#{0} has no captcha-answer", fixSec);
+                            logger.WarnFormat("N10 target second#{0} has no captcha-answer", fixSec);
                         }
                         
                     }
@@ -373,33 +389,37 @@ namespace Radar.Bidding
                                 && minute >= FinalTime.Minutes
                                 && sec >= FinalTime.Seconds)
                     {
-                        logger.InfoFormat("Trigger force submit second#{0}, OfferedPrice#{1}, base-price#{2}. {3}.", fixSec, OfferedPrice, pp.basePrice, (now.TimeOfDay >= FinalTime));
                         int delay = KK.RandomInt(ForceStart, ForceEnd);
+
+                        logger.InfoFormat("N100 Trigger force submit second#{0}, OfferedPrice#{1}, base-price#{2}. {3}. delay#{4}", fixSec, offeredPrice, pp.basePrice, (now.TimeOfDay >= FinalTime), delay);
+                        
                         KK.Sleep(delay);
 
                         SubmitOfferedPrice(fixSec, oper, answer);
 
-                        logger.InfoFormat("Force submit second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}.", fixSec, delay, OfferedPrice, pp.basePrice);
+                        logger.InfoFormat("N100 Force submit second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}.", fixSec, delay, offeredPrice, pp.basePrice);
                     }
 
-                    if (sec > 50 && PriceAt50 > 0 && OfferedPrice >= (PriceAt50 + DrawbackDeltaPrice + 100))
+                    if (sec > 50 && PriceAt50 > 0 && offeredPrice >= (PriceAt50 + DrawbackDeltaPrice + 100))
                     {
                         int PriceBack2 = biddingContext.GetPrice(sec - 2);
-                        if (PriceBack2 > 0 && (pp.basePrice - PriceBack2) >= 200)
+
+                        // 20190616 增加 当前时间 >= 112954
+                        if (sec >= 54 && PriceBack2 > 0 && (pp.basePrice - PriceBack2) >= 200)
                         {
                             bool matched = false;
                             int delay = -1;
-                            if (OfferedPrice == (pp.basePrice + 300 + 100)) // 提前 100
+                            if (offeredPrice == (pp.basePrice + 300 + 100)) // 提前 100
                             {
                                 delay = KK.RandomInt(Delay1Start, Delay1End);
                                 matched = true;
                             }
-                            else if (OfferedPrice == (pp.basePrice + 300 + 200))
+                            else if (offeredPrice == (pp.basePrice + 300 + 200))
                             {
                                 delay = KK.RandomInt(Delay2Start, Delay2End);
                                 matched = true;
                             }
-                            else if (OfferedPrice == (pp.basePrice + 300 + 300))
+                            else if (offeredPrice == (pp.basePrice + 300 + 300))
                             {
                                 delay = KK.RandomInt(Delay3Start, Delay3End);
                                 matched = true;
@@ -412,21 +432,34 @@ namespace Radar.Bidding
 
                                 SubmitOfferedPrice(fixSec, oper, answer);
 
-                                logger.InfoFormat("matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}.", fixSec, delay, OfferedPrice, pp.basePrice);
+                                logger.InfoFormat("matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack2#{4}", fixSec, delay, offeredPrice, pp.basePrice, PriceBack2);
                             }
 
                         }
                     }
-                     
+                    else if (sec >= 56 && (pp.basePrice - biddingContext.GetPrice(sec - 3)) == 20)
+                    {
+                        if (offeredPrice == pp.basePrice + 300 + 100) // 提前100
+                        {
+                            int delay = KK.RandomInt(delayOneS, delayOneE);
+                            KK.Sleep(delay);
+
+                            SubmitOfferedPrice(fixSec, oper, answer);
+
+                            logger.InfoFormat("N20 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack3#{4}", fixSec, delay, offeredPrice, pp.basePrice, biddingContext.GetPrice(sec - 3));
+                        }
+                        else
+                        {
+                            logger.InfoFormat("N20 sec#56 ELSE OfferedPrice#{0}, pp.basePrice#{0}", offeredPrice, pp.basePrice);
+                        }
+                    }
                     else
                     {
-                        logger.InfoFormat("ELSE - {0}, {1}, {2}. ", now.TimeOfDay, FinalTime, (now.TimeOfDay >= FinalTime));
+                        logger.InfoFormat("N29 ELSE - {0}, {1}, {2}. ", now.TimeOfDay, FinalTime, (now.TimeOfDay >= FinalTime));
                     }
-
 
                 }
                 
-
 
             }
 
@@ -500,86 +533,6 @@ namespace Radar.Bidding
             return img;
         }
 
-
-    }
-
-    [Component]
-    public class SubmitStrategyManager : InitializingBean
-    {
-        private static readonly ILog logger = LogManager.GetLogger(typeof(SubmitStrategyManager));
-
-        private static readonly string StrategyFileName = "submitStrategy.txt";
-        private static readonly string StrategyPath = "resource\\" + StrategyFileName;
-
-        // private BiddingScreen screen;
-
-        private FileSystemWatcher watcher = null;
-        // BiddingScreen screen
-
-        public SubmitStrategyManager()
-        {
-            // this.screen = screen;
-        }
-
-        public void AfterPropertiesSet()
-        {
-            this.WatchStragetyFile();
-        }
-
-        public List<SubmitPriceSetting> LoadStrategies()
-        {
-            string lines = FileUtils.readTxtFile(StrategyPath);
-
-            List<SubmitPriceSetting> settings = new List<SubmitPriceSetting>();
-            string[] lis = lines.Split('\n');
-            foreach (string li in lis)
-            {
-                logger.InfoFormat("load submit setting {0}", li);
-
-                if (li == null || li.Trim().StartsWith("#"))
-                {
-                    continue;
-                }
-
-                var sps = SubmitPriceSetting.fromLine(li.Trim());
-                if (sps != null)
-                {
-                    settings.Add(sps);
-                }
-            }
-
-            return settings;
-        }
-
-        private void WatchStragetyFile()
-        {
-            logger.InfoFormat("start watch directory#{0}, strategy-file#{1}", KK.ResourceDir(), StrategyFileName);
-
-            if (watcher != null)
-            {
-                watcher.Dispose();
-                logger.InfoFormat("Dispose previous watcher#{0}", watcher);
-            }
-
-            watcher = new FileSystemWatcher();
-            watcher.Path = KK.ResourceDir();
-            watcher.Filter = StrategyFileName;
-            watcher.Changed += new FileSystemEventHandler(OnProcess);
-            watcher.EnableRaisingEvents = true;
-            watcher.NotifyFilter = NotifyFilters.Attributes | NotifyFilters.CreationTime | NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastAccess
-                                   | NotifyFilters.LastWrite | NotifyFilters.Security | NotifyFilters.Size;
-            watcher.IncludeSubdirectories = false;
-        }
-
-        private void OnProcess(object source, FileSystemEventArgs e)
-        {
-            logger.InfoFormat("File#{0} with change#{1}, {2}.", e.FullPath, e.ChangeType, e.Name);
-
-            if (e.ChangeType == WatcherChangeTypes.Changed)
-            {
-                // screen.ResetStrategyByReload();
-            }
-        }
 
     }
 

@@ -5,6 +5,7 @@ using Radar.Common;
 using Radar.Common.Enums;
 using Radar.Common.Model;
 using Radar.Common.Raw;
+using Radar.Common.Utils;
 using Radar.IoC;
 using System;
 using System.Collections.Generic;
@@ -22,7 +23,7 @@ namespace Radar.Bidding.Messages
             return RawMessageType.JSON_COMMAND;
         }
 
-        public DataResult<string> Handle(RawMessage message)
+        public JsonCommand Handle(RawMessage message)
         {
             JsonCommand comm = MessageUtils.ParseAsCommandRequest(message.clientNo, message.getBodyText());
 
@@ -30,10 +31,10 @@ namespace Radar.Bidding.Messages
             if (commandProcessor == null)
             {
                 logger.ErrorFormat("command#{0} has no command-processor", comm.directiveVal);
-                return DataResults.Fail<string>("no command-processor");
+                return JsonCommands.Fail("no command-processor");
             }
 
-            DataResult<string> dr = commandProcessor.Execute(comm);
+            JsonCommand dr = commandProcessor.Execute(comm);
 
             return dr;
         }

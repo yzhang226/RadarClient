@@ -1,3 +1,4 @@
+using Radar.Bidding.Model;
 using Radar.Common;
 using System;
 using System.Collections.Generic;
@@ -191,9 +192,9 @@ namespace Radar.Common
             return numberStr;
         }
 
-        public static Radar.Bidding.Model.CaptchaImageAnswerRequest CreateImageAnswerRequest(string uuid)
+        public static CaptchaImageAnswerRequest CreateImageAnswerRequest(string uuid)
         {
-            var req = new Radar.Bidding.Model.CaptchaImageAnswerRequest();
+            var req = new CaptchaImageAnswerRequest();
             req.from = "test";
             req.token = "devJustTest";
             req.uid = uuid;
@@ -201,6 +202,15 @@ namespace Radar.Common
             return req;
         }
 
+        public static bool IsNotSecond(int sec)
+        {
+            if (sec < 0 || sec > 59)
+            {
+                return true;
+            }
+
+            return false;
+        }
 
     }
 }

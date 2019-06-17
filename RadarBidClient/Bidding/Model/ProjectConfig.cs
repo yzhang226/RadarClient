@@ -100,5 +100,35 @@ namespace Radar.Model
             }
         }
 
+        /// <summary>
+        /// 确定按钮点击模式
+        /// 1 - 普通点击 ;
+        /// 2 - 栅栏模式 ;
+        /// 3 - 混合模式 先普通点击 再 栅栏模式
+        /// </summary>
+        public int ConfirmClickMode
+        {
+            get
+            {
+                return Properties.Settings.Default.ConfirmClickMode;
+            }
+        }
+
+
+        public bool IsConfirmModeNormal()
+        {
+            return Properties.Settings.Default.ConfirmClickMode == 1;
+        }
+
+        public bool IsConfirmModeFence()
+        {
+            return Properties.Settings.Default.ConfirmClickMode == 2;
+        }
+
+        public bool IsConfirmModeMixed()
+        {
+            return Properties.Settings.Default.ConfirmClickMode == 3;
+        }
+
     }
 }

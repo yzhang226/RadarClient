@@ -38,7 +38,7 @@ namespace Radar.Bidding.Service
             BidderLoginRequest req = new BidderLoginRequest();
             req.machineCode = simulator.GetMachineCode();
 
-            JsonCommand comm = JsonCommands.ok(CommandDirective.CLIENT_LOGIN, req);
+            JsonCommand comm = JsonCommands.OK(CommandDirective.CLIENT_LOGIN, req);
 
             RawMessage msg = MessageUtils.BuildJsonMessage(_clientNo, comm);
 

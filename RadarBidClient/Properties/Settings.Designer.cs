@@ -25,7 +25,7 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://127.0.0.1:3456")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://119.3.64.205:3456")]
         public string BidAddressPrefix {
             get {
                 return ((string)(this["BidAddressPrefix"]));
@@ -43,7 +43,7 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool EnableAutoBidding {
             get {
                 return ((bool)(this["EnableAutoBidding"]));
@@ -97,10 +97,19 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool EnableSaberRobot {
             get {
                 return ((bool)(this["EnableSaberRobot"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        public int ConfirmClickMode {
+            get {
+                return ((int)(this["ConfirmClickMode"]));
             }
         }
     }

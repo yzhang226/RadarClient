@@ -20,7 +20,9 @@ namespace Radar.Bidding.Model
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<int, int> PriceAfter29 = new Dictionary<int, int>();
+        // private Dictionary<int, int> PriceAfter29 = new Dictionary<int, int>();
+
+        private ClientMinutePrice m29 = new ClientMinutePrice();
 
         private Dictionary<int, PriceSubmitOperate> submitOperateMap = new Dictionary<int, PriceSubmitOperate>();
 
@@ -28,17 +30,19 @@ namespace Radar.Bidding.Model
 
         public void AddPrice(int sec, int basePrice)
         {
-            PriceAfter29[sec] = basePrice;
+            //PriceAfter29[sec] = basePrice;
+            m29.AddSecPrice(sec, basePrice);
         }
 
         public int GetPrice(int sec)
         {
-            if (!PriceAfter29.ContainsKey(sec))
-            {
-                return -1;
-            }
+            return m29.GetSecPrice(sec);
+            //if (!PriceAfter29.ContainsKey(sec))
+            //{
+            //    return -1;
+            //}
 
-            return PriceAfter29[sec];
+            //return PriceAfter29[sec];
         }
 
         public PriceSubmitOperate AddPriceSetting(SubmitPriceSetting settting)

@@ -17,10 +17,10 @@ namespace Radar.Bidding.Command
             return CommandDirective.SYNC_SYSTEM_TIME;
         }
 
-        protected override DataResult<string> DoExecute(string args)
+        protected override JsonCommand DoExecute(string args)
         {
             bool bo = TimeSynchronizer.SyncFromNtpServer();
-            return DataResults.OK(bo.ToString());
+            return null;
         }
     }
 }

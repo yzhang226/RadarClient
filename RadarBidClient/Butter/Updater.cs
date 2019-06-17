@@ -5,15 +5,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Ionic.Zip;
-using Butter.Net;
+
 using log4net;
 using Radar.Bidding;
-using Radar;
 using System.Windows;
 
-namespace Butter.Update
+namespace Radar.Butter
 {
-    public class Updater
+    public class Updater : IDisposable
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(Updater));
 
@@ -310,6 +309,11 @@ namespace Butter.Update
             // When the launched application closes, close this application as well
             // Application.Exit();
             Application.Current.Shutdown();
+        }
+
+        public void Dispose()
+        {
+            logger.InfoFormat("Dispose");
         }
 
         #endregion

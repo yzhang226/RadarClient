@@ -36,14 +36,14 @@ namespace Radar.Bidding
             this.StopInquiryThread();
 
             isInquiryWork = true;
-            inquiryThread = Radar.Common.Threads.Threads.StartNewBackgroudThread(LoopInquiryCaptchaAnswer);
+            inquiryThread = Radar.Common.Threads.ThreadUtils.StartNewBackgroudThread(LoopInquiryCaptchaAnswer);
             logger.InfoFormat("Restart CaptchaTask to Inquiry Answer");
         }
 
         public void StopInquiryThread()
         {
             isInquiryWork = false;
-            Radar.Common.Threads.Threads.TryStopThreadByWait(inquiryThread, 60, 30, "inquiryThread");
+            Radar.Common.Threads.ThreadUtils.TryStopThreadByWait(inquiryThread, 60, 30, "inquiryThread");
         }
 
         /// <summary>

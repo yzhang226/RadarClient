@@ -1,5 +1,5 @@
 ﻿using Autofac;
-using Butter.Update;
+
 using log4net;
 using Microsoft.Win32;
 using Radar.Bidding;
@@ -31,7 +31,7 @@ namespace Radar
 
         private static readonly ILog logger = LogManager.GetLogger(typeof(MainWindow));
 
-        public static Updater updater;
+        public static Radar.Butter.Updater updater;
 
         private WindowSimulator robot;
 
@@ -68,7 +68,7 @@ namespace Radar
 
         private static void EnableAutoUpdate()
         {
-            updater = new Updater();
+            updater = new Radar.Butter.Updater();
             updater.StartMonitoring();
 
             //DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
@@ -113,12 +113,12 @@ namespace Radar
 
             logger.InfoFormat("osName is {0}.", osName);
 
-            string fullDictPath = "resource/dict/dict-" +  osName + ".txt";
+            string fullDictPath = string.Format("Resource/dict/dict-{0}.txt", osName);
 
             robot.SetDict(0, fullDictPath);
-            foreach (int dictIdx in Enum.GetValues(typeof(Radar.Bidding.Model.DictIndex)))
+            foreach (int dictIdx in Enum.GetValues(typeof(DictIndex)))
             {
-                robot.SetDict(dictIdx, "resource/dict/" + osName + "/dict-" + osName + "-" + dictIdx + ".txt");
+                robot.SetDict(dictIdx, string.Format("Resource/dict/{0}/dict-{0}-{1}.txt", osName, dictIdx));
             }
 
         }

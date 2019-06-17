@@ -1,6 +1,4 @@
-﻿using log4net;
-using Radar.Common;
-using Radar.Common.Enums;
+﻿using Radar.Common.Enums;
 using Radar.Common.Model;
 using Radar.IoC;
 using System;
@@ -10,15 +8,15 @@ using System.Text;
 
 namespace Radar.Bidding.Command
 {
-
     [Component]
-    public class CaptureBidScreenCommand : BaseCommand<string>
+    public class ClientPriceTellCommand : BaseCommand<string>
     {
-        private BidActionManager bidActionManager;
+        [Component]
+        private BiddingScreen biddingScreen;
 
-        public CaptureBidScreenCommand(BidActionManager bidActionManager)
+        public ClientPriceTellCommand(BiddingScreen biddingScreen)
         {
-            this.bidActionManager = bidActionManager;
+            this.biddingScreen = biddingScreen;
         }
 
         public override CommandDirective GetDirective()
@@ -28,12 +26,16 @@ namespace Radar.Bidding.Command
 
         protected override JsonCommand DoExecute(string args)
         {
-
-            string imgPath = bidActionManager.CaptureFlashScreen();
+            string[] arr = args.Split(',');
+            int hour = int.Parse(arr[0]);
+            int minute = int.Parse(arr[1]);
+            int price = int.Parse(arr[2]);
 
             return null;
         }
+
     }
+
     
 
 }

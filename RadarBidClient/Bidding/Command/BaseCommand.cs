@@ -28,7 +28,7 @@ namespace Radar.Bidding.Command
 
         public abstract CommandDirective GetDirective();
 
-        public DataResult<string> Execute(JsonCommand command)
+        public JsonCommand Execute(JsonCommand command)
         {
             REQ req;
             if (typeof(string).IsAssignableFrom(reqType))
@@ -40,12 +40,12 @@ namespace Radar.Bidding.Command
             {
                 req = Jsons.FromJson<REQ>(command.data);
             }
-            
-            DataResult<string> dr = DoExecute(req);
+
+            JsonCommand dr = DoExecute(req);
             return dr;
         }
 
-        protected abstract DataResult<string> DoExecute(REQ req);
+        protected abstract JsonCommand DoExecute(REQ req);
 
         public void AfterPropertiesSet()
         {

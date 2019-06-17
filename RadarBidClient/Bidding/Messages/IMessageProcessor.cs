@@ -11,7 +11,7 @@ namespace Radar.Bidding.Messages
     public interface IMessageProcessor
     {
 
-        DataResult<string> Handle(RawMessage message);
+        JsonCommand Handle(RawMessage message);
 
         RawMessageType MessageType();
 

@@ -20,7 +20,7 @@ namespace Radar.Common.Model
 
         public string data;
 
-        //
+        // 
         public int status;
 
         public string message;

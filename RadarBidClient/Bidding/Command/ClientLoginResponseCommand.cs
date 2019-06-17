@@ -29,13 +29,13 @@ namespace Radar.Bidding.Command
             return CommandDirective.RESP_CLIENT_LOGIN;
         }
 
-        protected override DataResult<string> DoExecute(BidderLoginResponse req)
+        protected override JsonCommand DoExecute(BidderLoginResponse req)
         {
             logger.InfoFormat("Response of ClientLogin: clientNo is {0}", req.clientNo);
 
             clientService.AssignedClientNo = req.clientNo;
 
-            return DataResults.OK(true.ToString());
+            return null;
         }
     }
 }

@@ -8,9 +8,9 @@ using System.Threading;
 namespace Radar.Common.Threads
 {
 
-    public class Threads
+    public class ThreadUtils
     {
-        private static readonly ILog logger = LogManager.GetLogger(typeof(Threads));
+        private static readonly ILog logger = LogManager.GetLogger(typeof(ThreadUtils));
 
         /// <summary>
         /// 开启一个背景线程
@@ -19,8 +19,7 @@ namespace Radar.Common.Threads
         /// <returns></returns>
         public static Thread StartNewBackgroudThread(ThreadStart tStart)
         {
-            Thread thr = new Thread(tStart);
-            thr.IsBackground = true;
+            Thread thr = new Thread(tStart) { IsBackground = true };
             thr.Start();
 
             return thr;
@@ -33,8 +32,7 @@ namespace Radar.Common.Threads
         /// <returns></returns>
         public static Thread StartNewBackgroundThread(ParameterizedThreadStart ptStart, object param)
         {
-            Thread thr = new Thread(ptStart);
-            thr.IsBackground = true;
+            Thread thr = new Thread(ptStart) { IsBackground = true };
             thr.Start(param);
 
             return thr;
@@ -52,10 +50,10 @@ namespace Radar.Common.Threads
         {
             if (th != null)
             {
-                Radar.Common.KK.Sleep(mills1);
+                KK.Sleep(mills1);
 
-                Threads.TryStopThread(th);
-                Radar.Common.KK.Sleep(mills2);
+                ThreadUtils.TryStopThread(th);
+                KK.Sleep(mills2);
                 logger.InfoFormat("NOW {0}#State is {1}", memo, th.ThreadState);
             }
         }

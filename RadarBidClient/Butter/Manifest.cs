@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Butter.Update
+namespace Radar.Butter
 {
     internal class Manifest
     {
-        private static readonly ILog logger = LogManager.GetLogger(typeof(Manifest));
+        private static readonly ILog logger = LogManager.GetLogger(typeof(Radar.Butter.Manifest));
 
         #region Fields
         private string _data;

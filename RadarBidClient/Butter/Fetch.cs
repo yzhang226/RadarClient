@@ -6,7 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 
-namespace Butter.Net
+namespace Radar.Butter
 {
     /// <summary>
     /// Fetches web pages.
@@ -77,8 +77,8 @@ namespace Butter.Net
                 }
                 catch (Exception ex)
                 {
-                    logger.Error("Load url#" + url + " error.", ex);
-                    break;
+                    logger.Error(string.Format("Load url#{0} retry#{1} error.", url, retry), ex);
+                    // break;
                 }
             }
         }

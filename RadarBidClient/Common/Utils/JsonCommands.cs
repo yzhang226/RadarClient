@@ -16,7 +16,7 @@ namespace Radar.Common.Utils
          * @param dr
          * @return
          */
-        public static bool isOk(JsonCommand dr)
+        public static bool IsOK(JsonCommand dr)
         {
             return dr != null && dr.status == 0;
         }
@@ -26,9 +26,9 @@ namespace Radar.Common.Utils
          * @param dr
          * @return
          */
-        public static bool isFail(JsonCommand dr)
+        public static bool IsFail(JsonCommand dr)
         {
-            return !isOk(dr);
+            return !IsOK(dr);
         }
 
         /**
@@ -36,7 +36,7 @@ namespace Radar.Common.Utils
          * @param data
          * @return
          */
-        public static JsonCommand ok(CommandDirective directive, object data)
+        public static JsonCommand OK(CommandDirective directive, object data)
         {
             string json = null;
             if (data != null)
@@ -53,12 +53,22 @@ namespace Radar.Common.Utils
             return new JsonCommand(directive, 0, json, "");
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static JsonCommand Fail(string message)
+        {
+            return new JsonCommand(CommandDirective.NONE, -1, null, message);
+        }
+
         /**
          *
          * @param message
          * @return
          */
-        public static JsonCommand fail(CommandDirective directive, String message)
+        public static JsonCommand Fail(CommandDirective directive, string message)
         {
             return new JsonCommand(directive, -1, null, message);
         }
@@ -69,7 +79,7 @@ namespace Radar.Common.Utils
          * @param message
          * @return
          */
-        public static JsonCommand fail(CommandDirective directive, int status, String message)
+        public static JsonCommand Fail(CommandDirective directive, int status, string message)
         {
             return new JsonCommand(directive, status, null, message);
         }

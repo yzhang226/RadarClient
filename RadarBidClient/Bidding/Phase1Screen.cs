@@ -40,7 +40,7 @@ namespace Radar.Bidding
             StopAwaitThread();
 
             isAwaitWork = true;
-            awaitThread = Radar.Common.Threads.Threads.StartNewBackgroudThread(() =>
+            awaitThread = Radar.Common.Threads.ThreadUtils.StartNewBackgroudThread(() =>
             {
                 LoopAwaitAnswer(imageUuid);
             });
@@ -81,7 +81,7 @@ namespace Radar.Bidding
         public void StopAwaitThread()
         {
             isAwaitWork = false;
-            Radar.Common.Threads.Threads.TryStopThreadByWait(awaitThread, 100, 100, "phase1-awaitThread");
+            Radar.Common.Threads.ThreadUtils.TryStopThreadByWait(awaitThread, 100, 100, "phase1-awaitThread");
         }
 
         public void AfterPropertiesSet()

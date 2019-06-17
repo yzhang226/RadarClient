@@ -12,24 +12,25 @@ namespace Radar.Bidding.Command
 {
 
     [Component]
-    public class CaptureBidScreenCommand : BaseCommand<string>
+    public class MoveCurcorCommand : BaseCommand<string>
     {
         private BidActionManager bidActionManager;
 
-        public CaptureBidScreenCommand(BidActionManager bidActionManager)
+        public MoveCurcorCommand(BidActionManager bidActionManager)
         {
             this.bidActionManager = bidActionManager;
         }
 
         public override CommandDirective GetDirective()
         {
-            return CommandDirective.CAPTURE_BID_SCREEN;
+            return CommandDirective.MOVE_CURSOR;
         }
 
         protected override JsonCommand DoExecute(string args)
         {
+            string[] arr = args.Split(',');
 
-            string imgPath = bidActionManager.CaptureFlashScreen();
+            int ret = bidActionManager.MoveCursor(int.Parse(arr[0]), int.Parse(arr[1]));
 
             return null;
         }

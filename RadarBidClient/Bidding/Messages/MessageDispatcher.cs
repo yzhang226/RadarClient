@@ -9,6 +9,8 @@ using System.Text;
 using Radar.Common.Raw;
 using Radar.Common.Utils;
 using Radar.Common.Enums;
+using Radar.Common.Model;
+using System.Threading.Tasks;
 
 namespace Radar.Bidding.Messages
 {
@@ -29,10 +31,26 @@ namespace Radar.Bidding.Messages
 
         public void Dispatch(RawMessage message)
         {
+            Dispatch(message, null);
+        }
+
+        public void Dispatch(RawMessage message, Func<RawMessage, string> dispatchCallback)
+        {
             IMessageProcessor processor = processors[message.messageType];
             if (processor != null)
             {
-                processor.Handle(message);
+                Task.Factory.StartNew(() =>
+                {
+                    JsonCommand ret = processor.Handle(message);
+
+                    if (dispatchCallback != null && ret != null && ret.Directive != CommandDirective.NONE)
+                    {
+                        RawMessage retRaw = MessageUtils.BuildJsonMessage(message.clientNo, ret);
+                        string callbackRet = dispatchCallback.Invoke(retRaw);
+                    }
+
+                });        
+
             }
             else
             {

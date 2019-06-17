@@ -73,6 +73,19 @@ namespace Radar.Bidding
             this.conf = conf;
         }
 
+        /// <summary>
+        /// 移动鼠标指针
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public int MoveCursor(int x, int y)
+        {
+            CoordPoint po = this.Datum.AddDelta(x, y);
+
+            return robot.MoveTo(po.x, po.y);
+        }
+
         public void ReopenNewBidWindow()
         {
             this.ReopenNewBidWindow(conf.BidAddressPrefix + "/bid.htm");
@@ -267,6 +280,10 @@ namespace Radar.Bidding
             }
         }
 
+        public CoordPoint DeltaPoint(int x, int y)
+        {
+            return this.Datum.AddDelta(x, y);
+        }
 
         public void MockLogin()
         {
@@ -440,7 +457,7 @@ namespace Radar.Bidding
 
         }
 
-        // 首屏 确定 按钮
+        // 
         private void ClickConfirmAtIndex(CoordPoint p1)
         {
             long t1 = KK.CurrentMills();
@@ -456,7 +473,7 @@ namespace Radar.Bidding
             //return /*null*/;
         }
 
-        // 首屏 同意 按钮
+        // 
         private void ClickAgreeAtIndex(CoordPoint p2)
         {
             long t1 = KK.CurrentMills();
@@ -474,7 +491,7 @@ namespace Radar.Bidding
             //});
         }
 
-        // 登录页  投标号 输入框
+        // 
         private void inputBidNumberAtLogin(CoordPoint p3, string bidNumber)
         {
             long t1 = KK.CurrentMills();
@@ -488,7 +505,7 @@ namespace Radar.Bidding
             }
         }
 
-        // 登录页   密码 输入框
+        // 
         private void inputPasswordAtLogin(CoordPoint p4, string password)
         {
             long t1 = KK.CurrentMills();
@@ -502,7 +519,7 @@ namespace Radar.Bidding
             }
         }
 
-        // 登录页   图像校验码 输入框
+        // 
         private void inputCaptchaAtLogin(CoordPoint p5, string captcha)
         {
             long t1 = KK.CurrentMills();
@@ -516,7 +533,7 @@ namespace Radar.Bidding
             }
         }
 
-        // 登录页 参加投标竞买 按钮
+        // 
         private void clickLoginAtLogin(CoordPoint p6)
         {
             long t1 = KK.CurrentMills();
@@ -529,7 +546,7 @@ namespace Radar.Bidding
             }
         }
 
-        // 第一阶段页 输入价格 输入框
+        // 
         private void inputPriceAtPhase1(CoordPoint p11, int price)
         {
             long t1 = KK.CurrentMills();
@@ -543,7 +560,7 @@ namespace Radar.Bidding
             }
         }
 
-        // 第一阶段页 再次输入价格 输入框
+        // 
         private void inputPrice2AtPhase1(CoordPoint p12, int price)
         {
             long t1 = KK.CurrentMills();
@@ -557,7 +574,7 @@ namespace Radar.Bidding
             }
         }
 
-        // 第一阶段页 出价 按钮
+        // 
         private void clickBidButtonAtPhase1(CoordPoint p12)
         {
             long t1 = KK.CurrentMills();
@@ -566,7 +583,7 @@ namespace Radar.Bidding
             logger.InfoFormat("第一阶段 尝试点击 - 出价 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.CurrentMills() - t1);
         }
 
-        // 第一阶段页 弹框 验证码 输入框
+        // 
         private void inputCaptchAtPhase1(CoordPoint p13, string captcha)
         {
             long t1 = KK.CurrentMills();
@@ -579,7 +596,7 @@ namespace Radar.Bidding
             }
         }
 
-        // 第一阶段页 弹框 验证码 确认 按钮
+        // 
         private void clickConfirmCaptchaAtPhase1(CoordPoint p12)
         {
             long t1 = KK.CurrentMills();
@@ -588,7 +605,7 @@ namespace Radar.Bidding
             logger.InfoFormat("第一阶段 尝试点击 - 验证码 确认 按钮 - {0}, {1}, {2}", p12.x, p12.y, KK.CurrentMills() - t1);
         }
 
-        // 第一阶段页 弹框 出价结果 确认 按钮
+        // 
         private void clickConfirmBidOkAtPhase1(CoordPoint p12)
         {
             long t1 = KK.CurrentMills();
@@ -656,7 +673,7 @@ namespace Radar.Bidding
             logger.InfoFormat("{0}#输入: {1} @ {2}, Elapsed {3}.", memo, text, p13.ToString(), KK.CurrentMills() - t1);
         }
 
-        // 第二阶段页 弹框 验证码 确认 按钮
+        // 
         public void ClickButtonByFenceWayLToR(CoordPoint pot)
         {
             long t1 = KK.CurrentMills();
@@ -668,7 +685,7 @@ namespace Radar.Bidding
                 robot.LeftClick();
             }
 
-            logger.DebugFormat("栅栏模式（从右到左） 点击 - 按钮 - {0}, elpased {1}.", pot.ToString(), KK.CurrentMills() - t1);
+            logger.InfoFormat("栅栏模式（从右到左） 点击 - 按钮 - {0}, elpased {1}.", pot.ToString(), KK.CurrentMills() - t1);
         }
 
         public void ClickButtonByFenceWayRToL(CoordPoint pot)
@@ -682,10 +699,10 @@ namespace Radar.Bidding
                 robot.LeftClick();
             }
 
-            logger.DebugFormat("栅栏模式（从左到右） 点击 - 按钮 - {0}, elpased {1}.", pot.ToString(), KK.CurrentMills() - t1);
+            logger.InfoFormat("栅栏模式（从左到右） 点击 - 按钮 - {0}, elpased {1}.", pot.ToString(), KK.CurrentMills() - t1);
         }
 
-        // 第二阶段页 弹框 出价结果 确认 按钮
+        // 
         public void ClickBtnOnceAtPoint(CoordPoint p12)
         {
             long t1 = KK.CurrentMills();

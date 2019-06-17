@@ -1,9 +1,6 @@
 ﻿using Autofac;
-using Autofac.Core;
 using log4net;
 using Radar.Common;
-
-using Radar.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,22 +9,31 @@ using System.Text;
 
 namespace Radar.IoC
 {
-    public class ApplicationContext
+    public class ApplicationContext : IDisposable
     {
 
         private static readonly ILog logger = LogManager.GetLogger(typeof(ApplicationContext));
 
         public static readonly ApplicationContext me = new ApplicationContext();
 
+        public void Dispose()
+        {
+            if (Container != null)
+            {
+                Container.Dispose();
+                Container = null;
+            }
+        }
+
         private ApplicationContext()
         {
-            initContainer();
+            InitContainer();
         }
 
 
         private IContainer Container;
 
-        private void initContainer()
+        private void InitContainer()
         {
             long s1 = KK.CurrentMills();
 
@@ -70,7 +76,7 @@ namespace Radar.IoC
                             ((InitializingBean) inst).AfterPropertiesSet();
                         } catch(Exception ex)
                         {
-                            logger.Error("call AfterPropertiesSet for class#" + inst + " error", ex);
+                            logger.Error(string.Format("call AfterPropertiesSet for class#{0} error", inst), ex);
                             throw ex;
                         }
                     }
@@ -98,21 +104,6 @@ namespace Radar.IoC
         public T Get<T>() {
             return Container.Resolve<T>();
         }
-
-    }
-
-    //[MetadataAttribute]
-    public class ComponentAttribute : Attribute
-    {
-
-    }
-
-    public interface InitializingBean 
-    {
-        /// <summary>
-        /// 初始化 Component 之后执行
-        /// </summary>
-        void AfterPropertiesSet();
 
     }
     

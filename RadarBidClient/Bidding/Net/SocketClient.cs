@@ -21,6 +21,8 @@ namespace Radar.Bidding.Net
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(SocketClient));
 
+        private static readonly object objLock = new object();
+
         private string ip;
  
         private int port;
@@ -84,7 +86,7 @@ namespace Radar.Bidding.Net
                 logger.InfoFormat("end socket-client connect with address#{0}:{1}, _client#{2}", ip, port, _client);
 
                 // 初始化线程
-                bytesReceiveThread = Threads.StartNewBackgroudThread(ReceiveForEver);
+                bytesReceiveThread = ThreadUtils.StartNewBackgroudThread(ReceiveForEver);
             }
             catch (Exception e)
             {
@@ -92,7 +94,7 @@ namespace Radar.Bidding.Net
             }
         }
 
-        public void setAnotherRecvCallback(Func<RawMessage, String> anotherRecvCallback)
+        public void setAnotherRecvCallback(Func<RawMessage, string> anotherRecvCallback)
         {
             this.anotherRecvCallback = anotherRecvCallback;
         }
@@ -146,12 +148,27 @@ namespace Radar.Bidding.Net
             }
         }
 
+        private string DispatchCallback(RawMessage message)
+        {
+            Send(message);
+            return "ok";
+        }
+
         public void Send(RawMessage raw)
         { 
-            byte[] byteData = RawMessageEncoder.me.encode(raw);
+            if (raw == null)
+            {
+                return;
+            }
 
-            // Begin sending the data to the remote device.  
-            _client.BeginSend(byteData, 0, byteData.Length, SocketFlags.None, new AsyncCallback(SendCallback), _client);
+            // TODO: 看起来不应该并发发送
+            lock (objLock)
+            {
+                byte[] byteData = RawMessageEncoder.me.encode(raw);
+
+                // Begin sending the data to the remote device.  
+                _client.BeginSend(byteData, 0, byteData.Length, SocketFlags.None, new AsyncCallback(SendCallback), _client);
+            }
         }
 
         private void SendCallback(IAsyncResult ar)
@@ -179,7 +196,7 @@ namespace Radar.Bidding.Net
         public void Shutdown()
         {
             isReceiveWork = false;
-            Threads.TryStopThreadByWait(bytesReceiveThread, 100, 100, "SocketClient");
+            ThreadUtils.TryStopThreadByWait(bytesReceiveThread, 100, 100, "SocketClient");
 
             _client.Shutdown(SocketShutdown.Both);
             _client.Close();
