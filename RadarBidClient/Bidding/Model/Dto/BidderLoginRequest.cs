@@ -12,5 +12,9 @@ namespace Radar.Bidding.Model.Dto
 
         public string machineCode;
 
+        public string clientVersion;
+
+        public string localIpAddress;
+
     }
 }

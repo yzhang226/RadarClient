@@ -1,4 +1,5 @@
-﻿using Radar.Common;
+﻿using Radar.Bidding.Model;
+using Radar.Common;
 using Radar.Common.Threads;
 using Radar.IoC;
 using Radar.Model;
@@ -306,7 +307,7 @@ namespace Radar.Bidding.DM
             return DMCRef.UseDict(_dm, index);
         }
 
-        public int UseDict(Radar.Bidding.Model.DictIndex index)
+        public int UseDict(DictIndex index)
         {
             return DMCRef.UseDict(_dm, (int) index);
         }

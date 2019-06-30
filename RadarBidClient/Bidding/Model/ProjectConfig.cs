@@ -100,6 +100,30 @@ namespace Radar.Model
             }
         }
 
+        public bool EnableAutoInputAccount
+        {
+            get
+            {
+                return Properties.Settings.Default.EnableAutoInputAccount;
+            }
+        }
+
+        public string SaberWebAddressPrefix
+        {
+            get
+            {
+                return Properties.Settings.Default.SaberWebAddressPrefix;
+            }
+        }
+
+        public string UploadRobotScreenUrl
+        {
+            get
+            {
+                return this.SaberWebAddressPrefix + "/v1/screen/upload"; ;
+            }
+        }
+
         /// <summary>
         /// 确定按钮点击模式
         /// 1 - 普通点击 ;

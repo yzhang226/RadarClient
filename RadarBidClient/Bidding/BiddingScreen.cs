@@ -1,4 +1,4 @@
-﻿using log4net;
+﻿ using log4net;
 using Radar.Bidding.Model;
 using Radar.Common;
 using Radar.Common.Threads;
@@ -126,20 +126,26 @@ namespace Radar.Bidding
 
         public void RefreshBiddingPage()
         {
+            if (this.webBro == null)
+            {
+                return;
+            }
+
             Action action1 = () =>
             {
                 this.webBro.Refresh();
             };
 
-            if (this.webBro != null)
-            {
-                this.webBro.Dispatcher.BeginInvoke(action1);
-            }
+            this.webBro.Dispatcher.BeginInvoke(action1);
         }
 
 
         private void SetShowUpText(string text)
         {
+            if (ShowUpBlock == null)
+            {
+                return;
+            }
 
             Action action1 = () =>
             {

@@ -1,6 +1,8 @@
 ﻿using log4net;
 using Radar.Bidding.Model;
+using Radar.Bidding.Model.Dto;
 using Radar.Common;
+using Radar.Common.Model;
 using Radar.IoC;
 using Radar.Model;
 using System;
@@ -280,6 +282,14 @@ namespace Radar.Bidding
             }
         }
 
+        public string FindTextByOcr(CoordRectangle rect, string color, DictIndex dictIndex = DictIndex.INDEX_ALL)
+        {
+            
+            robot.UseDict(dictIndex);
+            string ret = robot.Ocr(rect.x1, rect.y1, rect.x2, rect.y2, color, 0.8);
+            return ret;
+        }
+
         public CoordPoint DeltaPoint(int x, int y)
         {
             return this.Datum.AddDelta(x, y);
@@ -289,12 +299,7 @@ namespace Radar.Bidding
         {
             Task.Factory.StartNew(() =>
             {
-                // 首屏 确定 按钮
-                var p11 = Datum.AddDelta(741, 507);
-
-                // 首屏 同意 按钮
-                var p12 = Datum.AddDelta(730, 509);
-                this.ClickAgreeAtIndex(p11);
+                
 
                 // 登录页
                 var p21 = Datum.AddDelta(610, 200);
@@ -311,6 +316,17 @@ namespace Radar.Bidding
             });
         }
 
+        public void DismissCurtain()
+        {
+            // 首屏 确定 按钮
+            var p11 = Datum.AddDelta(741, 507);
+
+            // 首屏 同意 按钮
+            var p12 = Datum.AddDelta(730, 509);
+
+            this.ClickButtonAtPoint(p11, false, "首屏确定按钮");
+            this.ClickButtonAtPoint(p12, false, "首屏同意按钮");
+        }
 
         public void MockLoginAndPhase1()
         {
@@ -721,7 +737,7 @@ namespace Radar.Bidding
         {
 
             CoordRectangle rect2 = CoordRectangle.From(Datum, 900, 700);
-            var img02Path = KK.FlashScreenDir() + "\\" + KK.uuid() + "-" + DateTime.Now.ToString("HHmmss") + "-screen.jpg";
+            var img02Path = string.Format("{0}\\{1}-{2:HHmmss}-screen.jpg", KK.FlashScreenDir(), KK.uuid(), DateTime.Now);
             CaptureImage(rect2, img02Path);
 
             return img02Path;
@@ -765,5 +781,25 @@ namespace Radar.Bidding
         {
             InitFencePoint();
         }
+
+        public ScreenImageUploadResponse UploadRobotScreenImage(string imgPath)
+        {
+            string url = conf.UploadRobotScreenUrl;
+            CaptchaImageUploadRequest req = new CaptchaImageUploadRequest();
+            req.machineCode = robot.GetMachineCode();
+            req.token = "devJustTest";
+            req.uid = KK.GetFileNameNoSuffix(imgPath);
+            req.timestamp = KK.CurrentMills();
+            req.from = "test";
+
+            int httpStatus;
+            DataResult<ScreenImageUploadResponse> dr = HttpClients
+                .PostWithFiles<DataResult<ScreenImageUploadResponse>>(url, req, new List<string> { imgPath }, out httpStatus);
+
+            logger.InfoFormat("upload screen image#{0}, result is {1}", req.uid, Jsons.ToJson(dr));
+
+            return DataResults.IsOK(dr) ? dr.Data : null;
+        }
+
     }
 }

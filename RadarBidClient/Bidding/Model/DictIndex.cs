@@ -10,6 +10,13 @@ namespace Radar.Bidding.Model
 
     public enum DictIndex
     {
+
+
+        /// <summary>
+        /// 字库 - 所有
+        /// </summary>
+        INDEX_ALL = 0,
+
         /// <summary>
         /// 字库 - 当前时间
         /// </summary>

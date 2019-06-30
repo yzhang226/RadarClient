@@ -37,6 +37,8 @@ namespace Radar.Bidding.Service
         {
             BidderLoginRequest req = new BidderLoginRequest();
             req.machineCode = simulator.GetMachineCode();
+            req.clientVersion = Ver.ver;
+            req.localIpAddress = KK.GetLocalIP();
 
             JsonCommand comm = JsonCommands.OK(CommandDirective.CLIENT_LOGIN, req);
 
@@ -44,6 +46,8 @@ namespace Radar.Bidding.Service
 
 
             socketClient.Send(msg);
+
+            logger.InfoFormat("send DoClientLogin tcp request...");
 
         }
 

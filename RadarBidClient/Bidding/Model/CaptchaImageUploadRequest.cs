@@ -6,6 +6,8 @@ namespace Radar.Bidding.Model
 {
     public class CaptchaImageUploadRequest
     {
+        public string machineCode;
+
         public string uid;
 
         public string from;

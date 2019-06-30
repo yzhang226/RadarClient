@@ -34,7 +34,7 @@ namespace Radar.Bidding
 
         public List<SubmitPriceSetting> LoadStrategies()
         {
-            string lines = FileUtils.readTxtFile(StrategyPath);
+            string lines = FileUtils.ReadTxtFile(StrategyPath);
 
             List<SubmitPriceSetting> settings = new List<SubmitPriceSetting>();
             string[] lis = lines.Split('\n');

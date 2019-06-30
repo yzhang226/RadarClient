@@ -60,7 +60,7 @@ namespace Radar.Bidding.Net
             this.conf = conf;
         }
 
-        public void StartClient()
+        public void StartClient(Func<string, string> afterSuccessConnected)
         {
             logger.InfoFormat("begin start socket-client with address#{0}:{1}", ip, port);
 
@@ -87,6 +87,15 @@ namespace Radar.Bidding.Net
 
                 // 初始化线程
                 bytesReceiveThread = ThreadUtils.StartNewBackgroudThread(ReceiveForEver);
+
+                try
+                {
+                    afterSuccessConnected?.Invoke("");
+                } 
+                catch (Exception e1)
+                {
+                    logger.Error("afterSuccessConnected Invoke error", e1);
+                }
             }
             catch (Exception e)
             {
@@ -143,7 +152,10 @@ namespace Radar.Bidding.Net
                 }
                 catch (Exception e)
                 {
-                    logger.Error("Receive error", e);
+                    logger.ErrorFormat("Receive error", e.Message);
+                    KK.Sleep(500);
+                    // TODO: 出现错误, 先临时处理 不在接收了 
+                    isReceiveWork = false;
                 }
             }
         }

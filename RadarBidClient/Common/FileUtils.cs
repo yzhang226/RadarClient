@@ -8,11 +8,11 @@ using log4net;
 
 namespace Radar.Common
 {
-    class FileUtils
+    public class FileUtils
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof( FileUtils));
 
-        public static string readTxtFile(string path)
+        public static string ReadTxtFile(string path)
         {
             if (!File.Exists(path))
             {
@@ -35,12 +35,12 @@ namespace Radar.Common
             }
             finally
             {
-                closeQuiet(streamReader);
-                closeQuiet(stream);
+                CloseQuiet(streamReader);
+                CloseQuiet(stream);
             }
         }
 
-        public static void writeTxtFile(string path, string value)
+        public static void WriteTxtFile(string path, string value)
         {
             if (!File.Exists(path))
             {
@@ -62,12 +62,12 @@ namespace Radar.Common
             }
             finally
             {
-                closeQuiet(streamWriter);
-                closeQuiet(stream);
+                CloseQuiet(streamWriter);
+                CloseQuiet(stream);
             }
         }
 
-        public static void readFile(string path, ref byte[] fileBuffer)
+        public static void ReadFile(string path, ref byte[] fileBuffer)
         {
             FileStream fs = null;
             try
@@ -83,11 +83,11 @@ namespace Radar.Common
             }
             finally
             {
-                closeQuiet(fs);
+                CloseQuiet(fs);
             }
         }
 
-        public static void writeFile(string path, byte[] fileBuffer)
+        public static void WriteFile(string path, byte[] fileBuffer)
         {
             try
             {
@@ -96,58 +96,61 @@ namespace Radar.Common
                 fs.Close();
                 fs.Dispose();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                ;
+                logger.Error("WriteFile error", e);
             }
         }
-        public static void createDir(string dir)
+
+        public static void CreateDir(string dir)
         {
-            if (isDirExist(dir))
+            if (IsDirExist(dir))
             {
                 return;
             }
             Directory.CreateDirectory(dir);
         }
 
-        public static void deleteDir(string dir)
+        public static void DeleteDir(string dir)
         {
-            if (isDirExist(dir))
+            if (IsDirExist(dir))
             {
                 Directory.Delete(dir);
             }
         }
 
-        public static void deleteFile(string path)
+        public static void DeleteFile(string path)
         {
-            if (isFileExist(path))
+            if (IsFileExist(path))
             {
                 File.Delete(path);
             }
         }
 
-        public static void deleteFolder(string path)
+        public static void DeleteFolder(string path)
         {
             string[] diList = Directory.GetDirectories(path);
             foreach (var item in diList)
             {
-                deleteFolder(item);
+                DeleteFolder(item);
             }
             string[] fileList = Directory.GetFiles(path);
             foreach (var item in fileList)
             {
-                deleteFile(item);
+                DeleteFile(item);
             }
             Directory.Delete(path);
         }
-        public static int getFileSize(string file)
+
+        public static int GetFileSize(string file)
         {
             FileInfo fileInfo = new FileInfo(file);
             return (int)fileInfo.Length;
         }
-        public static void findFilesFullName(string path, ref List<string> fileList, string noContain)
+
+        public static void FindFilesFullName(string path, ref List<string> fileList, string noContain)
         {
-            if (!isDirExist(path))
+            if (!IsDirExist(path))
             {
                 return;
             }
@@ -166,9 +169,10 @@ namespace Radar.Common
                 }
             }
         }
-        public static void findFiles(string path, ref List<string> fileList, bool recursive)
+
+        public static void FindFiles(string path, ref List<string> fileList, bool recursive)
         {
-            if (!isDirExist(path))
+            if (!IsDirExist(path))
             {
                 return;
             }
@@ -178,31 +182,34 @@ namespace Radar.Common
             {
                 fileList.Add(item.Name);
             }
+
             if (recursive)
             {
                 string[] dirs = Directory.GetDirectories(path);
                 foreach (var item in dirs)
                 {
-                    findFiles(item, ref fileList, recursive);
+                    FindFiles(item, ref fileList, recursive);
                 }
             }
         }
-        public static void reName(string fileName, string newFileName)
+
+        public static void Rename(string fileName, string newFileName)
         {
             FileInfo info = new FileInfo(fileName);
             info.MoveTo(newFileName);
         }
 
-        public static bool isDirExist(string dir)
+        public static bool IsDirExist(string dir)
         {
             return Directory.Exists(dir);
         }
-        public static bool isFileExist(string path)
+
+        public static bool IsFileExist(string path)
         {
             return File.Exists(path);
         }
 
-        public static void closeQuiet(Stream stream)
+        public static void CloseQuiet(Stream stream)
         {
             try
             {
@@ -212,13 +219,13 @@ namespace Radar.Common
                     stream.Dispose();
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-
+                logger.Error("CloseQuiet error", e);
             }
         }
 
-        public static void closeQuiet(TextReader reader)
+        public static void CloseQuiet(TextReader reader)
         {
             try
             {
@@ -227,13 +234,13 @@ namespace Radar.Common
                     reader.Close();
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-
+                logger.Error("CloseQuiet error", e);
             }
         }
 
-        public static void closeQuiet(TextWriter writer)
+        public static void CloseQuiet(TextWriter writer)
         {
             try
             {
@@ -242,9 +249,9 @@ namespace Radar.Common
                     writer.Close();
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-
+                logger.Error("CloseQuiet error", e);
             }
         }
 

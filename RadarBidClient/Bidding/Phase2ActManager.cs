@@ -2,6 +2,7 @@
 using Radar.Bidding.Model;
 using Radar.Common;
 using Radar.Common.Model;
+using Radar.Common.Threads;
 using Radar.IoC;
 using Radar.Model;
 using System;
@@ -151,6 +152,25 @@ namespace Radar.Bidding
             // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
             // TODO: 应该检测 区域 是否有 出价有效
             KK.Sleep(600);
+
+            // 尝试得到提交的结果截图, 0.6s 1.6s 2.6s 
+            ThreadUtils.StartNewBackgroudThread(() => {
+                for (int i=0; i<3; i++)
+                {
+                    try
+                    {
+                        string imgPath = actionManager.CaptureFlashScreen();
+                        logger.InfoFormat("result of phase2-act is {0}", imgPath);
+                        KK.Sleep((i + 1) * 1000);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error("act2 background CaptureFlashScreen error", e);
+                    }
+                }
+            });
+            
+
             actionManager.ClickButtonAtPoint(Datum.AddDelta(661, 478), false, "第二阶段提交#确定");
 
             // 清除以前输入的价格

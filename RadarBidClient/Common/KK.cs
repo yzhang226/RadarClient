@@ -1,9 +1,12 @@
+using log4net;
 using Radar.Bidding.Model;
 using Radar.Common;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Principal;
 using System.Text;
@@ -13,6 +16,7 @@ namespace Radar.Common
 {
     public class KK
     {
+        private static readonly ILog logger = LogManager.GetLogger(typeof(KK));
 
         private const string Windows2000 = "5.0";
         private const string WindowsXP = "5.1";
@@ -149,7 +153,7 @@ namespace Radar.Common
         public static string GetFitOSName()
         {
             string osName = "";
-            switch (Environment.OSVersion.Version.Major + "." + Environment.OSVersion.Version.Minor)
+            switch (string.Format("{0}.{1}", Environment.OSVersion.Version.Major, Environment.OSVersion.Version.Minor))
             {
                 case Windows2000:
                     osName = "win2000";
@@ -210,6 +214,107 @@ namespace Radar.Common
             }
 
             return false;
+        }
+
+        private static string localIp = null;
+
+        public static string GetLocalIP()
+        {
+            if (localIp?.Length > 0)
+            {
+                return localIp;
+            }
+
+            try
+            {
+                localIp = GetLocalIPv4(NetworkInterfaceType.Wireless80211);
+
+                if (localIp == null || localIp.Length == 0)
+                {
+                    localIp = GetLocalIPv4(NetworkInterfaceType.Ethernet);
+                }
+
+                if (localIp == null || localIp.Length == 0)
+                {
+                    localIp = "127.0.0.1";
+                }
+
+                return localIp;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("GetLocalIP error", ex);
+                return "127.0.0.1";
+            }
+        }
+
+
+        public static string GetLocalIPv4(NetworkInterfaceType _type)
+        {
+            string output = "";
+            foreach (NetworkInterface item in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (item.NetworkInterfaceType != _type || item.OperationalStatus != OperationalStatus.Up)
+                {
+                    continue;
+                }
+
+                foreach (UnicastIPAddressInformation ip in item.GetIPProperties().UnicastAddresses)
+                {
+                    if (ip.Address.AddressFamily != AddressFamily.InterNetwork)
+                    {
+                        continue;
+                    }
+
+                    if (IPAddress.IsLoopback(ip.Address))
+                    {
+                        continue;
+                    }
+
+                    if (ip.Address.ToString().EndsWith(".1"))
+                    {
+                        continue;
+                    }
+
+                    output = ip.Address.ToString();
+                    logger.InfoFormat("detect ip#{0}", ip.Address);
+                }
+            }
+            return output;
+        }
+
+        public static BidAccountInfo LoadResourceAccount()
+        {
+            string path = ResourceDir() + "/account.txt";
+            string text = FileUtils.ReadTxtFile(path).Replace('\r', ' ');
+            string[] lines = text.Split('\n');
+
+            if (lines == null || lines.Length == 0 || lines[0] == null || lines[0].Length == 0)
+            {
+                return null;
+            }
+
+            string[] arr = lines[0].Split(',');
+            if (arr == null || arr.Length < 2)
+            {
+                return null;
+            }
+
+            var acc = new BidAccountInfo();
+            acc.BidNo = arr[0].Trim();
+            acc.Password = arr[1].Trim();
+            acc.IdCardNo = arr[2].Trim();
+            return acc;
+        }
+
+        public static string GetFileNameNoSuffix(string path)
+        {
+            FileInfo fi = new FileInfo(path);
+            string fname = fi.Name;
+            int idx = fname.LastIndexOf(".");
+
+            
+            return idx > 0 ? fname.Substring(0, idx) : fname;
         }
 
     }

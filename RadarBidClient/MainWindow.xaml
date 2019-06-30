@@ -27,7 +27,7 @@
 
             <Button x:Name="ReopenBiddingIEBtn" Content="重新打开竞拍页面" Canvas.Left="10" Canvas.Top="35" Width="151" Click="ReopenBiddingPage" Height="26"/>
 
-            <Button x:Name="AutoLoginPhase1Btn" Content="自动测试登录" Canvas.Left="10" Canvas.Top="97" Width="151" Click="AutoLoginPhase1" Height="26"/>
+            <Button x:Name="AutoLoginPhase1Btn" Content="载入登录账号" Canvas.Left="10" Canvas.Top="97" Width="151" Click="LoginAccountFromResource" Height="26"/>
 
             <Button x:Name="JustTestBtn" Content="测试专用" Canvas.Left="10" Canvas.Top="158" Width="151" Click="JustTest" Height="26" RenderTransformOrigin="0.564,4.212"/>
 

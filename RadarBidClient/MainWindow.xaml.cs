@@ -1,25 +1,22 @@
-﻿using Autofac;
-
-using log4net;
-using Microsoft.Win32;
+﻿using log4net;
 using Radar.Bidding;
 using Radar.Bidding.Model;
 using Radar.Bidding.Net;
 using Radar.Bidding.Service;
+using Radar.Butter;
 using Radar.Common;
+using Radar.Common.Threads;
+using Radar.Common.Utils;
 using Radar.IoC;
 using Radar.Model;
-
 
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
-using System.Windows.Threading;
 
 namespace Radar
 {
@@ -31,7 +28,7 @@ namespace Radar
 
         private static readonly ILog logger = LogManager.GetLogger(typeof(MainWindow));
 
-        public static Radar.Butter.Updater updater;
+        public static Updater updater;
 
         private WindowSimulator robot;
 
@@ -45,6 +42,8 @@ namespace Radar
 
         private ProjectConfig conf;
 
+        private LoginActManager loginActManager;
+
 
         public MainWindow()
         {
@@ -53,6 +52,8 @@ namespace Radar
             Application.Current.MainWindow.WindowState = WindowState.Maximized;
 
             InitializeComponent();
+
+            InitBizDir();
 
             InitBizComponent();
 
@@ -68,15 +69,9 @@ namespace Radar
 
         private static void EnableAutoUpdate()
         {
-            updater = new Radar.Butter.Updater();
+            updater = new Updater();
             updater.StartMonitoring();
 
-            //DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
-            //timer.Tick += delegate
-            //{
-            //    updater.SafeCheck(null);
-            //};
-            //timer.Start();
             logger.InfoFormat("Start Updater-Timer.");
         }
 
@@ -90,8 +85,19 @@ namespace Radar
             actionManager = ApplicationContext.me.Get<BidActionManager>();
             biddingScreen = ApplicationContext.me.Get<BiddingScreen>();
             conf = ApplicationContext.me.Get<ProjectConfig>();
+            loginActManager = ApplicationContext.me.Get<LoginActManager>();
 
             // 为了禁用js错误提示
+            this.webBro.LoadCompleted += new LoadCompletedEventHandler((sender, e) =>
+            {
+                loginActManager.BeforeLogin();
+                
+                if (conf.EnableAutoInputAccount)
+                {
+                    InputLoginAccount();
+                }
+
+            });
             this.webBro.Navigated += new NavigatedEventHandler(wbMain_Navigated);
             this.webBro.Navigate(new Uri(conf.BidLoginUrl));
 
@@ -101,64 +107,57 @@ namespace Radar
             if (conf.EnableSaberRobot)
             {
                 socketClient = ApplicationContext.me.Get<SocketClient>();
-                socketClient.StartClient();
-            }
+                clientService = ApplicationContext.me.Get<ClientService>();
 
-            clientService = ApplicationContext.me.Get<ClientService>();
+                socketClient.StartClient((aa) =>
+                {
+                    try
+                    {
+                        clientService.DoClientLogin();
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error("DoClientLogin error", e);
+                    }
+                    return aa;
+                });
+            }
 
             var captchaTaskDaemon = ApplicationContext.me.Get<CaptchaTaskDaemon>();
             captchaTaskDaemon.RestartInquiryThread();
 
             string osName = KK.GetFitOSName();
-
             logger.InfoFormat("osName is {0}.", osName);
 
-            string fullDictPath = string.Format("Resource/dict/dict-{0}.txt", osName);
-
-            robot.SetDict(0, fullDictPath);
             foreach (int dictIdx in Enum.GetValues(typeof(DictIndex)))
             {
+                if (dictIdx == 0) {
+                    robot.SetDict(0, string.Format("Resource/dict/dict-{0}.txt", osName));
+                    continue;
+                }
+
                 robot.SetDict(dictIdx, string.Format("Resource/dict/{0}/dict-{0}-{1}.txt", osName, dictIdx));
             }
 
+
         }
 
+        private void InitBizDir()
+        {
+            FileUtils.CreateDir(KK.CapturesDir());
+            FileUtils.CreateDir(KK.FlashScreenDir());
+        }
 
-        //private void UseLatestIE()
-        //{
-        //    int ieValue = 0;
-            
-        //    switch (webBro.Version.Major)
-        //    {
-        //        case 11:
-        //            ieValue = 11001;
-        //            break;
-        //        case 10:
-        //            ieValue = 10001;
-        //            break;
-        //        case 9:
-        //            ieValue = 9999;
-        //            break;
-        //        case 8:
-        //            ieValue = 8888;
-        //            break;
-        //        case 7:
-        //            ieValue = 7000;
-        //            break;
-        //    }
+        private void InputLoginAccount()
+        {
+            BidAccountInfo acc = KK.LoadResourceAccount();
+            if (acc == null)
+            {
+                return;
+            }
 
-        //    if (ieValue != 0)
-        //    {
-        //        using (RegistryKey registryKey =
-        //            Registry.CurrentUser.OpenSubKey(
-        //                @"SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION", true))
-        //        {
-        //            registryKey?.SetValue(Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName), ieValue,
-        //                RegistryValueKind.DWord);
-        //        }
-        //    }
-        //}
-
+            loginActManager.LoginBidAccount(acc.BidNo, acc.Password, acc.IdCardNo, false);
+        }
 
         public void ReopenBiddingPage(object sender, RoutedEventArgs e)
         {
@@ -184,11 +183,9 @@ namespace Radar
 
         }
 
-        public void AutoLoginPhase1(object sender, RoutedEventArgs e)
+        public void LoginAccountFromResource(object sender, RoutedEventArgs e)
         {
-            actionManager.MockLogin();
-
-            
+            InputLoginAccount();
         }
 
         public void StartAutoBidding(object sender, RoutedEventArgs e)

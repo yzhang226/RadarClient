@@ -9,6 +9,7 @@ using Ionic.Zip;
 using log4net;
 using Radar.Bidding;
 using System.Windows;
+using Radar.Common;
 
 namespace Radar.Butter
 {
@@ -37,6 +38,7 @@ namespace Radar.Butter
         private readonly Manifest _localConfig;
         private Manifest _remoteConfig;
         private readonly FileInfo _localConfigFile;
+        private bool loggingChk;
         #endregion
 
         #region Initialization
@@ -95,11 +97,32 @@ namespace Radar.Butter
         {
             try
             {
+                int dice = KK.RandomInt(54, 59);
+                int minute = DateTime.Now.Minute;
+                loggingChk = minute > dice;
+
                 CheckState(state);
             }
             catch (Exception e)
             {
                 logger.Error("Safe check error", e);
+            }
+        }
+
+        private void DoLogging(string info, params object[] args)
+        {
+            string text = info;
+            if (args?.Length > 0) {
+                text = string.Format(info, args);
+            }
+
+            if (logger.IsDebugEnabled)
+            {
+                logger.DebugFormat(text);
+            }
+            else if (loggingChk)
+            {
+                logger.InfoFormat(text);
             }
         }
 
@@ -109,7 +132,7 @@ namespace Radar.Butter
         /// <param name="state">The state.</param>
         private void CheckState(object state)
         {
-            logger.InfoFormat("Check starting.");
+            DoLogging("Check starting.");
 
             if (_updating)
             {
@@ -118,7 +141,8 @@ namespace Radar.Butter
             }
             var remoteUri = new Uri(this._localConfig.BaseUri + DefaultConfigFileName);
 
-            logger.InfoFormat("Fetching '{0}'.", remoteUri.AbsoluteUri);
+            DoLogging("Fetching '{0}'.", remoteUri.AbsoluteUri);
+
             var http = new Fetch { Retries = 5, RetrySleep = 30000, Timeout = 30000 };
             http.Load(remoteUri.AbsoluteUri);
             if (!http.Success)
@@ -136,27 +160,38 @@ namespace Radar.Butter
 
             if (this._localConfig.SecurityToken != this._remoteConfig.SecurityToken)
             {
-                logger.InfoFormat("Security token mismatch.");
+                logger.ErrorFormat("Security token mismatch.");
                 return;
             }
-            logger.InfoFormat("Remote config is valid. Local version is  {0}, Remote version is {1}.", this._localConfig.Version, this._remoteConfig.Version);
+            DoLogging("Remote config is valid. Local version is  {0}, Remote version is {1}.", this._localConfig.Version, this._remoteConfig.Version);
 
             if (this._remoteConfig.Version == this._localConfig.Version)
             {
-                logger.InfoFormat("Versions are the same. Check ending.");
+                DoLogging("Versions are the same. Check ending.");
                 return;
             }
             if (this._remoteConfig.Version < this._localConfig.Version)
             {
-                logger.InfoFormat("Remote version is older. That's weird. Check ending.");
+                logger.WarnFormat("Remote version is older. That's weird. Check ending.");
                 return;
             }
 
             logger.InfoFormat("Remote version is newer. Updating.");
             _updating = true;
-            Update();
-            _updating = false;
-            logger.InfoFormat("Check ending.");
+            try
+            {
+                Update();
+            }
+            catch (Exception e)
+            {
+                logger.Error("Do Update error", e);
+            } 
+            finally
+            {
+                _updating = false;
+            }
+
+            DoLogging("Check ending.");
         }
 
         /// <summary>
@@ -171,7 +206,10 @@ namespace Radar.Butter
             if (Directory.Exists(WorkPath))
             {
                 logger.InfoFormat("WARNING: Work directory already exists.");
-                try { Directory.Delete(WorkPath, true); }
+                try
+                {
+                    Directory.Delete(WorkPath, true);
+                }
                 catch (IOException)
                 {
                     logger.InfoFormat("Cannot delete open directory '{0}'.", WorkPath);
@@ -292,7 +330,7 @@ namespace Radar.Butter
             oSetup.ApplicationName = sAppName;
 
             // Generate the name of the DLL we are going to launch
-            sApplicationFile = System.IO.Path.Combine(sApplicationDirectory, sAppName + ".exe");
+            sApplicationFile = Path.Combine(sApplicationDirectory, sAppName + ".exe");
 
             oSetup.ApplicationBase = sApplicationDirectory;
             oSetup.ConfigurationFile = sApplicationFile + ".config";

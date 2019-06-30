@@ -1,6 +1,7 @@
 ﻿using log4net;
 using Radar.Bidding.Model;
 using Radar.Common;
+using Radar.Common.Model;
 using Radar.IoC;
 using Radar.Model;
 using System;
@@ -92,8 +93,8 @@ namespace Radar.Bidding
             req.from = "test";
 
             int httpStatus;
-            Radar.Common.Model.DataResult<CaptchaImageUploadResponse> dr = HttpClients
-                .PostWithFiles<Radar.Common.Model.DataResult<CaptchaImageUploadResponse>>(url, req, new List<string> { img.ImagePath1, img.ImagePath2 }, out httpStatus);
+            DataResult<CaptchaImageUploadResponse> dr = HttpClients
+                .PostWithFiles<DataResult<CaptchaImageUploadResponse>>(url, req, new List<string> { img.ImagePath1, img.ImagePath2 }, out httpStatus);
 
             logger.InfoFormat("upload catpcha task#{0}, result is {1}", img.Uuid, Jsons.ToJson(dr));
         }

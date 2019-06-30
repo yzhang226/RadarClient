@@ -196,6 +196,7 @@
     <Compile Include="Bidding\Command\SystemTimeSyncCommand.cs" />
     <Compile Include="Bidding\DM\DMCRef.cs" />
     <Compile Include="Bidding\Messages\IMessageProcessor.cs" />
+    <Compile Include="Bidding\Model\BidAccountInfo.cs" />
     <Compile Include="Bidding\Model\BiddingContext.cs" />
     <Compile Include="Bidding\Model\CaptchaAnswerImage.cs" />
     <Compile Include="Bidding\Model\CaptchaImageAnswerRequest.cs" />
@@ -207,6 +208,7 @@
     <Compile Include="Bidding\Model\ClientMinuteState.cs" />
     <Compile Include="Bidding\Model\Dto\BidderLoginRequest.cs" />
     <Compile Include="Bidding\Model\Dto\BidderLoginResponse.cs" />
+    <Compile Include="Bidding\Model\Dto\ScreenImageUploadResponse.cs" />
     <Compile Include="Bidding\SubmitStrategyManager.cs" />
     <Compile Include="Common\Logging\AsyncRollingFileAppender.cs" />
     <Compile Include="Common\Model\CommandRequest.cs" />
@@ -222,7 +224,7 @@
     <Compile Include="Common\Enums\TellDirective.cs" />
     <Compile Include="Bidding\Phase1Screen.cs" />
     <Compile Include="Bidding\Command\CaptureUploadBidScreenCommand.cs" />
-    <Compile Include="Bidding\LoginManager.cs" />
+    <Compile Include="Bidding\LoginActManager.cs" />
     <Compile Include="Bidding\Phase2ActManager.cs" />
     <Compile Include="Bidding\Phase1Manager.cs" />
     <Compile Include="Bidding\Service\ClientService.cs" />
@@ -356,9 +358,9 @@
     <Content Include="Resource\dlls\dmc.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Resource Include="Resource\account.txt">
+    <Content Include="Resource\account.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    </Content>
     <Content Include="Resource\submitStrategy.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
