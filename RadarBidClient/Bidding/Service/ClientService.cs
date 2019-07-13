@@ -33,14 +33,15 @@ namespace Radar.Bidding.Service
             this.simulator = simulator;
         }
 
-        public void DoClientLogin()
+        public void DoClientRegister()
         {
-            BidderLoginRequest req = new BidderLoginRequest();
-            req.machineCode = simulator.GetMachineCode();
-            req.clientVersion = Ver.ver;
-            req.localIpAddress = KK.GetLocalIP();
+            BidderRegisterRequest req = new BidderRegisterRequest();
+            req.MachineCode = simulator.GetMachineCode();
+            req.ClientVersion = Ver.ver;
+            req.LocalIpAddress = KK.GetLocalIP();
 
-            JsonCommand comm = JsonCommands.OK(CommandDirective.CLIENT_LOGIN, req);
+
+            JsonCommand comm = JsonCommands.OK(CommandDirective.CLIENT_REGISTER, req);
 
             RawMessage msg = MessageUtils.BuildJsonMessage(_clientNo, comm);
 

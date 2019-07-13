@@ -42,7 +42,14 @@ namespace Radar.Common.Threads
         {
             if ((th.ThreadState & ThreadState.Running) == ThreadState.Running)
             {
-                th.Abort();
+                try
+                {
+                    th.Abort();
+                }
+                catch (Exception e)
+                {
+                    logger.Error("TryStopThread error", e);
+                }
             }
         }
 

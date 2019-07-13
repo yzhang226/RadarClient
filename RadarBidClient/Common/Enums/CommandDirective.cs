@@ -15,14 +15,14 @@ namespace Radar.Common.Enums
         NONE = 0,
 
         /// <summary>
-        /// 客户端登录 - 请求
+        /// 客户端注册 - 请求
         /// </summary>
-        CLIENT_LOGIN = 60060,
+        CLIENT_REGISTER = 60060,
 
         /// <summary>
-        /// 客户端登录 - 响应
+        /// 客户端注册 - 响应
         /// </summary>
-        RESP_CLIENT_LOGIN = 60061,
+        RESP_REGISTER_LOGIN = 60061,
 
 
         /// <summary>
@@ -69,6 +69,25 @@ namespace Radar.Common.Enums
         /// 通知客户端价格
         /// </summary>
         CLIENT_PRICE_TELL = 90500,
+
+
+        /// <summary>
+        /// 竞拍账号登录
+        /// </summary>
+        BID_ACCOUNT_LOGIN = 90501,
+
+
+        /// <summary>
+        /// 第一阶段价格出价
+        /// </summary>
+        PHASE1_PRICE_OFFER = 90601,
+
+        /// <summary>
+        /// 第一阶段价格提交
+        /// </summary>
+        PHASE1_PRICE_SUBMIT = 90602,
+
+
 
     }
 }

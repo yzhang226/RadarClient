@@ -12,7 +12,7 @@ namespace Radar.Common.Times
         /// <returns></returns>
         public static bool SyncFromNtpServer()
         {
-            DateTime serverDt = Radar.Common.Times.NtpTime.GetNetworkTimeFromList();
+            DateTime serverDt = NtpTime.GetNetworkTimeFromList();
             return SystemTimeUpdater.SetDate(serverDt);
         }
 

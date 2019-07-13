@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Radar.Common
+namespace Radar.Bidding.Model.Dto
 {
-    public class Ver
+    public class BidderRegisterResponse
     {
-        public static readonly string ver = "2.0.0";
+
+        public int clientNo;
 
     }
 }

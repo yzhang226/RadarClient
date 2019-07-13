@@ -20,10 +20,11 @@ namespace Radar.Common.Times
 
         private static readonly List<string> NtpServerList = new List<string>
         {
-            "time.windows.com", "time.nist.gov", "time.nw.nist.gov", 
-            "time-nw.nist.gov", "time-a.nist.gov", "time-b.nist.gov"
+            "ntp1.aliyun.com", "ntp2.aliyun.com", "ntp3.aliyun.com",
+            "ntp4.aliyun.com", "timentp5.aliyun.com", "ntp6.aliyun.com",
+            "ntp7.aliyun.com"
         };
-
+        
         public static DateTime GetNetworkTimeFromList()
         {  
             foreach (string ntpServer in NtpServerList)

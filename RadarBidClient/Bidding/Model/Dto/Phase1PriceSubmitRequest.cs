@@ -5,10 +5,13 @@ using System.Text;
 
 namespace Radar.Bidding.Model.Dto
 {
-    public class BidderLoginResponse
+    public class Phase1PriceSubmitRequest
     {
 
-        public int clientNo;
+
+        public string MachineCode { get; set; }
+
+        public string Answer { get; set; }
 
     }
 }

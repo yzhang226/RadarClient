@@ -6,6 +6,7 @@ using Radar.Bidding.Service;
 using Radar.Butter;
 using Radar.Common;
 using Radar.Common.Threads;
+using Radar.Common.Times;
 using Radar.Common.Utils;
 using Radar.IoC;
 using Radar.Model;
@@ -109,18 +110,22 @@ namespace Radar
                 socketClient = ApplicationContext.me.Get<SocketClient>();
                 clientService = ApplicationContext.me.Get<ClientService>();
 
-                socketClient.StartClient((aa) =>
+                socketClient.AfterSuccessConnected = (aa) =>
                 {
                     try
                     {
-                        clientService.DoClientLogin();
+                        clientService.DoClientRegister();
                     }
                     catch (Exception e)
                     {
                         logger.Error("DoClientLogin error", e);
                     }
                     return aa;
-                });
+                };
+                socketClient.EnableSocketGuard = true;
+
+                socketClient.StartClient();
+                
             }
 
             var captchaTaskDaemon = ApplicationContext.me.Get<CaptchaTaskDaemon>();
@@ -139,6 +144,13 @@ namespace Radar
                 robot.SetDict(dictIdx, string.Format("Resource/dict/{0}/dict-{0}-{1}.txt", osName, dictIdx));
             }
 
+            if (conf.EnableCorrectNetTime)
+            {
+                ThreadUtils.StartNewBackgroudThread(() => {
+                    var bo = TimeSynchronizer.SyncFromNtpServer();
+                    logger.InfoFormat("TimeSynchronizer.SyncFromNtpServer result is {0}.", bo);
+                });
+            }
 
         }
 
@@ -156,7 +168,7 @@ namespace Radar
                 return;
             }
 
-            loginActManager.LoginBidAccount(acc.BidNo, acc.Password, acc.IdCardNo, false);
+            loginActManager.LoginBidAccount(acc.BidNo, acc.Password, acc.IdCardNo, conf.LoginAccountAfterAutoInput);
         }
 
         public void ReopenBiddingPage(object sender, RoutedEventArgs e)
@@ -179,7 +191,7 @@ namespace Radar
             // KK.Sleep(100);
             // biddingScreen.PreviewPhase2Captcha(pp);
 
-            clientService.DoClientLogin();
+            clientService.DoClientRegister();
 
         }
 

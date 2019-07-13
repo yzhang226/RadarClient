@@ -1,3 +1,4 @@
+using log4net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,9 @@ namespace Radar.Common
     /// </summary>
     public class SystemTimeUpdater
     {
+
+        private static readonly ILog logger = LogManager.GetLogger(typeof(SystemTimeUpdater));
+
         //设置系统时间的API函数
         [DllImport("kernel32.dll")]
         private static extern bool SetLocalTime(ref SYSTEMTIME time);
@@ -45,6 +49,10 @@ namespace Radar.Common
             st.second = (short)dt.Second;
             st.milliseconds = (short)dt.Millisecond;
             bool rt = SetLocalTime(ref st);
+
+            logger.InfoFormat("Set SystemTime to {0}", dt);
+            
+
             return rt;
         }
     }

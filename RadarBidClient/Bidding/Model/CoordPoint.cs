@@ -30,6 +30,14 @@ namespace Radar.Bidding.Model
             return new CoordPoint(this.x + dx, this.y + dy);
         }
 
+        public static CoordPoint From(string text)
+        {
+            var arr = text.Split(',');
+            int x = int.Parse(arr[0]);
+            int y = int.Parse(arr[1]);
+            return new CoordPoint(x, y);
+        }
+
         public override string ToString()
         {
             return "(" + x + ", " + y + ")";

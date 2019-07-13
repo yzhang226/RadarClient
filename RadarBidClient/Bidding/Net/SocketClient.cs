@@ -21,7 +21,11 @@ namespace Radar.Bidding.Net
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(SocketClient));
 
-        private static readonly object objLock = new object();
+        private static readonly object SEND_LOCK = new object();
+
+        private static readonly object START_LOCK = new object();
+
+        private static readonly object WATCH_LOCK = new object();
 
         private string ip;
  
@@ -30,20 +34,34 @@ namespace Radar.Bidding.Net
         //信息接收进程
         private Thread bytesReceiveThread = null;
 
+        private Thread socketWatchThrad = null;
+
         // ManualResetEvent instances signal completion.  
-        private static ManualResetEvent connectDone = new ManualResetEvent(false);
-        private static ManualResetEvent sendDone = new ManualResetEvent(false);
-        private static ManualResetEvent receiveDone = new ManualResetEvent(false);
+        private ManualResetEvent sendDone;// = new ManualResetEvent(false);
+        /// <summary>
+        /// 1  - 连接中
+        /// 10 - 正常
+        /// 100 - 异常
+        /// </summary>
+        private int connectStatus = 0;
+        // private static ManualResetEvent receiveDone = new ManualResetEvent(false);
 
         // The response from the remote device.  
         private static String response = String.Empty;
 
         private Socket _client;
-        private bool isReceiveWork = true;
+        private bool working = true;
+        private bool watching = true;
+
+        private bool socketStarting = false;
 
         private Func<RawMessage, String> anotherRecvCallback;
 
         private ProjectConfig conf;
+
+        public Func<string, string> AfterSuccessConnected { get; set; }
+
+        public bool EnableSocketGuard { get; set; }
 
         public SocketClient(string ip, int port)
         {
@@ -60,19 +78,15 @@ namespace Radar.Bidding.Net
             this.conf = conf;
         }
 
-        public void StartClient(Func<string, string> afterSuccessConnected)
+        public void StartClient()
         {
             logger.InfoFormat("begin start socket-client with address#{0}:{1}", ip, port);
 
-            isReceiveWork = true;
-
+            socketStarting = true;
+            working = true;
+            connectStatus = 1;
             try
             {
-                // Establish the remote endpoint for the socket.  
-                // The name of the remote device is "host.contoso.com".  
-                // IPHostEntry ipHostInfo = Dns.GetHostEntry(host);
-                // IPAddress ipAddress = ipHostInfo.AddressList[0];
-
                 IPAddress ipAddr = IPAddress.Parse(ip);
                 IPEndPoint remoteEP = new IPEndPoint(ipAddr, port);
 
@@ -81,26 +95,71 @@ namespace Radar.Bidding.Net
 
                 // Connect to the remote endpoint.  
                 _client.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), _client);
-                connectDone.WaitOne();
+                while (connectStatus == 1)
+                {
+                    KK.Sleep(100);
+
+                    if (connectStatus == 100)
+                    {
+                        break;
+                    }
+                }
+                socketStarting = false;
+                logger.InfoFormat("connectStatus is {0}", connectStatus);
 
                 logger.InfoFormat("end socket-client connect with address#{0}:{1}, _client#{2}", ip, port, _client);
 
-                // 初始化线程
-                bytesReceiveThread = ThreadUtils.StartNewBackgroudThread(ReceiveForEver);
-
-                try
-                {
-                    afterSuccessConnected?.Invoke("");
-                } 
-                catch (Exception e1)
-                {
-                    logger.Error("afterSuccessConnected Invoke error", e1);
-                }
+                this.InvokeAfterSuccessConnected();
             }
             catch (Exception e)
             {
                 logger.Error("StartClient error", e);
             }
+            finally
+            {
+                socketStarting = false;
+            }
+
+
+            if (EnableSocketGuard)
+            {
+                StartSocketGuardIfNotExist();
+            }
+
+        }
+
+        private void InvokeAfterSuccessConnected()
+        {
+            if (connectStatus != 10)
+            {
+                logger.WarnFormat("connectStatus is not success, so DONOT Invoke AfterSuccessConnected");
+                return;
+            }
+
+            // 初始化线程
+            bytesReceiveThread = ThreadUtils.StartNewBackgroudThread(ReceiveForEver);
+
+            try
+            {
+                AfterSuccessConnected?.Invoke("");
+            }
+            catch (Exception e1)
+            {
+                logger.Error("afterSuccessConnected Invoke error", e1);
+            }
+
+        }
+
+        private void RestartClient()
+        {
+            logger.InfoFormat("begin RestartClient");
+            lock (START_LOCK)
+            {
+                this.Shutdown();
+
+                this.StartClient();
+            }
+            logger.InfoFormat("done RestartClient");
         }
 
         public void setAnotherRecvCallback(Func<RawMessage, string> anotherRecvCallback)
@@ -120,18 +179,18 @@ namespace Radar.Bidding.Net
 
                 logger.InfoFormat("Socket connected to {0}", client.RemoteEndPoint.ToString());
 
-                // Signal that the connection has been made.  
-                connectDone.Set();
+                connectStatus = 10;
             }
             catch (Exception e)
             {
                 logger.Error("ConnectCallback error.", e);
+                connectStatus = 100;
             }
         }
 
         private void ReceiveForEver()
         {
-            while (isReceiveWork)
+            while (working)
             {
                 try
                 {
@@ -152,10 +211,13 @@ namespace Radar.Bidding.Net
                 }
                 catch (Exception e)
                 {
-                    logger.ErrorFormat("Receive error", e.Message);
-                    KK.Sleep(500);
-                    // TODO: 出现错误, 先临时处理 不在接收了 
-                    isReceiveWork = false;
+                    // logger.ErrorFormat("Receive error", e.Message);
+                    logger.Error("Receive error", e);
+
+                    // TODO: 出现错误, 先临时处理 不再接收了 
+                    working = false;
+
+                    KK.Sleep(50);
                 }
             }
         }
@@ -174,12 +236,17 @@ namespace Radar.Bidding.Net
             }
 
             // TODO: 看起来不应该并发发送
-            lock (objLock)
+            lock (SEND_LOCK)
             {
+                sendDone = new ManualResetEvent(false);
+
                 byte[] byteData = RawMessageEncoder.me.encode(raw);
 
                 // Begin sending the data to the remote device.  
                 _client.BeginSend(byteData, 0, byteData.Length, SocketFlags.None, new AsyncCallback(SendCallback), _client);
+
+                // TODO: 这里可以等待发送完成在返回
+
             }
         }
 
@@ -207,11 +274,125 @@ namespace Radar.Bidding.Net
 
         public void Shutdown()
         {
-            isReceiveWork = false;
-            ThreadUtils.TryStopThreadByWait(bytesReceiveThread, 100, 100, "SocketClient");
+            if (_client == null)
+            {
+                logger.InfoFormat("_client already closed.");
+                return;
+            }
 
-            _client.Shutdown(SocketShutdown.Both);
-            _client.Close();
+            working = false;
+            // watching = false;
+            ThreadUtils.TryStopThreadByWait(bytesReceiveThread, 200, 300, "BytesReceiveThread");
+
+            try
+            {
+                _client.Shutdown(SocketShutdown.Both);
+                logger.InfoFormat("_client.Shutdown done");
+            } 
+            catch (Exception e)
+            {
+                logger.Error("_client.Shutdown error", e);
+            }
+            
+            try
+            {
+                _client.Close();
+                logger.InfoFormat("_client.Close done");
+            } 
+            catch (Exception e)
+            {
+                logger.Error("_client.Close error", e);
+            }
+
+            _client = null;
+
+        }
+
+        private void StartSocketGuardIfNotExist()
+        {
+            if (socketWatchThrad != null)
+            {
+                return;
+            }
+
+            logger.InfoFormat("begin StartSocketClientGuard");
+            watching = true;
+            socketWatchThrad = ThreadUtils.StartNewBackgroudThread(WatchSocketClient);
+        }
+
+        /// <summary>
+        /// 连续 未连接 次数
+        /// </summary>
+        private int continuousDisconnectedCount = 0;
+
+        private static readonly int RESTART_THRESHOLD = 2;
+
+        private void WatchSocketClient()
+        {
+            KK.Sleep(5 * 1000);
+
+
+            while (watching)
+            {
+                int detectInterval = 1500;
+                KK.Sleep(detectInterval);
+
+                if (socketStarting)
+                {
+                    logger.InfoFormat("socket is starting");
+                    continue;
+                }
+
+                try
+                {
+
+                    bool connected = _client != null && IsSocketConnected(_client);
+                    DateTime dt = DateTime.Now;
+
+                    // logger.InfoFormat("socket connected#{0}", connected);
+
+                    if (dt.Minute > 57 && dt.Second % 8 == 0)
+                    {
+                        logger.InfoFormat("dice socket connected#{0}", connected);
+                    }
+
+                    if (!connected)
+                    {
+                        continuousDisconnectedCount++;
+                        detectInterval += continuousDisconnectedCount * 150;
+                        logger.InfoFormat("socket connected is false, count#{0}", continuousDisconnectedCount);
+                    }
+                    else
+                    {
+                        continuousDisconnectedCount = 0;
+                    }
+
+                    if (continuousDisconnectedCount >= RESTART_THRESHOLD)
+                    {
+                        continuousDisconnectedCount = 0;
+                        this.RestartClient();
+                    } 
+
+                } catch (Exception e)
+                {
+                    logger.Error("WatchSocketClient error", e);
+                } 
+                finally
+                {
+                    
+                }
+            }
+
+        }
+
+        private bool IsSocketConnected(Socket s)
+        {
+            bool part1 = s.Poll(1000, SelectMode.SelectRead);
+            bool part2 = (s.Available == 0);
+            if ((part1 && part2) || !s.Connected)
+                return false;
+            else
+                return true;
         }
 
         public void Dispose()

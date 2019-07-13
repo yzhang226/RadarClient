@@ -13,23 +13,23 @@ using System.Text;
 namespace Radar.Bidding.Command
 {
     [Component]
-    public class ClientLoginResponseCommand : BaseCommand<BidderLoginResponse>
+    public class ClientRegisterResponseCommand : BaseCommand<BidderRegisterResponse>
     {
-        private static readonly ILog logger = LogManager.GetLogger(typeof(ClientLoginResponseCommand));
+        private static readonly ILog logger = LogManager.GetLogger(typeof(ClientRegisterResponseCommand));
 
         private ClientService clientService;
 
-        public ClientLoginResponseCommand(ClientService clientService)
+        public ClientRegisterResponseCommand(ClientService clientService)
         {
             this.clientService = clientService;
         }
 
         public override CommandDirective GetDirective()
         {
-            return CommandDirective.RESP_CLIENT_LOGIN;
+            return CommandDirective.RESP_REGISTER_LOGIN;
         }
 
-        protected override JsonCommand DoExecute(BidderLoginResponse req)
+        protected override JsonCommand DoExecute(BidderRegisterResponse req)
         {
             logger.InfoFormat("Response of ClientLogin: clientNo is {0}", req.clientNo);
 

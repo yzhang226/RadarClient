@@ -727,6 +727,24 @@ namespace Radar.Bidding
             logger.InfoFormat("点击 - 按钮（一次） - {0}, elapsed {1}.", p12.ToString(), KK.CurrentMills() - t1);
         }
 
+        /// <summary>
+        /// 在相对坐标(x, y)上点击一次
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        public void ClickOnceAtPointRelative(int x, int y)
+        {
+            long t1 = KK.CurrentMills();
+            var re = Datum.AddDelta(x, y);
+            int ret = robot.MoveTo(re.x, re.y);
+            robot.LeftClick();
+        }
+
+        public void ClickOnceAtPointRelative(CoordPoint p)
+        {
+            ClickOnceAtPointRelative(p.x, p.y);
+        }
+
 
         public int CaptureImage(CoordRectangle rect, string filePath)
         {

@@ -32,12 +32,13 @@ namespace Radar.Bidding
             actionManager.DismissCurtain();
         }
 
-        public void LoginBidAccount(string bidNo, string password, string idCardNo, bool clickLoginButton)
+        public Task LoginBidAccount(string bidNo, string password, string idCardNo, bool clickLoginButton)
         {
-            Task.Factory.StartNew(() =>
+            Task ta = Task.Factory.StartNew(() =>
             {
                 this._LoginBidAccount(bidNo, password, idCardNo, clickLoginButton);
             });
+            return ta;
         }
 
         private void _LoginBidAccount(string bidNo, string password, string idCardNo, bool clickLoginButton)
@@ -48,9 +49,7 @@ namespace Radar.Bidding
             var p21 = Datum.AddDelta(610, 168);
             var p22 = Datum.AddDelta(610, 218);
             var p23 = Datum.AddDelta(610, 264);
-
-            var p24 = Datum.AddDelta(642, 473);
-
+            
             actionManager.InputTextAtPoint(p21, bidNo, true, "投标号");
             actionManager.InputTextAtPoint(p22, password, true, "密码");
 
@@ -60,19 +59,28 @@ namespace Radar.Bidding
             bool isIdCardNeeded = IsIdCardNeeded(Datum);
             if (isIdCardNeeded)
             {
-                actionManager.InputTextAtPoint(p23, idCardNo, true, "密码");
+                actionManager.InputTextAtPoint(p23, idCardNo, true, "身份证");
             }
 
             //this.inputCaptchaAtLogin(p23, "301726");
             //this.clickLoginAtLogin(p24);
             if (clickLoginButton)
             {
-                actionManager.ClickButtonAtPoint(p24, false, "投标竞拍");
+                ClickLoginButton();
             }
 
             logger.InfoFormat("login account#{0} ", bidNo);
 
         }
+
+        public void ClickLoginButton()
+        {
+            var Datum = actionManager.Datum;
+
+            var p24 = Datum.AddDelta(642, 473);
+            actionManager.ClickButtonAtPoint(p24, false, "投标竞拍");
+        }
+
 
         public bool IsIdCardNeeded(CoordPoint Datum)
         {

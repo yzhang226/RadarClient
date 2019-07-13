@@ -108,6 +108,14 @@ namespace Radar.Model
             }
         }
 
+        public bool LoginAccountAfterAutoInput
+        {
+            get
+            {
+                return Properties.Settings.Default.LoginAccountAfterAutoInput;
+            }
+        }
+
         public string SaberWebAddressPrefix
         {
             get
@@ -121,6 +129,17 @@ namespace Radar.Model
             get
             {
                 return this.SaberWebAddressPrefix + "/v1/screen/upload"; ;
+            }
+        }
+
+        /// <summary>
+        /// 是否开启 校准系统时间
+        /// </summary>
+        public bool EnableCorrectNetTime
+        {
+            get
+            {
+                return Properties.Settings.Default.EnableCorrectNetTime;
             }
         }
 

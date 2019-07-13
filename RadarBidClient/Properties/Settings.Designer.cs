@@ -115,7 +115,7 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool EnableAutoInputAccount {
             get {
                 return ((bool)(this["EnableAutoInputAccount"]));
@@ -128,6 +128,24 @@ namespace Radar.Properties {
         public string SaberWebAddressPrefix {
             get {
                 return ((string)(this["SaberWebAddressPrefix"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool EnableCorrectNetTime {
+            get {
+                return ((bool)(this["EnableCorrectNetTime"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool LoginAccountAfterAutoInput {
+            get {
+                return ((bool)(this["LoginAccountAfterAutoInput"]));
             }
         }
     }

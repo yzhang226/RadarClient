@@ -33,10 +33,16 @@
       <Value Profile="(Default)">3</Value>
     </Setting>
     <Setting Name="EnableAutoInputAccount" Type="System.Boolean" Scope="Application">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="SaberWebAddressPrefix" Type="System.String" Scope="Application">
       <Value Profile="(Default)">http://127.0.0.1:8877</Value>
+    </Setting>
+    <Setting Name="EnableCorrectNetTime" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="LoginAccountAfterAutoInput" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>
