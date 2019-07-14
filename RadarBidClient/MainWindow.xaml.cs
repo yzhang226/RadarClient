@@ -54,6 +54,8 @@ namespace Radar
 
             InitializeComponent();
 
+            VerLabel.Content = Ver.ver;
+
             InitBizDir();
 
             InitBizComponent();
@@ -92,7 +94,10 @@ namespace Radar
             this.webBro.LoadCompleted += new LoadCompletedEventHandler((sender, e) =>
             {
                 loginActManager.BeforeLogin();
+
+                logger.InfoFormat("webBro.LoadCompleted - EnableAutoInputAccount is {0}.", conf.EnableAutoInputAccount);
                 
+                // TODO: 这里每次都会在每一个页面载入的时候, 都会执行这一段逻辑。所以不能开启这段逻辑
                 if (conf.EnableAutoInputAccount)
                 {
                     InputLoginAccount();

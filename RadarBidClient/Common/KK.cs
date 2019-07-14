@@ -137,7 +137,7 @@ namespace Radar.Common
 
         public static string ResourceDir()
         {
-            return WorkingBaseDir() + "\\resource";
+            return WorkingBaseDir() + "\\Resource";
         }
 
         public static string CapturesDir()

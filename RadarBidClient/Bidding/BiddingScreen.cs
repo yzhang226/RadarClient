@@ -65,6 +65,9 @@ namespace Radar.Bidding
         private int delayOneS = 0;
         private int delayOneE = 600;
 
+        private int delayTwoS = 500;
+        private int delayTwoE = 900;
+
         private int ForceStart = 200;
         private int ForceEnd = 1200;
 
@@ -122,6 +125,13 @@ namespace Radar.Bidding
             {
                 biddingContext.AddPriceSetting(sps);
             }
+        }
+
+        public void RewriteAndResetStrategyFile(string strategyText)
+        {
+            strategyManager.WriteNewStrategyToFile(strategyText);
+            this.ResetStrategyByReload();
+
         }
 
         public void RefreshBiddingPage()
@@ -438,7 +448,7 @@ namespace Radar.Bidding
 
                                 SubmitOfferedPrice(fixSec, oper, answer);
 
-                                logger.InfoFormat("matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack2#{4}", fixSec, delay, offeredPrice, pp.basePrice, PriceBack2);
+                                logger.InfoFormat("N10 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack2#{4}", fixSec, delay, offeredPrice, pp.basePrice, PriceBack2);
                             }
 
                         }
@@ -454,14 +464,26 @@ namespace Radar.Bidding
 
                             logger.InfoFormat("N20 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack3#{4}", fixSec, delay, offeredPrice, pp.basePrice, biddingContext.GetPrice(sec - 3));
                         }
+
+                        // 20190714 增加判断 连续变动价格（100）
+                        else if (offeredPrice == pp.basePrice + 300 + 200) // 提前 200
+                        {
+                            int delay = KK.RandomInt(delayTwoS, delayTwoE);
+                            KK.Sleep(delay);
+
+                            SubmitOfferedPrice(fixSec, oper, answer);
+
+                            logger.InfoFormat("N21 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack3#{4}", fixSec, delay, offeredPrice, pp.basePrice, biddingContext.GetPrice(sec - 3));
+                        }
+
                         else
                         {
-                            logger.InfoFormat("N20 sec#56 ELSE OfferedPrice#{0}, pp.basePrice#{0}", offeredPrice, pp.basePrice);
+                            logger.InfoFormat("N25 sec#56 ELSE OfferedPrice#{0}, pp.basePrice#{0}", offeredPrice, pp.basePrice);
                         }
                     }
                     else
                     {
-                        logger.InfoFormat("N29 ELSE - {0}, {1}, {2}. ", now.TimeOfDay, FinalTime, (now.TimeOfDay >= FinalTime));
+                        logger.InfoFormat("N39 ELSE - {0}, {1}, {2}. ", now.TimeOfDay, FinalTime, (now.TimeOfDay >= FinalTime));
                     }
 
                 }
@@ -483,11 +505,11 @@ namespace Radar.Bidding
             {
                 if (answer == null || answer.Length == 0)
                 {
-                    logger.WarnFormat("target second#{0} has no captcha-answer", fixSec);
+                    logger.ErrorFormat("target second#{0} has no captcha-answer", fixSec);
                     return -1;
                 }
 
-                logger.InfoFormat("submit target second#{0}, still not fill captcha answer#{1}", fixSec, answer);
+                logger.InfoFormat("submit target second#{0}, and fill captcha answer#{1}", fixSec, answer);
                 phase2Manager.SubmitOfferedPrice(answer);
             }
             oper.status = 1;

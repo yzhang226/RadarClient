@@ -15,7 +15,7 @@ namespace Radar.Bidding
         private static readonly ILog logger = LogManager.GetLogger(typeof(SubmitStrategyManager));
 
         private static readonly string StrategyFileName = "submitStrategy.txt";
-        private static readonly string StrategyPath = "resource\\" + StrategyFileName;
+        private static readonly string StrategyPath = KK.ResourceDir() + "\\" + StrategyFileName;
 
         // private BiddingScreen screen;
 
@@ -57,6 +57,13 @@ namespace Radar.Bidding
             return settings;
         }
 
+        public void WriteNewStrategyToFile(string strategyText)
+        {
+
+            FileUtils.WriteTxtFile(StrategyPath, strategyText);
+            logger.InfoFormat("using new strategy - {0}", strategyText);
+        }
+
         private void WatchStragetyFile()
         {
             logger.InfoFormat("start watch directory#{0}, strategy-file#{1}", KK.ResourceDir(), StrategyFileName);
@@ -72,8 +79,9 @@ namespace Radar.Bidding
             watcher.Filter = StrategyFileName;
             watcher.Changed += new FileSystemEventHandler(OnProcess);
             watcher.EnableRaisingEvents = true;
-            watcher.NotifyFilter = NotifyFilters.Attributes | NotifyFilters.CreationTime | NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastAccess
-                                   | NotifyFilters.LastWrite | NotifyFilters.Security | NotifyFilters.Size;
+            //  | NotifyFilters.LastAccess  | NotifyFilters.Size
+            watcher.NotifyFilter = NotifyFilters.Attributes | NotifyFilters.CreationTime | NotifyFilters.DirectoryName | NotifyFilters.FileName
+                                   | NotifyFilters.LastWrite | NotifyFilters.Security;
             watcher.IncludeSubdirectories = false;
         }
 

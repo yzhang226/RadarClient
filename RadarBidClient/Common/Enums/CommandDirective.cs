@@ -87,6 +87,11 @@ namespace Radar.Common.Enums
         /// </summary>
         PHASE1_PRICE_SUBMIT = 90602,
 
+        /// <summary>
+        /// …Ë÷√æ∫≈ƒ≤ﬂ¬‘
+        /// </summary>
+        BID_STRATEGIES_SET = 90603,
+
 
 
     }

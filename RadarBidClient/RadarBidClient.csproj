@@ -196,6 +196,7 @@
     <Compile Include="Bidding\Command\ICommand.cs" />
     <Compile Include="Bidding\Command\Phase1PriceOfferCommand.cs" />
     <Compile Include="Bidding\Command\Phase1PriceSubmitCommand.cs" />
+    <Compile Include="Bidding\Command\StrategySetCommand.cs" />
     <Compile Include="Bidding\Command\SystemTimeSyncCommand.cs" />
     <Compile Include="Bidding\DM\DMCRef.cs" />
     <Compile Include="Bidding\Messages\IMessageProcessor.cs" />
@@ -212,6 +213,7 @@
     <Compile Include="Bidding\Model\Dto\BidAccountLoginRequest.cs" />
     <Compile Include="Bidding\Model\Dto\BidderRegisterRequest.cs" />
     <Compile Include="Bidding\Model\Dto\BidderRegisterResponse.cs" />
+    <Compile Include="Bidding\Model\Dto\BidStrategiesSetRequest.cs" />
     <Compile Include="Bidding\Model\Dto\Phase1PriceOfferRequest.cs" />
     <Compile Include="Bidding\Model\Dto\Phase1PriceSubmitRequest.cs" />
     <Compile Include="Bidding\Model\Dto\ScreenImageUploadResponse.cs" />
