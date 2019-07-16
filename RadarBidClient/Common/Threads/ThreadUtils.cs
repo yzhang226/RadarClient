@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Radar.Common.Threads
 {
@@ -63,6 +64,22 @@ namespace Radar.Common.Threads
                 KK.Sleep(mills2);
                 logger.InfoFormat("NOW {0}#State is {1}", memo, th.ThreadState);
             }
+        }
+
+        public static Task StartNewTaskSafe(Action act)
+        {
+            // act.Invoke();
+            var ret = Task.Factory.StartNew(() => {
+                try
+                {
+                    act.Invoke();
+                } 
+                catch (Exception e)
+                {
+                    logger.Error("action invoke error", e);
+                }
+            });
+            return ret;
         }
 
     }

@@ -2,6 +2,7 @@
 using Radar.Bidding.Model;
 using Radar.Bidding.Model.Dto;
 using Radar.Bidding.Service;
+using Radar.Common;
 using Radar.Common.Enums;
 using Radar.Common.Model;
 using Radar.Common.Threads;
@@ -56,9 +57,12 @@ namespace Radar.Bidding.Command
             ThreadUtils.StartNewBackgroudThread(() =>
             {
 
-                bidActionManager.ClickOnceAtPointRelative(p1.x, p1.y);
-                bidActionManager.ClickOnceAtPointRelative(p2.x, p2.y);
-                bidActionManager.ClickOnceAtPointRelative(p3.x, p3.y);
+                bidActionManager.ClickOnceAtPointRelative(p1.x - 14, p1.y - 2);
+                KK.Sleep(KK.RandomInt(100, 500));
+                bidActionManager.ClickOnceAtPointRelative(p2.x - 14, p2.y - 2);
+                KK.Sleep(KK.RandomInt(100, 500));
+                bidActionManager.ClickOnceAtPointRelative(p3.x - 14, p3.y - 2);
+                KK.Sleep(KK.RandomInt(100, 500));
 
                 loginActManager.ClickLoginButton();
 

@@ -216,8 +216,11 @@
     <Compile Include="Bidding\Model\Dto\BidStrategiesSetRequest.cs" />
     <Compile Include="Bidding\Model\Dto\Phase1PriceOfferRequest.cs" />
     <Compile Include="Bidding\Model\Dto\Phase1PriceSubmitRequest.cs" />
+    <Compile Include="Bidding\Model\Dto\PriceActionRequest.cs" />
     <Compile Include="Bidding\Model\Dto\ScreenImageUploadResponse.cs" />
+    <Compile Include="Bidding\Service\PriceActionService.cs" />
     <Compile Include="Bidding\SubmitStrategyManager.cs" />
+    <Compile Include="Common\Enums\PriceAction.cs" />
     <Compile Include="Common\Logging\AsyncRollingFileAppender.cs" />
     <Compile Include="Common\Model\CommandRequest.cs" />
     <Compile Include="Bidding\Model\CoordPoint.cs" />

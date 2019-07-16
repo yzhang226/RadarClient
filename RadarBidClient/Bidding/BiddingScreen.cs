@@ -1,5 +1,6 @@
-﻿ using log4net;
+﻿using log4net;
 using Radar.Bidding.Model;
+using Radar.Bidding.Service;
 using Radar.Common;
 using Radar.Common.Threads;
 using Radar.IoC;
@@ -38,6 +39,8 @@ namespace Radar.Bidding
 
         private SubmitStrategyManager strategyManager;
 
+        private PriceActionService priceActionService;
+
         private WebBrowser webBro;
 
         private Phase2ActManager phase2Manager;
@@ -73,12 +76,14 @@ namespace Radar.Bidding
 
         // private CaptchaAnswerImage LastImage;
 
-        public BiddingScreen(ProjectConfig conf, BidActionManager actionManager, Phase2ActManager phase2Manager, SubmitStrategyManager strategyManager)
+        public BiddingScreen(ProjectConfig conf, BidActionManager actionManager, Phase2ActManager phase2Manager, 
+            SubmitStrategyManager strategyManager, PriceActionService priceActionService)
         {
             this.conf = conf;
             this.actionManager = actionManager;
             this.phase2Manager = phase2Manager;
             this.strategyManager = strategyManager;
+            this.priceActionService = priceActionService;
         }
 
         public void SetWebBrowser(WebBrowser webBro)
@@ -342,6 +347,8 @@ namespace Radar.Bidding
                     continue;
                 }
 
+                
+
                 // 到点就出价
                 if (sec == fixSec)
                 {
@@ -367,6 +374,12 @@ namespace Radar.Bidding
                     CaptchaAnswerImage ansImg = phase2Manager.OfferPrice(stra.GetOfferedPrice(), true);
                     biddingContext.PutAwaitImage(ansImg, oper);
 
+                    int offeredPrice = stra.GetOfferedPrice();
+                    DateTime pageTime = pp.pageTime;
+                    ThreadUtils.StartNewTaskSafe(() => {
+                        priceActionService.ReportPriceOffered(offeredPrice, pageTime);
+                    });
+
                     oper.answerUuid = ansImg.Uuid;
                     oper.status = 0;
                     oper.status = 20;
@@ -389,7 +402,7 @@ namespace Radar.Bidding
 
                         if (answer?.Length > 0)
                         {
-                            SubmitOfferedPrice(fixSec, oper, answer);
+                            SubmitOfferedPrice(fixSec, oper, answer, pp);
                         }
                         else
                         {
@@ -411,7 +424,7 @@ namespace Radar.Bidding
                         
                         KK.Sleep(delay);
 
-                        SubmitOfferedPrice(fixSec, oper, answer);
+                        SubmitOfferedPrice(fixSec, oper, answer, pp);
 
                         logger.InfoFormat("N100 Force submit second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}.", fixSec, delay, offeredPrice, pp.basePrice);
                     }
@@ -446,7 +459,7 @@ namespace Radar.Bidding
                                 
                                 KK.Sleep(delay);
 
-                                SubmitOfferedPrice(fixSec, oper, answer);
+                                SubmitOfferedPrice(fixSec, oper, answer, pp);
 
                                 logger.InfoFormat("N10 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack2#{4}", fixSec, delay, offeredPrice, pp.basePrice, PriceBack2);
                             }
@@ -460,7 +473,7 @@ namespace Radar.Bidding
                             int delay = KK.RandomInt(delayOneS, delayOneE);
                             KK.Sleep(delay);
 
-                            SubmitOfferedPrice(fixSec, oper, answer);
+                            SubmitOfferedPrice(fixSec, oper, answer, pp);
 
                             logger.InfoFormat("N20 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack3#{4}", fixSec, delay, offeredPrice, pp.basePrice, biddingContext.GetPrice(sec - 3));
                         }
@@ -471,7 +484,7 @@ namespace Radar.Bidding
                             int delay = KK.RandomInt(delayTwoS, delayTwoE);
                             KK.Sleep(delay);
 
-                            SubmitOfferedPrice(fixSec, oper, answer);
+                            SubmitOfferedPrice(fixSec, oper, answer, pp);
 
                             logger.InfoFormat("N21 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack3#{4}", fixSec, delay, offeredPrice, pp.basePrice, biddingContext.GetPrice(sec - 3));
                         }
@@ -495,22 +508,32 @@ namespace Radar.Bidding
 
         }
 
-        private int SubmitOfferedPrice(int fixSec, PriceSubmitOperate oper, string answer)
+        private int SubmitOfferedPrice(int fixSec, PriceSubmitOperate oper, string answer, PagePrice pp)
         {
+            DateTime pageTime = pp.pageTime;
             if (oper.status == 21)
             {
                 phase2Manager.SubmitOfferedPrice();
+                ThreadUtils.StartNewTaskSafe(() => {
+                    priceActionService.ReportPriceSubbmitted(0, pageTime);
+                });
             }
             else
             {
                 if (answer == null || answer.Length == 0)
                 {
                     logger.ErrorFormat("target second#{0} has no captcha-answer", fixSec);
+                    ThreadUtils.StartNewTaskSafe(() => {
+                        priceActionService.ReportPriceSubbmitted(-100, pageTime);
+                    });
                     return -1;
                 }
 
                 logger.InfoFormat("submit target second#{0}, and fill captcha answer#{1}", fixSec, answer);
                 phase2Manager.SubmitOfferedPrice(answer);
+                ThreadUtils.StartNewTaskSafe(() => {
+                    priceActionService.ReportPriceSubbmitted(0, pageTime);
+                });
             }
             oper.status = 1;
             biddingContext.RemoveSubmitOperate(fixSec);

@@ -1,5 +1,6 @@
 ﻿using log4net;
 using Radar.Bidding.Model;
+using Radar.Common;
 using Radar.IoC;
 using Radar.Model;
 using System;
@@ -51,7 +52,10 @@ namespace Radar.Bidding
             var p23 = Datum.AddDelta(610, 264);
             
             actionManager.InputTextAtPoint(p21, bidNo, true, "投标号");
+            KK.Sleep(KK.RandomInt(100, 500));
+
             actionManager.InputTextAtPoint(p22, password, true, "密码");
+            KK.Sleep(KK.RandomInt(100, 500));
 
             // TODO: 验证码方式变了
 
@@ -60,6 +64,7 @@ namespace Radar.Bidding
             if (isIdCardNeeded)
             {
                 actionManager.InputTextAtPoint(p23, idCardNo, true, "身份证");
+                KK.Sleep(KK.RandomInt(100, 500));
             }
 
             //this.inputCaptchaAtLogin(p23, "301726");
@@ -84,10 +89,11 @@ namespace Radar.Bidding
 
         public bool IsIdCardNeeded(CoordPoint Datum)
         {
+            actionManager.UseDict(DictIndex.INDEX_ALL);
             var p1 = Datum.AddDelta(408, 243);
             var rect = CoordRectangle.From(p1, 469, 44);
             var text = actionManager.FindTextByOcr(rect, "777777-777777");
-            logger.InfoFormat("ocr 识别内容是 {0}", text);
+            logger.InfoFormat("IsIdCardNeeded ocr 识别内容是 {0}", text);
             return text.Contains("身");
         }
 

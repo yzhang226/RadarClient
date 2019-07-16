@@ -131,6 +131,11 @@ namespace Radar.Bidding
             robot.UseDict(0);
         }
 
+        public void UseDict(DictIndex dictIdx)
+        {
+            robot.UseDict(dictIdx);
+        }
+
         public PageTimePriceResult DetectPriceAndTimeInScreen(PageTimePriceResult LastResult)
         {
             long t1 = KK.CurrentMills();
@@ -451,13 +456,13 @@ namespace Radar.Bidding
                 {
                     // 不会有 scroll
                     // bench.x = (re.x - w) / 2;
-                    bench.x = 682;
+                    bench.x = 672;
                     bench.y = 23;
                 }
                 else
                 {
                     // bench.x = (re.x - w - 15) / 2;
-                    bench.x = 354;
+                    bench.x = 344;
                     bench.y = 19;
                 }
 
@@ -736,6 +741,7 @@ namespace Radar.Bidding
         {
             long t1 = KK.CurrentMills();
             var re = Datum.AddDelta(x, y);
+            // logger.InfoFormat("ClickOnceAtPointRelative use coord - {0}, {1} - {2}, {3} .", x, y, re.x, re.y);
             int ret = robot.MoveTo(re.x, re.y);
             robot.LeftClick();
         }
