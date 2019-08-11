@@ -16,5 +16,11 @@ namespace Radar.Bidding.Model
 
         public long timestamp;
 
+
+        /**
+         * 上传类型
+         */
+        public int uploadType;
+
     }
 }

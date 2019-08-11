@@ -27,6 +27,10 @@ namespace Radar.Bidding.Service
 
         private WindowSimulator simulator;
 
+        private string _machineCode;
+
+        private string _seatNo;
+
         public ClientService(SocketClient socketClient, WindowSimulator simulator)
         {
             this.socketClient = socketClient;
@@ -36,9 +40,10 @@ namespace Radar.Bidding.Service
         public void DoClientRegister()
         {
             BidderRegisterRequest req = new BidderRegisterRequest();
-            req.MachineCode = simulator.GetMachineCode();
+            req.MachineCode = GetMachineCode();
             req.ClientVersion = Ver.ver;
             req.LocalIpAddress = KK.GetLocalIP();
+            req.SeatNo = GetClientSeatNo();
 
 
             JsonCommand comm = JsonCommands.OK(CommandDirective.CLIENT_REGISTER, req);
@@ -48,8 +53,26 @@ namespace Radar.Bidding.Service
 
             socketClient.Send(msg);
 
-            logger.InfoFormat("send DoClientLogin tcp request...");
+            logger.InfoFormat("send DoClientRegister tcp request...");
+        }
 
+        public string GetClientSeatNo()
+        {
+            if (_seatNo == null)
+            {
+                _seatNo = KK.ReadClientSeatNo();
+            }
+            return _seatNo;
+        }
+
+        public string GetMachineCode()
+        {
+            if (_machineCode == null)
+            {
+                _machineCode = simulator.GetMachineCode();
+            }
+
+            return _machineCode;
         }
 
         public int AssignedClientNo

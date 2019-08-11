@@ -317,5 +317,27 @@ namespace Radar.Common
             return idx > 0 ? fname.Substring(0, idx) : fname;
         }
 
+        /// <summary>
+        /// 读取seat-no文件, 获取座位号
+        /// </summary>
+        /// <returns></returns>
+        public static string ReadClientSeatNo()
+        {
+            string seatNo = "-2";
+            try
+            {
+                string path = KK.ResourceDir() + "\\seat-no";
+                string text = FileUtils.ReadTxtFile(path);
+                string[] arr = text.Split('\n');
+                seatNo = arr[0];
+            }
+            catch (Exception e)
+            {
+                logger.Error("GetClientSeatNo", e);
+                seatNo = "ERR";
+            }
+            return seatNo;
+        }
+
     }
 }

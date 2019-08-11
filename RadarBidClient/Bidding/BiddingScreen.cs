@@ -456,7 +456,6 @@ namespace Radar.Bidding
 
                             if (matched)
                             {
-                                
                                 KK.Sleep(delay);
 
                                 SubmitOfferedPrice(fixSec, oper, answer, pp);
@@ -465,35 +464,37 @@ namespace Radar.Bidding
                             }
 
                         }
+                        else if (sec >= 56 && (pp.basePrice - biddingContext.GetPrice(sec - 3)) == 200)
+                        {
+                            if (offeredPrice == pp.basePrice + 300 + 100) // 提前100
+                            {
+                                int delay = KK.RandomInt(delayOneS, delayOneE);
+                                KK.Sleep(delay);
+
+                                SubmitOfferedPrice(fixSec, oper, answer, pp);
+
+                                logger.InfoFormat("N20 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack3#{4}", fixSec, delay, offeredPrice, pp.basePrice, biddingContext.GetPrice(sec - 3));
+                            }
+
+                            // 20190714 增加判断 连续变动价格（100）
+                            else if (offeredPrice == pp.basePrice + 300 + 200) // 提前 200
+                            {
+                                int delay = KK.RandomInt(delayTwoS, delayTwoE);
+                                KK.Sleep(delay);
+
+                                SubmitOfferedPrice(fixSec, oper, answer, pp);
+
+                                logger.InfoFormat("N21 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack3#{4}", fixSec, delay, offeredPrice, pp.basePrice, biddingContext.GetPrice(sec - 3));
+                            }
+
+                            else
+                            {
+                                logger.InfoFormat("N25 sec#56 ELSE OfferedPrice#{0}, pp.basePrice#{0}", offeredPrice, pp.basePrice);
+                            }
+                        }
+
                     }
-                    else if (sec >= 56 && (pp.basePrice - biddingContext.GetPrice(sec - 3)) == 20)
-                    {
-                        if (offeredPrice == pp.basePrice + 300 + 100) // 提前100
-                        {
-                            int delay = KK.RandomInt(delayOneS, delayOneE);
-                            KK.Sleep(delay);
-
-                            SubmitOfferedPrice(fixSec, oper, answer, pp);
-
-                            logger.InfoFormat("N20 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack3#{4}", fixSec, delay, offeredPrice, pp.basePrice, biddingContext.GetPrice(sec - 3));
-                        }
-
-                        // 20190714 增加判断 连续变动价格（100）
-                        else if (offeredPrice == pp.basePrice + 300 + 200) // 提前 200
-                        {
-                            int delay = KK.RandomInt(delayTwoS, delayTwoE);
-                            KK.Sleep(delay);
-
-                            SubmitOfferedPrice(fixSec, oper, answer, pp);
-
-                            logger.InfoFormat("N21 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack3#{4}", fixSec, delay, offeredPrice, pp.basePrice, biddingContext.GetPrice(sec - 3));
-                        }
-
-                        else
-                        {
-                            logger.InfoFormat("N25 sec#56 ELSE OfferedPrice#{0}, pp.basePrice#{0}", offeredPrice, pp.basePrice);
-                        }
-                    }
+                    
                     else
                     {
                         logger.InfoFormat("N39 ELSE - {0}, {1}, {2}. ", now.TimeOfDay, FinalTime, (now.TimeOfDay >= FinalTime));
@@ -569,8 +570,10 @@ namespace Radar.Bidding
             // TODO: 这里使用异步处理，否则出现不能显示验证码。
             // TODO: 这里可以归为一类问题：模拟时，必须等到所有操作才能显示页面。需要解决。
 
+            logger.InfoFormat("Execute PreviewPhase2Captcha @{0}", pp.pageTime);
+
             CaptchaAnswerImage img = null;
-            Task.Factory.StartNew(() =>
+            ThreadUtils.StartNewTaskSafe(() =>
             {
                 img = phase2Manager.OfferPrice(pp.basePrice + 1500, false);
                 phase2Manager.CancelOfferedPrice();

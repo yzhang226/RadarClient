@@ -31,12 +31,12 @@ namespace Radar.Common.Enums
         SYNC_SYSTEM_TIME = 90100,
 
         /// <summary>
-        /// 截图且上传flash屏幕
+        /// 截图flash屏幕
         /// </summary>
         CAPTURE_BID_SCREEN = 90201,
 
         /// <summary>
-        /// 截图且上传flash屏幕
+        /// 上传flash屏幕
         /// </summary>
         UPLOAD_BID_SCREEN = 90202,
 
@@ -46,19 +46,29 @@ namespace Radar.Common.Enums
         CAPTURE_UPLOAD_BID_SCREEN = 90203,
 
         /// <summary>
+        /// 截图且上传全屏幕
+        /// </summary>
+        CAPTURE_UPLOAD_FULL_SCREEN = 90204,
+
+        /// <summary>
+        /// 上传压缩日志文件
+        /// </summary>
+        UPLOAD_ZIPPED_LOG_FILE = 90210,
+
+        /// <summary>
         /// 移动鼠标
         /// </summary>
         MOVE_CURSOR = 90300,
 
         /// <summary>
-        /// 左键点击
+        /// 移动鼠标 并 左键点击
         /// </summary>
-        LEFT_CLICK = 90301,
+        MOVE_LEFT_CLICK = 90301,
 
         /// <summary>
-        /// 输入文本
+        /// 移动鼠标 并 左键点击 并 输入文本
         /// </summary>
-        INPUT_TEXT = 90302,
+        MOVE_CLICK_INPUT_TEXT = 90302,
 
         /// <summary>
         /// 指令脚本（多个指令的集合）

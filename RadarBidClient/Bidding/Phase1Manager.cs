@@ -34,20 +34,18 @@ namespace Radar.Bidding
         /// 2. 点击出价按钮 - 移动到按钮位置，点击
         /// 3. 对验证码区域截图 且 上传
         /// </summary>
-        public CaptchaAnswerImage OfferPrice(int targetPrice, bool enableCancelFirst)
+        public CaptchaAnswerImage OfferPrice(int targetPrice, bool enableCancelFirst, bool needUploadCaptchaTask = false)
         {
-            var Datum = actionManager.Datum;
-
             // 0. 出价前，先尝试取消，防止上一步的可能的遮罩
             if (enableCancelFirst)
             {
-                actionManager.ClickButtonByFenceWayRToL(Datum.AddDelta(742, 502));
+                actionManager.ClickButtonByFenceWayRToL(actionManager.AddDelta(742, 502));
             }
 
             // 1. 输入价格 且 出价
-            actionManager.InputTextAtPoint(Datum.AddDelta(676, 317), targetPrice.ToString(), true, "第一阶段出价#i1");
-            actionManager.InputTextAtPoint(Datum.AddDelta(676, 375), targetPrice.ToString(), true, "第一阶段出价#i2");
-            actionManager.ClickButtonAtPoint(Datum.AddDelta(800, 373), true, "第一阶段出价");
+            actionManager.InputTextAtPoint(actionManager.AddDelta(676, 317), targetPrice.ToString(), true, "第一阶段出价#i1");
+            actionManager.InputTextAtPoint(actionManager.AddDelta(676, 375), targetPrice.ToString(), true, "第一阶段出价#i2");
+            actionManager.ClickButtonAtPoint(actionManager.AddDelta(800, 373), true, "第一阶段出价");
 
             // 2. 对验证码区域截屏且上传 
             KK.Sleep(500);
@@ -59,18 +57,16 @@ namespace Radar.Bidding
 
         private CaptchaAnswerImage CaptureCaptchaImage()
         {
-            var Datum = actionManager.Datum;
-
             DateTime dt = DateTime.Now;
             var uuid = KK.uuid();
 
             // 1. 验证码 - 提示语
-            CoordRectangle rect1 = CoordRectangle.From(Datum.AddDelta(442, 338), 380, 53);
+            CoordRectangle rect1 = CoordRectangle.From(actionManager.AddDelta(442, 338), 380, 53);
             var img01Path = KK.CapturesDir() + "\\" + uuid + "-" + dt.ToString("HHmmss") + "-p21.jpg";
             actionManager.CaptureImage(rect1, img01Path);
 
             // 2. 验证码 - 图形区域
-            CoordRectangle rect2 = CoordRectangle.From(Datum.AddDelta(445, 390), 230, 90);
+            CoordRectangle rect2 = CoordRectangle.From(actionManager.AddDelta(445, 390), 230, 90);
             var img02Path = KK.CapturesDir() + "\\" + uuid + "-" + dt.ToString("HHmmss") + "-p22.jpg";
             actionManager.CaptureImage(rect2, img02Path);
 
@@ -117,9 +113,7 @@ namespace Radar.Bidding
         {
             logger.InfoFormat("submit offered-price with answer#{0}", answer);
 
-            var Datum = actionManager.Datum;
-
-            actionManager.InputTextAtPoint(Datum.AddDelta(734, 416), answer, true, "第一阶段提交#输入验证码");
+            actionManager.InputTextAtPoint(actionManager.AddDelta(734, 416), answer, true, "第一阶段提交#输入验证码");
         }
 
         /// <summary>
@@ -127,17 +121,15 @@ namespace Radar.Bidding
         /// </summary>
         public void SubmitOfferedPrice()
         {
-            var Datum = actionManager.Datum;
-
-            actionManager.ClickButtonByFenceWayLToR(Datum.AddDelta(553, 500));
+            actionManager.ClickButtonByFenceWayLToR(actionManager.AddDelta(553, 500));
 
             // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
             // TODO: 应该检测 区域 是否有 出价有效
             KK.Sleep(600);
-            actionManager.ClickButtonAtPoint(Datum.AddDelta(661, 478), false, "第一阶段提交#确定");
+            actionManager.ClickButtonAtPoint(actionManager.AddDelta(661, 478), false, "第一阶段提交#确定");
 
             // 清除以前输入的价格
-            actionManager.CleanTextAtPoint(Datum.AddDelta(676, 417), 6, true, "第一阶段提交");
+            actionManager.CleanTextAtPoint(actionManager.AddDelta(676, 417), 6, true, "第一阶段提交");
         }
 
     }

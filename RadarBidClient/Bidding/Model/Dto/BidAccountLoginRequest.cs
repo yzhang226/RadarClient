@@ -9,16 +9,17 @@ namespace Radar.Bidding.Model.Dto
     {
 
 
-        public String MachineCode { get; set; }
+        public string MachineCode { get; set; }
 
-        public String BidAccountNo { get; set; }
+        public string BidAccountNo { get; set; }
 
-        public String BidAccountPswd { get; set; }
+        public string BidAccountPswd { get; set; }
 
-        public String BidAccountIdCard { get; set; }
+        public string BidAccountIdCard { get; set; }
 
-        public String LoginCoords { get; set; }
+        public string LoginCoords { get; set; }
 
+        public int ScreenModeVal { get; set; }
 
     }
 }

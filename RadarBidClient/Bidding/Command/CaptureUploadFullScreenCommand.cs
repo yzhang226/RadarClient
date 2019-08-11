@@ -1,8 +1,9 @@
 ﻿using log4net;
-using Radar.Bidding.Model;
+using Radar.Bidding.Model.Dto;
 using Radar.Common;
 using Radar.Common.Enums;
 using Radar.Common.Model;
+using Radar.Common.Utils;
 using Radar.IoC;
 using System;
 using System.Collections.Generic;
@@ -13,24 +14,26 @@ namespace Radar.Bidding.Command
 {
 
     [Component]
-    public class MoveCurcorCommand : BaseCommand<string>
+    public class CaptureUploadFullScreenCommand : BaseCommand<string>
     {
+
         private BidActionManager bidActionManager;
 
-        public MoveCurcorCommand(BidActionManager bidActionManager)
+        public CaptureUploadFullScreenCommand(BidActionManager bidActionManager)
         {
             this.bidActionManager = bidActionManager;
         }
 
         public override CommandDirective GetDirective()
         {
-            return CommandDirective.MOVE_CURSOR;
+            return CommandDirective.CAPTURE_UPLOAD_FULL_SCREEN;
         }
 
         protected override JsonCommand DoExecute(string args)
         {
-            CoordPoint p = CoordPoint.FromAndAdjustRemote(args);
-            int ret = bidActionManager.MoveCursor(p);
+            string imgPath = bidActionManager.CaptureFullScreen();
+            ScreenImageUploadResponse resp = bidActionManager.UploadFileToSaber(imgPath);
+            
             return null;
         }
     }

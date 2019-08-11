@@ -28,10 +28,10 @@ namespace Radar.Bidding.Model
         }
 
 
-        public PagePrice(DateTime occur, int currentPrice)
+        public PagePrice(DateTime occur, int basePrice)
         {
             this.pageTime = occur;
-            this.basePrice = currentPrice;
+            this.basePrice = basePrice;
         }
 
         public override bool Equals(object objx)

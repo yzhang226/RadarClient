@@ -66,7 +66,7 @@ namespace Radar.Bidding.Service
 
             socketClient.Send(msg);
 
-            logger.InfoFormat("send price-action#{0}#{1} at srceeTime#{2} tcp request...", price, action, screenTime);
+            logger.InfoFormat("send price-action#{0}#{1} at screenTime#{2} tcp request...", price, action, screenTime);
         }
 
     }

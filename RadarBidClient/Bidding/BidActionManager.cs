@@ -52,7 +52,7 @@ namespace Radar.Bidding
         private List<CoordPoint> fenceEndPointsReverse = new List<CoordPoint>();
 
 
-        public CoordPoint Datum
+        private CoordPoint Datum
         {
             get
             {
@@ -81,9 +81,9 @@ namespace Radar.Bidding
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        public int MoveCursor(int x, int y)
+        public int MoveCursor(CoordPoint p)
         {
-            CoordPoint po = this.Datum.AddDelta(x, y);
+            CoordPoint po = this.Datum.AddDelta(p.x, p.y);
 
             return robot.MoveTo(po.x, po.y);
         }
@@ -199,7 +199,14 @@ namespace Radar.Bidding
             robot.UseDict(DictIndex.INDEX_NUMBER);
             string ret2 = robot.Ocr(x21, y21, x22, y22, "ff0000-000000", 0.8);
 
-            logger.InfoFormat("价格区间 - OCR内容, {0} @ {1}, elapsed {2}ms",ret2, dt, KK.CurrentMills() - s1);
+            if (dt.Minute > 26)
+            {
+                logger.InfoFormat("价格区间 - OCR内容, {0} @ {1}, elapsed {2}ms", ret2, dt, KK.CurrentMills() - s1);
+            } else
+            {
+                logger.DebugFormat("价格区间 - OCR内容, {0} @ {1}, elapsed {2}ms", ret2, dt, KK.CurrentMills() - s1);
+            }
+            
 
             if (ret2 == null || ret2.Length == 0 || ret2.Length < 10)
             {
@@ -223,11 +230,18 @@ namespace Radar.Bidding
                 return PageTimePriceResult.ErrorPrice();
             }
 
-            logger.InfoFormat("price parsed priceLow is {0}, pricHigh is {1}", priceLow, priceHigh);
+            int basePrice = (priceLow + priceHigh) / 2;
 
-            int currentPrice = (priceLow + priceHigh) / 2;
-
-            var pp = new PagePrice(dt, currentPrice);
+            if (dt.Minute > 25)
+            {
+                logger.InfoFormat("parsed price - base#{0}, low#{1}, high#{2}", basePrice, priceLow, priceHigh);
+            } 
+            else
+            {
+                logger.DebugFormat("parsed price - base#{0}, low#{1}, high#{2}", basePrice, priceLow, priceHigh);
+            }
+            
+            var pp = new PagePrice(dt, basePrice);
             pp.low = priceLow;
             pp.high = priceHigh;
 
@@ -291,13 +305,41 @@ namespace Radar.Bidding
         {
             
             robot.UseDict(dictIndex);
+
             string ret = robot.Ocr(rect.x1, rect.y1, rect.x2, rect.y2, color, 0.8);
             return ret;
         }
 
+        /// <summary>
+        /// 返回基于 基准点 的坐标位置
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
         public CoordPoint DeltaPoint(int x, int y)
         {
             return this.Datum.AddDelta(x, y);
+        }
+
+        /// <summary>
+        /// 返回基于 基准点 的坐标位置
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public CoordPoint AddDelta(int x, int y)
+        {
+            return this.Datum.AddDelta(x, y);
+        }
+
+        /// <summary>
+        /// 返回基于 基准点 的坐标位置
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public CoordPoint DeltaPoint(CoordPoint p)
+        {
+            return this.Datum.AddDelta(p.x, p.y);
         }
 
         public void MockLogin()
@@ -324,13 +366,15 @@ namespace Radar.Bidding
         public void DismissCurtain()
         {
             // 首屏 确定 按钮
-            var p11 = Datum.AddDelta(741, 507);
+            // var p11 = Datum.AddDelta(741, 507);
+            var p11 = new CoordPoint(741, 507);
 
             // 首屏 同意 按钮
-            var p12 = Datum.AddDelta(730, 509);
+            // var p12 = Datum.AddDelta(730, 509);
+            var p12 = new CoordPoint(730, 509);
 
-            this.ClickButtonAtPoint(p11, false, "首屏确定按钮");
-            this.ClickButtonAtPoint(p12, false, "首屏同意按钮");
+            this.ClickBtnOnceAtPoint(p11, "首屏确定按钮");
+            this.ClickBtnOnceAtPoint(p12, "首屏同意按钮");
         }
 
         public void MockLoginAndPhase1()
@@ -723,34 +767,35 @@ namespace Radar.Bidding
             logger.InfoFormat("栅栏模式（从左到右） 点击 - 按钮 - {0}, elpased {1}.", pot.ToString(), KK.CurrentMills() - t1);
         }
 
-        // 
-        public void ClickBtnOnceAtPoint(CoordPoint p12)
-        {
-            long t1 = KK.CurrentMills();
-            int ret = robot.MoveTo(p12.x, p12.y);
-            robot.LeftClick();
-            logger.InfoFormat("点击 - 按钮（一次） - {0}, elapsed {1}.", p12.ToString(), KK.CurrentMills() - t1);
-        }
-
         /// <summary>
-        /// 在相对坐标(x, y)上点击一次
+        /// 如果 isAbsolute  != true,  在相对坐标(x, y)上点击一次 
+        /// 否则 在绝对坐标(x, y)上点击一次 
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        public void ClickOnceAtPointRelative(int x, int y)
+        /// <param name="p12"></param>
+        /// <param name="isAbsolute"></param>
+        public void ClickBtnOnceAtPoint(CoordPoint p12, string memo = "", bool isAbsolute = false, int delayMills = 0, int clickCount = 1)
         {
+            if (delayMills > 0)
+            {
+                KK.Sleep(delayMills);
+            }
+
             long t1 = KK.CurrentMills();
-            var re = Datum.AddDelta(x, y);
-            // logger.InfoFormat("ClickOnceAtPointRelative use coord - {0}, {1} - {2}, {3} .", x, y, re.x, re.y);
-            int ret = robot.MoveTo(re.x, re.y);
+            CoordPoint po = p12;
+            if (!isAbsolute)
+            {
+                po = Datum.AddDelta(p12.x, p12.y);
+            }
+
+            int ret = robot.MoveTo(po.x, po.y);
             robot.LeftClick();
+            if (clickCount > 1)
+            {
+                robot.LeftClick();
+            }
+            
+            logger.InfoFormat("点击按钮#{0} @ {1} with count#{2}, elapsed {3}.", memo, po.ToString(), clickCount, KK.CurrentMills() - t1);
         }
-
-        public void ClickOnceAtPointRelative(CoordPoint p)
-        {
-            ClickOnceAtPointRelative(p.x, p.y);
-        }
-
 
         public int CaptureImage(CoordRectangle rect, string filePath)
         {
@@ -761,7 +806,17 @@ namespace Radar.Bidding
         {
 
             CoordRectangle rect2 = CoordRectangle.From(Datum, 900, 700);
-            var img02Path = string.Format("{0}\\{1}-{2:HHmmss}-screen.jpg", KK.FlashScreenDir(), KK.uuid(), DateTime.Now);
+            var img02Path = string.Format("{0}\\{1}-{2:HHmmss}-flash-screen.jpg", KK.FlashScreenDir(), KK.uuid(), DateTime.Now);
+            CaptureImage(rect2, img02Path);
+
+            return img02Path;
+        }
+
+        public string CaptureFullScreen()
+        {
+            var scr = GetScreenResolution();
+            CoordRectangle rect2 = CoordRectangle.From(0, 0, scr.x, scr.y);
+            var img02Path = string.Format("{0}\\{1}-{2:HHmmss}-full-screen.jpg", KK.FlashScreenDir(), KK.uuid(), DateTime.Now);
             CaptureImage(rect2, img02Path);
 
             return img02Path;
@@ -789,7 +844,7 @@ namespace Radar.Bidding
                 for (int r = 1; r <= rows; r++)
                 {
                     var fence = startPoint.AddDelta(c * cellLen, r * cellWidth);
-                    logger.InfoFormat("fence is row={0} column={1}, point is {2}.", r, c, fence.ToString());
+                    logger.DebugFormat("fence is row={0} column={1}, point is {2}.", r, c, fence.ToString());
                     fenceEndPoints.Add(fence);
                 }
             }
@@ -797,7 +852,7 @@ namespace Radar.Bidding
             fenceEndPointsReverse = new List<CoordPoint>(fenceEndPoints);
             fenceEndPointsReverse.Reverse();
 
-            logger.InfoFormat("init FenceEndPoints, size {0}", fenceEndPoints.Count);
+            logger.DebugFormat("init FenceEndPoints, size {0}", fenceEndPoints.Count);
         }
 
 
@@ -806,21 +861,22 @@ namespace Radar.Bidding
             InitFencePoint();
         }
 
-        public ScreenImageUploadResponse UploadRobotScreenImage(string imgPath)
+        public ScreenImageUploadResponse UploadFileToSaber(string filePath, int uploadType = 0)
         {
             string url = conf.UploadRobotScreenUrl;
             CaptchaImageUploadRequest req = new CaptchaImageUploadRequest();
             req.machineCode = robot.GetMachineCode();
             req.token = "devJustTest";
-            req.uid = KK.GetFileNameNoSuffix(imgPath);
+            req.uid = KK.GetFileNameNoSuffix(filePath);
             req.timestamp = KK.CurrentMills();
             req.from = "test";
+            req.uploadType = uploadType;
 
             int httpStatus;
             DataResult<ScreenImageUploadResponse> dr = HttpClients
-                .PostWithFiles<DataResult<ScreenImageUploadResponse>>(url, req, new List<string> { imgPath }, out httpStatus);
+                .PostWithFiles<DataResult<ScreenImageUploadResponse>>(url, req, new List<string> { filePath }, out httpStatus);
 
-            logger.InfoFormat("upload screen image#{0}, result is {1}", req.uid, Jsons.ToJson(dr));
+            logger.InfoFormat("upload file#{0}, result is {1}", req.uid, Jsons.ToJson(dr));
 
             return DataResults.IsOK(dr) ? dr.Data : null;
         }

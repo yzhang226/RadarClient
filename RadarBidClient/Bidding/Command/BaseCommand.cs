@@ -23,7 +23,7 @@ namespace Radar.Bidding.Command
             Type selfType = this.GetType();
             Type genericT = selfType.BaseType;
             reqType = genericT.GetGenericArguments()[0];
-            logger.InfoFormat("command#{0} 's request type is {1}.", genericT, reqType);
+            logger.DebugFormat("command#{0} 's request type is {1}.", genericT, reqType);
         }
 
         public abstract CommandDirective GetDirective();
@@ -49,7 +49,7 @@ namespace Radar.Bidding.Command
 
         public void AfterPropertiesSet()
         {
-            logger.InfoFormat("Register Command#{0}", this);
+            logger.DebugFormat("Register Command#{0}", this);
 
             CommandProcessorFactory.Register(this);
         }

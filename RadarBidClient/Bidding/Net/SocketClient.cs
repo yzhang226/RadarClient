@@ -254,7 +254,7 @@ namespace Radar.Bidding.Net
         {
             try
             {
-                logger.InfoFormat("SendCallback in");
+                logger.DebugFormat("SendCallback in");
 
                 // Retrieve the socket from the state object.  
                 Socket client = (Socket) ar.AsyncState;
@@ -325,7 +325,18 @@ namespace Radar.Bidding.Net
         /// </summary>
         private int continuousDisconnectedCount = 0;
 
-        private static readonly int RESTART_THRESHOLD = 2;
+        /// <summary>
+        /// 连续 连接 次数
+        /// </summary>
+        private int continuousConnectedCount = 0;
+
+        private static readonly int RESTART_THRESHOLD = 1;
+
+        private static readonly int DETECT_INTERVAL_MILLS = 2000;
+
+        private static readonly int AGAIN_CHECK_INTERVAL_MILLS = DETECT_INTERVAL_MILLS * 30;
+
+        private static readonly int AGAIN_CHECK_THRESHOLD = AGAIN_CHECK_INTERVAL_MILLS / DETECT_INTERVAL_MILLS;
 
         private void WatchSocketClient()
         {
@@ -334,8 +345,7 @@ namespace Radar.Bidding.Net
 
             while (watching)
             {
-                int detectInterval = 1500;
-                KK.Sleep(detectInterval);
+                KK.Sleep(DETECT_INTERVAL_MILLS);
 
                 if (socketStarting)
                 {
@@ -346,7 +356,7 @@ namespace Radar.Bidding.Net
                 try
                 {
 
-                    bool connected = _client != null && IsSocketConnected(_client);
+                    bool connected = _client != null && IsConnected(_client);
                     DateTime dt = DateTime.Now;
 
                     // logger.InfoFormat("socket connected#{0}", connected);
@@ -358,17 +368,19 @@ namespace Radar.Bidding.Net
 
                     if (!connected)
                     {
+                        continuousConnectedCount = 0;
                         continuousDisconnectedCount++;
-                        detectInterval += continuousDisconnectedCount * 150;
                         logger.InfoFormat("socket connected is false, count#{0}", continuousDisconnectedCount);
                     }
                     else
                     {
+                        continuousConnectedCount++;
                         continuousDisconnectedCount = 0;
                     }
 
                     if (continuousDisconnectedCount >= RESTART_THRESHOLD)
                     {
+                        continuousConnectedCount = 0;
                         continuousDisconnectedCount = 0;
                         this.RestartClient();
                     } 
@@ -385,7 +397,34 @@ namespace Radar.Bidding.Net
 
         }
 
-        private bool IsSocketConnected(Socket s)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        private bool IsConnected(Socket client)
+        {
+            if (client == null || !client.Connected)
+            {
+                return false;
+            }
+
+            if ( (continuousConnectedCount % AGAIN_CHECK_THRESHOLD) == 0 )
+            {
+                return CheckConnectStateBySend(client);
+            }
+            else
+            {
+                return CheckConnectStateByPoll(client);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        private bool CheckConnectStateByPoll(Socket s)
         {
             bool part1 = s.Poll(1000, SelectMode.SelectRead);
             bool part2 = (s.Available == 0);
@@ -393,6 +432,53 @@ namespace Radar.Bidding.Net
                 return false;
             else
                 return true;
+        }
+
+        /// <summary>
+        /// Connected 当它返回false时Socket, 要么从未连接, 要么不再处于连接状态。
+        /// 
+        /// 参考 https://docs.microsoft.com/zh-cn/dotnet/api/system.net.sockets.socket.connected?redirectedfrom=MSDN&view=netframework-4.8#System_Net_Sockets_Socket_Connected
+        /// </summary>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        private bool CheckConnectStateBySend(Socket client)
+        {
+            // This is how you can determine whether a socket is still connected.
+            bool blockingState = client.Blocking;
+            bool connected = false;
+            try
+            {
+                byte[] tmp = new byte[1];
+
+                client.Blocking = false;
+                client.Send(tmp, 0, 0);
+                connected = true;
+            }
+            catch (SocketException e)
+            {
+                // 10035 == WSAEWOULDBLOCK
+                if (e.NativeErrorCode.Equals(10035))
+                {
+                    logger.InfoFormat("Still Connected, but the Send would block");
+                }
+                else
+                {
+                    logger.ErrorFormat("Disconnected: error code {0}!", e.NativeErrorCode);
+                }
+            }
+            catch(Exception e)
+            {
+                connected = false;
+                logger.Error("CheckConnectStateBySend error", e);
+            }
+            finally
+            {
+                client.Blocking = blockingState;
+            }
+
+            logger.DebugFormat("Connected: {0}", connected);
+
+            return connected;
         }
 
         public void Dispose()

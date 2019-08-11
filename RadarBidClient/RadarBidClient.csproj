@@ -185,6 +185,8 @@
     <Compile Include="Bidding\CaptchaTaskDaemon.cs" />
     <Compile Include="Bidding\Command\BaseCommand.cs" />
     <Compile Include="Bidding\Command\BidAccountLoginCommand.cs" />
+    <Compile Include="Bidding\Command\UploadZippedLogFile.cs" />
+    <Compile Include="Bidding\Command\CaptureUploadFullScreenCommand.cs" />
     <Compile Include="Bidding\Command\ClientPriceTellCommand.cs" />
     <Compile Include="Bidding\Command\DirectiveScriptCommand.cs" />
     <Compile Include="Bidding\Command\InputTextCommand.cs" />
@@ -214,6 +216,8 @@
     <Compile Include="Bidding\Model\Dto\BidderRegisterRequest.cs" />
     <Compile Include="Bidding\Model\Dto\BidderRegisterResponse.cs" />
     <Compile Include="Bidding\Model\Dto\BidStrategiesSetRequest.cs" />
+    <Compile Include="Bidding\Model\Dto\InputTextCommandRequest.cs" />
+    <Compile Include="Bidding\Model\Dto\LeftClickCommandRequest.cs" />
     <Compile Include="Bidding\Model\Dto\Phase1PriceOfferRequest.cs" />
     <Compile Include="Bidding\Model\Dto\Phase1PriceSubmitRequest.cs" />
     <Compile Include="Bidding\Model\Dto\PriceActionRequest.cs" />
@@ -262,6 +266,7 @@
     <Compile Include="Common\Utils\JsonCommands.cs" />
     <Compile Include="Common\Utils\RequestSequence.cs" />
     <Compile Include="Common\Ver.cs" />
+    <Compile Include="Common\ZipUtils.cs" />
     <Compile Include="IoC\ComponentAttribute.cs" />
     <Compile Include="IoC\InitializingBean.cs" />
     <Compile Include="IoC\ApplicationContext.cs" />
@@ -306,6 +311,7 @@
     </Compile>
     <Content Include="Manifest.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Captures\.gitkeep">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -336,6 +342,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resource\seat-no">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resource\dict\dict-win2003.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

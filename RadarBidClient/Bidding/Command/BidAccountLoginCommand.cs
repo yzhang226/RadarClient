@@ -40,33 +40,36 @@ namespace Radar.Bidding.Command
 
         protected override JsonCommand DoExecute(BidAccountLoginRequest req)
         {
-            logger.InfoFormat("Execute BidAccountLogin: MachineCode is {0}, coords is {1}", req.MachineCode, req.LoginCoords);
+            logger.InfoFormat("Execute BidAccountLogin: MachineCode is {0}, coords is {1}, ScreenModeVal is {2}", req.MachineCode, req.LoginCoords, req.ScreenModeVal);
 
             // string bidNo, string password, string idCardNo, bool clickLoginButton
             var coords = req.LoginCoords;
             var arr = coords.Split(';');
-            var p1 = CoordPoint.From(arr[0]);
-            var p2 = CoordPoint.From(arr[1]);
-            var p3 = CoordPoint.From(arr[2]);
+            var p1 = CoordPoint.FromAndAdjustRemote(arr[0]);
+            var p2 = CoordPoint.FromAndAdjustRemote(arr[1]);
+            var p3 = CoordPoint.FromAndAdjustRemote(arr[2]);
+
+            bool isAbsolute = false;
+            if (req.ScreenModeVal == 10)
+            {
+                isAbsolute = true;
+            }
 
 
             Task ta = loginActManager.LoginBidAccount(req.BidAccountNo, req.BidAccountPswd, req.BidAccountIdCard, false);
 
-            ta.Wait();
-
-            ThreadUtils.StartNewBackgroudThread(() =>
+            ta.ContinueWith((task) =>
             {
-
-                bidActionManager.ClickOnceAtPointRelative(p1.x - 14, p1.y - 2);
-                KK.Sleep(KK.RandomInt(100, 500));
-                bidActionManager.ClickOnceAtPointRelative(p2.x - 14, p2.y - 2);
-                KK.Sleep(KK.RandomInt(100, 500));
-                bidActionManager.ClickOnceAtPointRelative(p3.x - 14, p3.y - 2);
-                KK.Sleep(KK.RandomInt(100, 500));
+                bidActionManager.ClickBtnOnceAtPoint(p1, "验证码坐标 点1", isAbsolute, KK.RandomInt(100, 500));
+                bidActionManager.ClickBtnOnceAtPoint(p2, "验证码坐标 点2", isAbsolute, KK.RandomInt(100, 500));
+                bidActionManager.ClickBtnOnceAtPoint(p3, "验证码坐标 点3", isAbsolute, KK.RandomInt(100, 500));
 
                 loginActManager.ClickLoginButton();
-
             });
+
+            // ta.Wait();
+
+            // ThreadUtils.StartNewTaskSafe();
 
 
             return null;

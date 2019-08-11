@@ -15,6 +15,8 @@ namespace Radar.Bidding.Model.Dto
         public string ClientVersion { get; set; }
 
         public string LocalIpAddress { get; set; }
+
+        public string SeatNo { get; set; }
         
     }
 }

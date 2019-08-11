@@ -36,19 +36,17 @@ namespace Radar.Bidding
         /// </summary>
         public CaptchaAnswerImage OfferPrice(int targetPrice, bool enableCancelFirst)
         {
-            var Datum = actionManager.Datum;
-
             // 0. 出价前，先尝试取消，防止上一步的可能的遮罩
             if (enableCancelFirst)
             {
                 // this.CancelOfferedPrice();
-                actionManager.ClickButtonByFenceWayRToL(Datum.AddDelta(742, 502));
+                actionManager.ClickButtonByFenceWayRToL(actionManager.AddDelta(742, 502));
             }
 
             // 1. 输入价格 且 出价
             // TODO: 坐标方法 - 应该抽取出来单独管理 
-            actionManager.InputTextAtPoint(Datum.AddDelta(676, 417), targetPrice.ToString(), true, "第二阶段出价");
-            actionManager.ClickButtonAtPoint(Datum.AddDelta(800, 415), true, "第二阶段出价");
+            actionManager.InputTextAtPoint(actionManager.AddDelta(676, 417), targetPrice.ToString(), true, "第二阶段出价");
+            actionManager.ClickButtonAtPoint(actionManager.AddDelta(800, 415), true, "第二阶段出价");
 
             // 2. 对验证码区域截屏且上传 
             KK.Sleep(500);
@@ -60,18 +58,16 @@ namespace Radar.Bidding
 
         private CaptchaAnswerImage CaptureCaptchaImage()
         {
-            var Datum = actionManager.Datum;
-
             DateTime dt = DateTime.Now;
             var uuid = KK.uuid();
             
             // 1. 验证码 - 提示语
-            CoordRectangle rect1 = CoordRectangle.From(Datum.AddDelta(442, 338), 380, 53);
+            CoordRectangle rect1 = CoordRectangle.From(actionManager.AddDelta(442, 338), 380, 53);
             var img01Path = string.Format("{0}\\{1}-{2:HHmmss}-p21.jpg", KK.CapturesDir(), uuid, dt);
             actionManager.CaptureImage(rect1, img01Path);
 
             // 2. 验证码 - 图形区域
-            CoordRectangle rect2 = CoordRectangle.From(Datum.AddDelta(445, 390), 230, 90);
+            CoordRectangle rect2 = CoordRectangle.From(actionManager.AddDelta(445, 390), 230, 90);
             var img02Path = string.Format("{0}\\{1}-{2:HHmmss}-p22.jpg", KK.CapturesDir(), uuid, dt);
             actionManager.CaptureImage(rect2, img02Path);
 
@@ -118,9 +114,7 @@ namespace Radar.Bidding
         {
             logger.InfoFormat("submit offered-price with answer#{0}", answer);
 
-            var Datum = actionManager.Datum;
-
-            actionManager.InputTextAtPoint(Datum.AddDelta(734, 416), answer, true, "第二阶段提交#输入验证码");
+            actionManager.InputTextAtPoint(actionManager.AddDelta(734, 416), answer, true, "第二阶段提交#输入验证码");
         }
 
         /// <summary>
@@ -128,25 +122,23 @@ namespace Radar.Bidding
         /// </summary>
         public void SubmitOfferedPrice()
         {
-            var Datum = actionManager.Datum;
-
             // TODO: 为了尽快的点击到确定按钮，提供3种模式
             if (conf.IsConfirmModeNormal())
             {
-                actionManager.ClickButtonAtPoint(Datum.AddDelta(554, 506), false, "第二阶段提交#1");
+                actionManager.ClickButtonAtPoint(actionManager.AddDelta(554, 506), false, "第二阶段提交#1");
             }
             else if (conf.IsConfirmModeMixed())
             {
-                actionManager.ClickButtonAtPoint(Datum.AddDelta(554, 506), false, "第二阶段提交#1");
-                actionManager.ClickButtonByFenceWayLToR(Datum.AddDelta(553, 500));
+                actionManager.ClickButtonAtPoint(actionManager.AddDelta(554, 506), false, "第二阶段提交#1");
+                actionManager.ClickButtonByFenceWayLToR(actionManager.AddDelta(553, 500));
             }
             else if (conf.IsConfirmModeFence())
             {
-                actionManager.ClickButtonByFenceWayLToR(Datum.AddDelta(553, 500));
+                actionManager.ClickButtonByFenceWayLToR(actionManager.AddDelta(553, 500));
             }
             else
             {
-                actionManager.ClickButtonByFenceWayLToR(Datum.AddDelta(553, 500));
+                actionManager.ClickButtonByFenceWayLToR(actionManager.AddDelta(553, 500));
             }
 
             // TODO: 等待, 点击完成验证码确认按钮, 会弹出 出价有效
@@ -171,10 +163,10 @@ namespace Radar.Bidding
             });
             
 
-            actionManager.ClickButtonAtPoint(Datum.AddDelta(661, 478), false, "第二阶段提交#确定");
+            actionManager.ClickButtonAtPoint(actionManager.AddDelta(661, 478), false, "第二阶段提交#确定");
 
             // 清除以前输入的价格
-            actionManager.CleanTextAtPoint(Datum.AddDelta(676, 417), 6, true, "第二阶段提交");
+            actionManager.CleanTextAtPoint(actionManager.AddDelta(676, 417), 6, true, "第二阶段提交");
         }
 
         /// <summary>
@@ -182,12 +174,10 @@ namespace Radar.Bidding
         /// </summary>
         public void CancelOfferedPrice()
         {
-            var Datum = actionManager.Datum;
-            
-            actionManager.ClickButtonByFenceWayRToL(Datum.AddDelta(742, 502));
+            actionManager.ClickButtonByFenceWayRToL(actionManager.AddDelta(742, 502));
 
             // 清除以前输入的价格
-            actionManager.CleanTextAtPoint(Datum.AddDelta(676, 417), 6, true, "第二阶段出价#取消");
+            actionManager.CleanTextAtPoint(actionManager.AddDelta(676, 417), 6, true, "第二阶段出价#取消");
         }
 
     }

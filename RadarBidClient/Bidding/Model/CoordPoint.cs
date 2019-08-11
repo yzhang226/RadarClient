@@ -38,6 +38,29 @@ namespace Radar.Bidding.Model
             return new CoordPoint(x, y);
         }
 
+        /// <summary>
+        /// 远端发送的对标坐标是有偏差的，所以这里用(-14, -2)做校准
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static CoordPoint FromAndAdjustRemote(string text)
+        {
+            CoordPoint cp = From(text);
+            cp.x = cp.x - 14;
+            cp.y = cp.y - 2;
+
+            return cp;
+        }
+
+        /// <summary>
+        /// 远端发送的对标坐标是有偏差的，所以这里用(-14, -2)做校准
+        /// </summary>
+        /// <returns></returns>
+        public CoordPoint DeltaRemote()
+        {
+            return new CoordPoint(this.x - 14, this.y - 2);
+        }
+
         public override string ToString()
         {
             return "(" + x + ", " + y + ")";

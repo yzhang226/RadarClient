@@ -1,4 +1,5 @@
 ﻿using log4net;
+using Radar.Bidding.Model;
 using Radar.Common;
 using Radar.IoC;
 using Radar.Model;
@@ -29,7 +30,7 @@ namespace Radar.Bidding
         {
             logger.InfoFormat("第一阶段出价 - 开始");
 
-            Radar.Bidding.Model.CaptchaAnswerImage img = phase1Manager.OfferPrice(price, true);
+            CaptchaAnswerImage img = phase1Manager.OfferPrice(price, true, true);
             StartAwaitAnswerToSubmit(img.Uuid);
 
             logger.InfoFormat("第一阶段出价 - 等待验证码提交");
@@ -56,7 +57,7 @@ namespace Radar.Bidding
                 long ss = KK.CurrentMills();
                 try
                 {
-                    var taskContext = Radar.Bidding.Model.CaptchaTaskContext.me;
+                    var taskContext = CaptchaTaskContext.me;
                     var answer = taskContext.GetAnswer(imageUuid);
                     if (answer?.Length > 0)
                     {

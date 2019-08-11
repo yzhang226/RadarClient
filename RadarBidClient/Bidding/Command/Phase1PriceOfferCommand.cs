@@ -38,7 +38,7 @@ namespace Radar.Bidding.Command
         {
             logger.InfoFormat("Execute Phase1PriceOffer: MachineCode is {0}, Price is {1}", req.MachineCode, req.Price);
 
-            phase1Manager.OfferPrice(req.Price, true);
+            phase1Manager.OfferPrice(req.Price, true, false);
             
             return null;
         }

@@ -32,7 +32,7 @@ namespace Radar.Bidding.Command
         protected override JsonCommand DoExecute(string args)
         {
             string imgPath = bidActionManager.CaptureFlashScreen();
-            ScreenImageUploadResponse resp = bidActionManager.UploadRobotScreenImage(imgPath);
+            ScreenImageUploadResponse resp = bidActionManager.UploadFileToSaber(imgPath);
 
             // return JsonCommands.OK(CommandDirective.CAPTURE_UPLOAD_BID_SCREEN, resp);
             return null;

@@ -8,7 +8,7 @@ namespace Radar.Bidding.Model.Dto
     public class ScreenImageUploadResponse
     {
 
-        public List<String> ImgPaths { get; set; }
+        public List<String> FilePaths { get; set; }
 
     }
 }

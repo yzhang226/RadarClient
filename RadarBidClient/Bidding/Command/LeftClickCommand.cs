@@ -1,4 +1,5 @@
 ﻿using Radar.Bidding.Model;
+using Radar.Bidding.Model.Dto;
 using Radar.Common.Enums;
 using Radar.Common.Model;
 using Radar.IoC;
@@ -11,7 +12,7 @@ namespace Radar.Bidding.Command
 {
 
     [Component]
-    public class LeftClickCommand : BaseCommand<string>
+    public class LeftClickCommand : BaseCommand<LeftClickCommandRequest>
     {
         private BidActionManager bidActionManager;
 
@@ -22,17 +23,22 @@ namespace Radar.Bidding.Command
 
         public override CommandDirective GetDirective()
         {
-            return CommandDirective.MOVE_CURSOR;
+            return CommandDirective.MOVE_LEFT_CLICK;
         }
 
-        protected override JsonCommand DoExecute(string args)
+        protected override JsonCommand DoExecute(LeftClickCommandRequest req)
         {
-            string[] arr = args.Split(',');
-            bool needMoreOnceClick = arr.Length > 3 ? bool.Parse(arr[2]) : false;
-            string memo = arr.Length > 4 ? arr[3] : "click";
-            CoordPoint cp = bidActionManager.DeltaPoint(int.Parse(arr[0]), int.Parse(arr[1]));
+            string[] arr = req.Coord.Split(',');
+            CoordPoint p = new CoordPoint(int.Parse(arr[0]), int.Parse(arr[1])).DeltaRemote();
+
+            bool isAbsolute = false;
+            if (req.ScreenModeVal == 10)
+            {
+                isAbsolute = true;
+            }
             
-            bidActionManager.ClickButtonAtPoint(cp, needMoreOnceClick, memo);
+            
+            bidActionManager.ClickBtnOnceAtPoint(p, "LC", isAbsolute);
 
             return null;
         }

@@ -48,8 +48,6 @@ namespace Radar.Common.Times
 
         public static DateTime GetNetworkTime(string ntpServer)
         {
-
-
             // NTP message size - 16 bytes of the digest (RFC 2030)
             var ntpData = new byte[48];
 
@@ -93,7 +91,11 @@ namespace Radar.Common.Times
             //**UTC** time
             var networkDateTime = (new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddMilliseconds((long)milliseconds);
 
-            return networkDateTime.ToLocalTime();
+            DateTime dt = networkDateTime.ToLocalTime();
+
+            logger.InfoFormat("GetNetworkTime from NTPServer#{0}, time is {1}", ntpServer, dt);
+
+            return dt;
         }
 
         // stackoverflow.com/a/3294698/162671

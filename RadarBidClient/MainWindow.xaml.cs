@@ -54,7 +54,7 @@ namespace Radar
 
             InitializeComponent();
 
-            VerLabel.Content = Ver.ver;
+            InitCanvasComponent();
 
             InitBizDir();
 
@@ -75,7 +75,13 @@ namespace Radar
             updater = new Updater();
             updater.StartMonitoring();
 
-            logger.InfoFormat("Start Updater-Timer.");
+            logger.InfoFormat("Start UpdateTimer.");
+        }
+
+        private void InitCanvasComponent()
+        {
+            VerLabel.Content = Ver.ver;
+            SeatNoLabel.Content = KK.ReadClientSeatNo();
         }
 
         private void InitBizComponent()
@@ -151,7 +157,7 @@ namespace Radar
 
             if (conf.EnableCorrectNetTime)
             {
-                ThreadUtils.StartNewBackgroudThread(() => {
+                ThreadUtils.StartNewTaskSafe(() => {
                     var bo = TimeSynchronizer.SyncFromNtpServer();
                     logger.InfoFormat("TimeSynchronizer.SyncFromNtpServer result is {0}.", bo);
                 });
