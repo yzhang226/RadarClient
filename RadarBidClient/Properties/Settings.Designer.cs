@@ -25,7 +25,7 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://119.3.64.205:3456")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://192.168.31.209:3456")]
         public string BidAddressPrefix {
             get {
                 return ((string)(this["BidAddressPrefix"]));
@@ -34,7 +34,7 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://119.3.64.205:8866")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://192.168.31.209:8866")]
         public string CaptchaAddressPrefix {
             get {
                 return ((string)(this["CaptchaAddressPrefix"]));
@@ -88,7 +88,7 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("192.168.31.182:8876")]
+        [global::System.Configuration.DefaultSettingValueAttribute("192.168.31.209:8876")]
         public string SaberServerAddress {
             get {
                 return ((string)(this["SaberServerAddress"]));
@@ -124,7 +124,7 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://192.168.31.182:8877")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://192.168.31.209:8877")]
         public string SaberWebAddressPrefix {
             get {
                 return ((string)(this["SaberWebAddressPrefix"]));

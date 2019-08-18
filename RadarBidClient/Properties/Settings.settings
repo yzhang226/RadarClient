@@ -3,10 +3,10 @@
   <Profiles />
   <Settings>
     <Setting Name="BidAddressPrefix" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">http://119.3.64.205:3456</Value>
+      <Value Profile="(Default)">http://192.168.31.209:3456</Value>
     </Setting>
     <Setting Name="CaptchaAddressPrefix" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">http://119.3.64.205:8866</Value>
+      <Value Profile="(Default)">http://192.168.31.209:8866</Value>
     </Setting>
     <Setting Name="EnableAutoBidding" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
@@ -24,7 +24,7 @@
       <Value Profile="(Default)">dev</Value>
     </Setting>
     <Setting Name="SaberServerAddress" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">192.168.31.182:8876</Value>
+      <Value Profile="(Default)">192.168.31.209:8876</Value>
     </Setting>
     <Setting Name="EnableSaberRobot" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
@@ -36,7 +36,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="SaberWebAddressPrefix" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">http://192.168.31.182:8877</Value>
+      <Value Profile="(Default)">http://192.168.31.209:8877</Value>
     </Setting>
     <Setting Name="EnableCorrectNetTime" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>

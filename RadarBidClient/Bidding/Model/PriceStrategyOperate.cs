@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Radar.Bidding.Model
 {
-    public class PriceSubmitOperate
+    public class PriceStrategyOperate
     {
         public SubmitPriceSetting setting;
 

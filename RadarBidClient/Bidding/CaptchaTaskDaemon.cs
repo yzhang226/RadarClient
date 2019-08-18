@@ -1,5 +1,8 @@
 ﻿using log4net;
+using Radar.Bidding.Model;
 using Radar.Common;
+using Radar.Common.Model;
+using Radar.Common.Threads;
 using Radar.IoC;
 using Radar.Model;
 using System;
@@ -22,10 +25,17 @@ namespace Radar.Bidding
         private static bool isInquiryWork = false;
         private static Thread inquiryThread;
 
+        private Func<CaptchaAnswerImage, bool> captchaInputCallbackFunc;
+
         public CaptchaTaskDaemon(ProjectConfig conf, Phase2ActManager phase2ActManager)
         {
             this.conf = conf;
             this.phase2ActManager = phase2ActManager;
+        }
+
+        public void SetCaptchaInputCallbackFunc(Func<CaptchaAnswerImage, bool> captchaInputCallbackFunc)
+        {
+            this.captchaInputCallbackFunc = captchaInputCallbackFunc;
         }
 
         /// <summary>
@@ -36,14 +46,14 @@ namespace Radar.Bidding
             this.StopInquiryThread();
 
             isInquiryWork = true;
-            inquiryThread = Radar.Common.Threads.ThreadUtils.StartNewBackgroudThread(LoopInquiryCaptchaAnswer);
+            inquiryThread = ThreadUtils.StartNewBackgroudThread(LoopInquiryCaptchaAnswer);
             logger.InfoFormat("Restart CaptchaTask to Inquiry Answer");
         }
 
         public void StopInquiryThread()
         {
             isInquiryWork = false;
-            Radar.Common.Threads.ThreadUtils.TryStopThreadByWait(inquiryThread, 60, 30, "inquiryThread");
+            ThreadUtils.TryStopThreadByWait(inquiryThread, 60, 30, "inquiryThread");
         }
 
         /// <summary>
@@ -56,15 +66,15 @@ namespace Radar.Bidding
                 long ss = KK.CurrentMills();
                 try
                 {
-                    var taskContext = Radar.Bidding.Model.CaptchaTaskContext.me;
+                    var taskContext = CaptchaTaskContext.me;
                     long s1 = KK.CurrentMills();
-                    if (Radar.Bidding.Model.CaptchaTaskContext.me.IsAllImagesAnswered())
+                    if (CaptchaTaskContext.me.IsAllImagesAnswered())
                     {
                         KK.Sleep(30);
                         continue;
                     }
 
-                    var images = new List<Radar.Bidding.Model.CaptchaAnswerImage>(taskContext.GetImagesOfAwaitAnswer());
+                    var images = new List<CaptchaAnswerImage>(taskContext.GetImagesOfAwaitAnswer());
 
                     logger.DebugFormat("inquiry answer, image size is {0}. First Uuid is {1}", images.Count, images[0].Uuid);
 
@@ -79,24 +89,28 @@ namespace Radar.Bidding
                         {
                             var req = KK.CreateImageAnswerRequest(img.Uuid);
 
-                            Radar.Common.Model.DataResult<Radar.Bidding.Model.CaptchaImageAnswerResponse> dr = HttpClients
-                                .PostAsJson<Radar.Common.Model.DataResult<Radar.Bidding.Model.CaptchaImageAnswerResponse>>(conf.CaptchaAddressPrefix + "/v1/biding/captcha-answer", req);
+                            DataResult<CaptchaImageAnswerResponse> dr = HttpClients
+                                .PostAsJson<DataResult<CaptchaImageAnswerResponse>>(conf.CaptchaAddressPrefix + "/v1/biding/captcha-answer", req);
 
                             if (DataResults.IsOK(dr) && dr.Data?.answer?.Length > 0)
                             {
+                                img.Answer = dr.Data.answer;
+
                                 taskContext.PutAnswer(img.Uuid, dr.Data.answer);
                                 taskContext.RemoveAwaitImage(img.Uuid);
 
                                 logger.InfoFormat("GET task#{0}'s answer is {1}", img.Uuid, dr.Data.answer);
 
                                 // TODO：这段应该剥离出去
-                                TryInputAnswerAhead(img.Uuid, dr.Data.answer);
+                                // TryInputAnswerAhead(img.Uuid, dr.Data.answer);
+                                captchaInputCallbackFunc?.Invoke(img);
 
                             }
                         }
                         else
                         {
                             taskContext.RemoveAwaitImage(img.Uuid);
+                            // captchaInputCallbackFunc?.Invoke(img);
                         }
                     }
 
@@ -123,7 +137,7 @@ namespace Radar.Bidding
         /// <param name="answer"></param>
         private void TryInputAnswerAhead(string imageUuid, string answer)
         {
-            var oper = Radar.Bidding.Model.BiddingContext.GetSubmitOperateByUuid(imageUuid);
+            var oper = BiddingContext.GetSubmitOperateByUuid(imageUuid);
             if (oper != null && oper.status != 99)
             {
                 phase2ActManager.InputCaptchForSubmit(answer);

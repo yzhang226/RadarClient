@@ -24,9 +24,9 @@ namespace Radar.Bidding.Model
 
         private ClientMinutePrice m29 = new ClientMinutePrice();
 
-        private Dictionary<int, PriceSubmitOperate> submitOperateMap = new Dictionary<int, PriceSubmitOperate>();
+        private Dictionary<int, PriceStrategyOperate> submitOperateMap = new Dictionary<int, PriceStrategyOperate>();
 
-        private static Dictionary<string, PriceSubmitOperate> uuidOfsubmitOperateMap = new Dictionary<string, PriceSubmitOperate>();
+        private static Dictionary<string, PriceStrategyOperate> uuidOfsubmitOperateMap = new Dictionary<string, PriceStrategyOperate>();
 
         public void AddPrice(int sec, int basePrice)
         {
@@ -45,9 +45,9 @@ namespace Radar.Bidding.Model
             //return PriceAfter29[sec];
         }
 
-        public PriceSubmitOperate AddPriceSetting(SubmitPriceSetting settting)
+        public PriceStrategyOperate AddPriceSetting(SubmitPriceSetting settting)
         {
-            var oper = new PriceSubmitOperate();
+            var oper = new PriceStrategyOperate();
             oper.setting = settting;
             oper.status = -1;
 
@@ -56,7 +56,7 @@ namespace Radar.Bidding.Model
             return oper;
         }
 
-        public Dictionary<int, PriceSubmitOperate> GetSubmitOperateMap()
+        public Dictionary<int, PriceStrategyOperate> GetSubmitOperateMap()
         {
             return submitOperateMap;
         }
@@ -65,12 +65,17 @@ namespace Radar.Bidding.Model
 
         public bool RemoveSubmitOperate(int second)
         {
-            if (submitOperateMap.ContainsKey(second))
+            PriceStrategyOperate opert = null;
+            bool ret = submitOperateMap.TryGetValue(second, out opert);
+
+            logger.InfoFormat("try RemoveSubmitOperate second#{0}, opert#{1}, ret#{2} map count#{3}", second, opert, ret, submitOperateMap.Count);
+
+            if (opert != null)
             {
-                return false;
+                submitOperateMap.Remove(second);
             }
 
-            return submitOperateMap.Remove(second);
+            return false;
         }
 
         public void CleanSubmitOperate()
@@ -78,7 +83,7 @@ namespace Radar.Bidding.Model
             submitOperateMap.Clear();
         }
 
-        public static PriceSubmitOperate GetSubmitOperateByUuid(string uuid)
+        public static PriceStrategyOperate GetSubmitOperateByUuid(string uuid)
         {
             if (!uuidOfsubmitOperateMap.ContainsKey(uuid))
             {
@@ -94,7 +99,7 @@ namespace Radar.Bidding.Model
             priceMap[price.pageTime] = price;
         }
 
-        public void PutAwaitImage(CaptchaAnswerImage image, PriceSubmitOperate oper)
+        public void PutAwaitImage(CaptchaAnswerImage image, PriceStrategyOperate oper)
         {
             CaptchaTaskContext.me.PutAwaitImage(image);
             if (oper != null)

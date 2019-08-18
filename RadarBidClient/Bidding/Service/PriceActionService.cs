@@ -21,44 +21,43 @@ namespace Radar.Bidding.Service
 
         private SocketClient socketClient;
 
-        private WindowSimulator simulator;
-
         private ClientService clientService;
 
 
-        public PriceActionService(SocketClient socketClient, WindowSimulator simulator, ClientService clientService)
+        public PriceActionService(SocketClient socketClient, ClientService clientService)
         {
             this.socketClient = socketClient;
-            this.simulator = simulator;
             this.clientService = clientService;
         }
 
-        public void ReportPriceOffered(int price, DateTime screenTime, string memo = "")
+        public void ReportPriceOffered(int screenPrice, int targetPrice, DateTime screenTime, DateTime occurTime, string memo = "")
         {
             // 
-            DoPriceAction(PriceAction.PRICE_OFFER, price, screenTime, memo);
+            DoPriceAction(PriceAction.PRICE_OFFER, screenPrice, targetPrice, screenTime, 0, occurTime, memo);
         }
 
-        public void ReportPriceSubbmitted(int price, DateTime screenTime, string memo = "")
+        public void ReportPriceSubbmitted(int screenPrice, int targetPrice, DateTime screenTime, int usedDelayMills, DateTime occurTime, string memo = "")
         {
             // 
-            DoPriceAction(PriceAction.PRICE_SUBMIT, price, screenTime, memo);
+            DoPriceAction(PriceAction.PRICE_SUBMIT, screenPrice, targetPrice, screenTime, usedDelayMills, occurTime, memo);
         }
 
-        public void ReportPriceShowed(int price, DateTime screenTime, string memo = "")
+        public void ReportPriceShowed(int screenPrice, DateTime screenTime, DateTime occurTime, string memo = "")
         {
             // 
-            DoPriceAction(PriceAction.PRICE_SHOW, price, screenTime, memo);
+            DoPriceAction(PriceAction.PRICE_SHOW, screenPrice, 0, screenTime, 0, occurTime, memo);
         }
 
-        private void DoPriceAction(PriceAction action, int price, DateTime screenTime, string memo = "")
+        private void DoPriceAction(PriceAction action, int screenPrice, int targetPrice, DateTime screenTime, int usedDelayMills, DateTime occurTime, string memo = "")
         {
             PriceActionRequest req = new PriceActionRequest();
-            req.MachineCode = simulator.GetMachineCode();
-            req.Action = action;
-            req.Price = price;
+            req.MachineCode = clientService.GetMachineCode();
+            req.OccurTime = occurTime == null ? DateTime.Now : occurTime;
             req.ScreenTime = screenTime;
-            req.OccurTime = DateTime.Now;
+            req.UsedDelayMills = usedDelayMills;
+            req.Action = action;
+            req.ScreenPrice = screenPrice;
+            req.TargetPrice = targetPrice;
 
             JsonCommand comm = JsonCommands.OK(CommandDirective.CLIENT_PRICE_TELL, req);
 
@@ -66,7 +65,7 @@ namespace Radar.Bidding.Service
 
             socketClient.Send(msg);
 
-            logger.InfoFormat("send price-action#{0}#{1} at screenTime#{2} tcp request...", price, action, screenTime);
+            logger.InfoFormat("report price#{0}#{1}action#{2} at screenTime#{3} occurTime{4}", screenPrice, targetPrice, action, screenTime, req.OccurTime);
         }
 
     }

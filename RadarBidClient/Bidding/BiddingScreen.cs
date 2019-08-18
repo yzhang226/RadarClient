@@ -2,6 +2,7 @@
 using Radar.Bidding.Model;
 using Radar.Bidding.Service;
 using Radar.Common;
+using Radar.Common.Enums;
 using Radar.Common.Threads;
 using Radar.IoC;
 using Radar.Model;
@@ -45,36 +46,14 @@ namespace Radar.Bidding
 
         private Phase2ActManager phase2Manager;
 
-
-        private static TimeSpan PreviewStartTime = new TimeSpan(11, 29, 15);
-
-        private static TimeSpan PreviewEndTime = new TimeSpan(11, 29, 29);
-
+        private BiddingPriceManager biddingPriceManager;
+        
         private TextBlock ShowUpBlock;
 
-        // private static bool ThreadContinue = true;
 
-        private int DrawbackDeltaPrice = 500;
+        private static readonly DateTime PreviewStartTime = new DateTime(2019, 08, 18, 11, 29, 15);
 
-        private int Delay1Start = 0;
-        private int Delay1End = 200;
-
-        private int Delay2Start = 0;
-        private int Delay2End = 600;
-
-        private int Delay3Start = 500;
-        private int Delay3End = 900;
-
-        private int delayOneS = 0;
-        private int delayOneE = 600;
-
-        private int delayTwoS = 500;
-        private int delayTwoE = 900;
-
-        private int ForceStart = 200;
-        private int ForceEnd = 1200;
-
-        // private CaptchaAnswerImage LastImage;
+        private static readonly DateTime PreviewEndTime = new DateTime(2019, 08, 18, 11, 29, 29);
 
         public BiddingScreen(ProjectConfig conf, BidActionManager actionManager, Phase2ActManager phase2Manager, 
             SubmitStrategyManager strategyManager, PriceActionService priceActionService)
@@ -124,6 +103,8 @@ namespace Radar.Bidding
         public void ResetStrategyByReload()
         {
             biddingContext.CleanSubmitOperate();
+
+            biddingPriceManager = new BiddingPriceManager(strategyManager, biddingContext, CancelStrategyRequest);
 
             List<SubmitPriceSetting> settings = this.strategyManager.LoadStrategies();
             foreach (SubmitPriceSetting sps in settings)
@@ -192,6 +173,7 @@ namespace Radar.Bidding
         {
             biddingContext = new BiddingContext();
         }
+
 
 
         private void LoopDetectPriceAndTimeInScreen()
@@ -294,252 +276,169 @@ namespace Radar.Bidding
 
             return string.Format("{0}{1:HH:mm:ss}.\n{2} - {3}.", prefix, pp.pageTime, pp.low, pp.high);
         }
+        
+        /// <summary>
+        /// 取消策略请求
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns></returns>
+        public bool CancelStrategyRequest(BiddingPriceRequest req)
+        {
+            // 取消之前的策略
+            req.OperateStatus = StrategyOperateStatus.CANCELLED;
 
-        private TimeSpan FinalTime = new TimeSpan(11, 29, 57);
+            // TODO: 应该实际取点击 取消 按钮
+            return true;
+        }
+        
+        public bool CaptchaAnswerInputCallback(CaptchaAnswerImage img)
+        {
+            // biddingPriceManager.InputAnswer(img.Uuid);
+
+            var req = biddingPriceManager.GetRequestByUuid(img.Uuid);
+
+            if (req != null && req.OperateStatus == StrategyOperateStatus.CAPTCHA_AWAIT)
+            {
+                phase2Manager.InputCaptchForSubmit(img.Answer);
+                req.OperateStatus = StrategyOperateStatus.CAPTCHA_INPUTTED;
+                logger.InfoFormat("strategy#{0} captcha-answer is inputted", req.StrategySecond);
+            }
+
+            return true;
+        }
 
         private void AfterSuccessDetect(PagePrice pp)
         {
 
             // 1. 11:29:15 获取验证码 用于预览
-            if (!IsPreviewDone && pp.pageTime.TimeOfDay >= PreviewStartTime && pp.pageTime.TimeOfDay <= PreviewEndTime)
+            if (!IsPreviewDone && pp.pageTime.TimeOfDay >= PreviewStartTime.TimeOfDay && pp.pageTime.TimeOfDay <= PreviewEndTime.TimeOfDay)
             {
                 PreviewPhase2Captcha(pp);
                 return;
             }
 
             int hour = pp.pageTime.Hour;
+            int minute = pp.pageTime.Minute;
+            int sec = pp.pageTime.Second;
 
-            if (hour != 11)
+            if (hour != 11 || minute != 29)
             {
                 return;
             }
 
             long s1 = KK.CurrentMills();
-
-            int minute = pp.pageTime.Minute;
-            int sec = pp.pageTime.Second;
-            
             
             DateTime now = DateTime.Now;
+            
+            biddingContext.AddPrice(sec, pp.basePrice);
 
-            var strats = new Dictionary<int, PriceSubmitOperate>(biddingContext.GetSubmitOperateMap());
+            var req = biddingPriceManager.Calcs(pp);
 
-            // TODO: 临时改动
-            int baseMinute = 28;
-
-            if (minute == 29)
-            // if (minute > baseMinute)
+            if (req == null)
             {
-                biddingContext.AddPrice(sec, pp.basePrice);
+                logger.InfoFormat("afterDetect elapsed {0}ms", KK.CurrentMills() - s1);
+                return;
             }
 
-            foreach (var item in strats)
+            if (req.OperateStatus == StrategyOperateStatus.NEED_OFFER_PRICE) // 1. 此处直接出价
             {
-                int fixSec = item.Key;
+                CaptchaAnswerImage ansImg = phase2Manager.OfferPrice(req.TargetPrice, true);
+                biddingContext.PutAwaitImage(ansImg, null);
 
-                var oper = item.Value;
-                SubmitPriceSetting stra = oper.setting;
-                int fixMinute = stra.minute > 0 ? stra.minute : 29;
+                req.CaptchaUuid = ansImg.Uuid;
+                req.OperateStatus = StrategyOperateStatus.CAPTCHA_AWAIT;
 
-                if (fixMinute != minute)
-                // if (fixMinute < baseMinute)
-                {
-                    continue;
-                }
+                biddingPriceManager.CancelnOutOfDateRequest(req.StrategySecond);
 
-                
-
-                // 到点就出价
-                if (sec == fixSec)
-                {
-
-                    // 0. 检查之前秒数的策略状态
-                    foreach (var va in strats)
-                    {
-                        if (va.Key < fixSec)
-                        {
-                            // 取消之前的策略
-                            logger.InfoFormat("previous strategy second#{0} detected#{1}, cancel this strategy.", va.Key, va.Value.status);
-                            va.Value.status = 99;
-                            biddingContext.RemoveSubmitOperate(va.Key);
-                        }
-                    }
-
-
-                    stra.basePrice = pp.basePrice;
-
-                    logger.InfoFormat("find target second#{0}, delta#{1}, base-price#{2}, offer-price#{3}", fixSec, stra.deltaPrice, pp.basePrice, stra.GetOfferedPrice());
-
-                    // 1. 此处直接出价
-                    CaptchaAnswerImage ansImg = phase2Manager.OfferPrice(stra.GetOfferedPrice(), true);
-                    biddingContext.PutAwaitImage(ansImg, oper);
-
-                    int offeredPrice = stra.GetOfferedPrice();
-                    DateTime pageTime = pp.pageTime;
-                    ThreadUtils.StartNewTaskSafe(() => {
-                        priceActionService.ReportPriceOffered(offeredPrice, pageTime);
-                    });
-
-                    oper.answerUuid = ansImg.Uuid;
-                    oper.status = 0;
-                    oper.status = 20;
-
-                }
-
-                // 检查是否到价
-                if (sec >= fixSec && (oper.status != 1 && oper.status != 99 && oper.status != -1))
-                {
-                    // 2. 检查提交价格策略
-                    int offeredPrice = stra.GetOfferedPrice();
-                    int PriceAt50 = biddingContext.GetPrice(50);
-                    string answer = CaptchaTaskContext.me.GetAnswer(oper.answerUuid);
-
-                    // logger.InfoFormat("try target second#{0}, offer-price#{1}, delta#{2}. delta ", fixSec, OfferedPrice, (pp.basePrice + 300));
-
-                    if (offeredPrice <= (pp.basePrice + 300))
-                    {
-                        logger.InfoFormat("N10 submit target second#{0}, offer-price#{1}, delta#{2}.", fixSec, offeredPrice, stra.deltaPrice);
-
-                        if (answer?.Length > 0)
-                        {
-                            SubmitOfferedPrice(fixSec, oper, answer, pp);
-                        }
-                        else
-                        {
-                            // TODO: 到价时，依然未有验证码
-                            // oper.status = 20;
-                            logger.WarnFormat("N10 target second#{0} has no captcha-answer", fixSec);
-                        }
-                        
-                    }
-
-                    if (sec > 50
-                                && hour >= FinalTime.Hours
-                                && minute >= FinalTime.Minutes
-                                && sec >= FinalTime.Seconds)
-                    {
-                        int delay = KK.RandomInt(ForceStart, ForceEnd);
-
-                        logger.InfoFormat("N100 Trigger force submit second#{0}, OfferedPrice#{1}, base-price#{2}. {3}. delay#{4}", fixSec, offeredPrice, pp.basePrice, (now.TimeOfDay >= FinalTime), delay);
-                        
-                        KK.Sleep(delay);
-
-                        SubmitOfferedPrice(fixSec, oper, answer, pp);
-
-                        logger.InfoFormat("N100 Force submit second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}.", fixSec, delay, offeredPrice, pp.basePrice);
-                    }
-
-                    if (sec > 50 && PriceAt50 > 0 && offeredPrice >= (PriceAt50 + DrawbackDeltaPrice + 100))
-                    {
-                        int PriceBack2 = biddingContext.GetPrice(sec - 2);
-
-                        // 20190616 增加 当前时间 >= 112954
-                        if (sec >= 54 && PriceBack2 > 0 && (pp.basePrice - PriceBack2) >= 200)
-                        {
-                            bool matched = false;
-                            int delay = -1;
-                            if (offeredPrice == (pp.basePrice + 300 + 100)) // 提前 100
-                            {
-                                delay = KK.RandomInt(Delay1Start, Delay1End);
-                                matched = true;
-                            }
-                            else if (offeredPrice == (pp.basePrice + 300 + 200))
-                            {
-                                delay = KK.RandomInt(Delay2Start, Delay2End);
-                                matched = true;
-                            }
-                            else if (offeredPrice == (pp.basePrice + 300 + 300))
-                            {
-                                delay = KK.RandomInt(Delay3Start, Delay3End);
-                                matched = true;
-                            }
-
-                            if (matched)
-                            {
-                                KK.Sleep(delay);
-
-                                SubmitOfferedPrice(fixSec, oper, answer, pp);
-
-                                logger.InfoFormat("N10 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack2#{4}", fixSec, delay, offeredPrice, pp.basePrice, PriceBack2);
-                            }
-
-                        }
-                        else if (sec >= 56 && (pp.basePrice - biddingContext.GetPrice(sec - 3)) == 200)
-                        {
-                            if (offeredPrice == pp.basePrice + 300 + 100) // 提前100
-                            {
-                                int delay = KK.RandomInt(delayOneS, delayOneE);
-                                KK.Sleep(delay);
-
-                                SubmitOfferedPrice(fixSec, oper, answer, pp);
-
-                                logger.InfoFormat("N20 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack3#{4}", fixSec, delay, offeredPrice, pp.basePrice, biddingContext.GetPrice(sec - 3));
-                            }
-
-                            // 20190714 增加判断 连续变动价格（100）
-                            else if (offeredPrice == pp.basePrice + 300 + 200) // 提前 200
-                            {
-                                int delay = KK.RandomInt(delayTwoS, delayTwoE);
-                                KK.Sleep(delay);
-
-                                SubmitOfferedPrice(fixSec, oper, answer, pp);
-
-                                logger.InfoFormat("N21 matched second#{0}, delay#{1}, OfferedPrice#{2}, base-price#{3}. PriceBack3#{4}", fixSec, delay, offeredPrice, pp.basePrice, biddingContext.GetPrice(sec - 3));
-                            }
-
-                            else
-                            {
-                                logger.InfoFormat("N25 sec#56 ELSE OfferedPrice#{0}, pp.basePrice#{0}", offeredPrice, pp.basePrice);
-                            }
-                        }
-
-                    }
-                    
-                    else
-                    {
-                        logger.InfoFormat("N39 ELSE - {0}, {1}, {2}. ", now.TimeOfDay, FinalTime, (now.TimeOfDay >= FinalTime));
-                    }
-
-                }
-                
-
+                //
+                AsyncReportPriceOffered(pp, req.TargetPrice);
             }
 
+            if (req.CanSubmit)
+            {
+                req.SubmittedScreenTime = pp.pageTime;
+                req.SubmittedScreenPrice = pp.basePrice;
+                SubmitOfferedPrice(req);
+            }
+            
             logger.InfoFormat("afterDetect elapsed {0}ms", KK.CurrentMills() - s1);
 
         }
 
-        private int SubmitOfferedPrice(int fixSec, PriceSubmitOperate oper, string answer, PagePrice pp)
+        // private int SubmitOfferedPrice(int fixSec, PriceStrategyOperate oper, string answer, PagePrice pp, int offeredPrice, int usedDelayMills, DateTime occurTime)
+        private int SubmitOfferedPrice(BiddingPriceRequest req)
         {
-            DateTime pageTime = pp.pageTime;
-            if (oper.status == 21)
+            bool submitted = false;
+            string memo = "";
+            DateTime occurTime = DateTime.Now;
+            if (req.OperateStatus == StrategyOperateStatus.CAPTCHA_INPUTTED)
             {
+                if (req.ComputedDelayMills > 0)
+                {
+                    KK.Sleep(req.ComputedDelayMills);
+                }
                 phase2Manager.SubmitOfferedPrice();
-                ThreadUtils.StartNewTaskSafe(() => {
-                    priceActionService.ReportPriceSubbmitted(0, pageTime);
-                });
+                submitted = true;
+
+                logger.InfoFormat("strategy#{0} exec submit", req.StrategySecond);
             }
             else
             {
+                string answer = CaptchaTaskContext.me.GetAnswer(req.CaptchaUuid);
                 if (answer == null || answer.Length == 0)
                 {
-                    logger.ErrorFormat("target second#{0} has no captcha-answer", fixSec);
-                    ThreadUtils.StartNewTaskSafe(() => {
-                        priceActionService.ReportPriceSubbmitted(-100, pageTime);
-                    });
+                    
+                    submitted = false;
+                    logger.ErrorFormat("strategy#{0} can not exec submit, because has no captcha-answer#{1}", req.StrategySecond, req.CaptchaUuid);
+
                     return -1;
+                } else
+                {
+                    if (req.ComputedDelayMills > 0)
+                    {
+                        KK.Sleep(req.ComputedDelayMills);
+                    }
+                    phase2Manager.SubmitOfferedPrice(answer);
+
+                    memo = "WiAns";
+
+                    logger.WarnFormat("strategy#{0} exec submit and fill captcha-answer#{1}", req.StrategySecond, answer);
                 }
 
-                logger.InfoFormat("submit target second#{0}, and fill captcha answer#{1}", fixSec, answer);
-                phase2Manager.SubmitOfferedPrice(answer);
-                ThreadUtils.StartNewTaskSafe(() => {
-                    priceActionService.ReportPriceSubbmitted(0, pageTime);
-                });
+                
             }
-            oper.status = 1;
-            biddingContext.RemoveSubmitOperate(fixSec);
 
+            if (submitted)
+            {
+                req.OperateStatus = StrategyOperateStatus.PRICE_SUBMITTED;
+                biddingPriceManager.RemoveStrategy(req.StrategySecond);
+
+                AsyncReportPriceSubbmitted(req, occurTime, memo);
+                
+            }
+            
             return 0;
+        }
+
+        private void AsyncReportPriceSubbmitted(BiddingPriceRequest req, DateTime occurTime, string memo)
+        {
+            DateTime pageTime = req.SubmittedScreenTime;
+            int screenPrice = req.SubmittedScreenPrice;
+            int offeredPrice = req.TargetPrice;
+            int usedDelayMills = req.ComputedDelayMills;
+            ThreadUtils.StartNewTaskSafe(() => {
+                priceActionService.ReportPriceSubbmitted(screenPrice, offeredPrice, pageTime, usedDelayMills, occurTime, memo);
+            });
+        }
+
+        private void AsyncReportPriceOffered(PagePrice pp, int offeredPrice)
+        {
+            DateTime pageTime = pp.pageTime;
+            int screenPrice = pp.basePrice;
+            DateTime occurTime = DateTime.Now;
+            ThreadUtils.StartNewTaskSafe(() => {
+                priceActionService.ReportPriceOffered(screenPrice, offeredPrice, pageTime, occurTime, "offer");
+            });
         }
 
         private void ProcessErrorDetect(PageTimePriceResult ret)

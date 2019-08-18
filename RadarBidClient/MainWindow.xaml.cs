@@ -140,6 +140,7 @@ namespace Radar
             }
 
             var captchaTaskDaemon = ApplicationContext.me.Get<CaptchaTaskDaemon>();
+            captchaTaskDaemon.SetCaptchaInputCallbackFunc(biddingScreen.CaptchaAnswerInputCallback);
             captchaTaskDaemon.RestartInquiryThread();
 
             string osName = KK.GetFitOSName();

@@ -180,6 +180,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bidding\BiddingPriceManager.cs" />
     <Compile Include="Bidding\BiddingScreen.cs" />
     <Compile Include="Bidding\BidActionManager.cs" />
     <Compile Include="Bidding\CaptchaTaskDaemon.cs" />
@@ -204,6 +205,7 @@
     <Compile Include="Bidding\Messages\IMessageProcessor.cs" />
     <Compile Include="Bidding\Model\BidAccountInfo.cs" />
     <Compile Include="Bidding\Model\BiddingContext.cs" />
+    <Compile Include="Bidding\Model\BiddingPriceRequest.cs" />
     <Compile Include="Bidding\Model\CaptchaAnswerImage.cs" />
     <Compile Include="Bidding\Model\CaptchaImageAnswerRequest.cs" />
     <Compile Include="Bidding\Model\CaptchaImageAnswerResponse.cs" />
@@ -225,6 +227,7 @@
     <Compile Include="Bidding\Service\PriceActionService.cs" />
     <Compile Include="Bidding\SubmitStrategyManager.cs" />
     <Compile Include="Common\Enums\PriceAction.cs" />
+    <Compile Include="Common\Enums\PriceOperateStatus.cs" />
     <Compile Include="Common\Logging\AsyncRollingFileAppender.cs" />
     <Compile Include="Common\Model\CommandRequest.cs" />
     <Compile Include="Bidding\Model\CoordPoint.cs" />
@@ -232,7 +235,7 @@
     <Compile Include="Common\Model\DataResult.cs" />
     <Compile Include="Bidding\Model\PagePrice.cs" />
     <Compile Include="Bidding\Model\PageTimePriceResult.cs" />
-    <Compile Include="Bidding\Model\PriceSubmitOperate.cs" />
+    <Compile Include="Bidding\Model\PriceStrategyOperate.cs" />
     <Compile Include="Common\Enums\RawMessageType.cs" />
     <Compile Include="Common\Enums\CommandDirective.cs" />
     <Compile Include="Bidding\Model\SubmitPriceSetting.cs" />
