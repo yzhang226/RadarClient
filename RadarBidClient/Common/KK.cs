@@ -29,9 +29,19 @@ namespace Radar.Common
         // 
         public static long CurrentMills()
         {
-            long currentTicks = DateTime.Now.Ticks;
+            return ToMills(DateTime.Now);
+        }
+
+        public static DateTime ToDateTime(long mills)
+        {
+            DateTime startTime = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+            return startTime.AddMilliseconds(mills);
+        }
+
+        public static long ToMills(DateTime dt)
+        {
             DateTime dtFrom = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-            return (currentTicks - dtFrom.Ticks) / 10000;
+            return (dt.Ticks - dtFrom.Ticks) / 10000;
         }
 
         // 

@@ -1,4 +1,5 @@
-﻿using Radar.Common.Enums;
+﻿using Radar.Common;
+using Radar.Common.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,6 +51,27 @@ namespace Radar.Bidding.Model.Dto
         /// </summary>
         public string Memo { get; set; }
 
+        public string ToLine()
+        {
+            return MachineCode + ";" + KK.ToMills(OccurTime) + ";" + KK.ToMills(ScreenTime) + ";" + Action + ";" + ScreenPrice + ";" + TargetPrice + ";" + UsedDelayMills + ";" + Memo;
+        }
+
+        public PriceActionRequest FromLine(string line)
+        {
+            string[] arr = line.Split(';');
+            var req = new PriceActionRequest();
+            req.MachineCode = arr[0];
+            req.OccurTime = KK.ToDateTime(long.Parse(arr[1]));
+            req.ScreenTime = KK.ToDateTime(long.Parse(arr[2]));
+            // req.Action = (PriceAction) Enum.ToObject(typeof(PriceAction), int.Parse(arr[3]));
+            req.Action = (PriceAction)Enum.Parse(typeof(PriceAction), arr[3]);
+            req.ScreenPrice = int.Parse(arr[4]);
+            req.TargetPrice = int.Parse(arr[5]);
+            req.UsedDelayMills = int.Parse(arr[6]);
+            req.Memo = arr.Length > 7 ? arr[7] : null;
+
+            return req;
+        }
 
     }
 }

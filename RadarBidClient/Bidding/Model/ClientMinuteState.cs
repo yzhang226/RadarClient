@@ -29,18 +29,18 @@ namespace Radar.Bidding.Model
         }
 
 
-        public void addClientSecPrice(int sec, int price)
-        {
-            if (KK.IsNotSecond(sec))
-            {
-                logger.ErrorFormat("illegal second#{0}", sec);
-                return;
-            }
+        //public void addClientSecPrice(int sec, int price)
+        //{
+        //    if (KK.IsNotSecond(sec))
+        //    {
+        //        logger.ErrorFormat("illegal second#{0}", sec);
+        //        return;
+        //    }
 
 
-            mp.AddSecPrice(sec, price);
+        //    mp.AddSecPrice();
 
-        }
+        //}
 
         public void Clear()
         {

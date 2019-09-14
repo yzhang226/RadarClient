@@ -25,7 +25,7 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://192.168.31.209:3456")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://119.3.64.205:3456")]
         public string BidAddressPrefix {
             get {
                 return ((string)(this["BidAddressPrefix"]));
@@ -34,7 +34,7 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://192.168.31.209:8866")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://119.3.64.205:8866")]
         public string CaptchaAddressPrefix {
             get {
                 return ((string)(this["CaptchaAddressPrefix"]));

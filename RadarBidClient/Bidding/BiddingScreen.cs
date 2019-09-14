@@ -174,7 +174,10 @@ namespace Radar.Bidding
             biddingContext = new BiddingContext();
         }
 
-
+        public BiddingContext GetBiddingContext()
+        {
+            return biddingContext;
+        }
 
         private void LoopDetectPriceAndTimeInScreen()
         {
@@ -235,7 +238,7 @@ namespace Radar.Bidding
                         }
 
                         s1 = KK.CurrentMills();
-                        AfterSuccessDetect(pp);
+                        AfterSuccessDetectInner(pp);
                         logger.DebugFormat("afterDetect elapsed {0}ms", KK.CurrentMills() - s1);
                     }
                     else
@@ -307,9 +310,8 @@ namespace Radar.Bidding
             return true;
         }
 
-        private void AfterSuccessDetect(PagePrice pp)
+        private void AfterSuccessDetectInner(PagePrice pp)
         {
-
             // 1. 11:29:15 获取验证码 用于预览
             if (!IsPreviewDone && pp.pageTime.TimeOfDay >= PreviewStartTime.TimeOfDay && pp.pageTime.TimeOfDay <= PreviewEndTime.TimeOfDay)
             {
@@ -317,11 +319,30 @@ namespace Radar.Bidding
                 return;
             }
 
-            int hour = pp.pageTime.Hour;
-            int minute = pp.pageTime.Minute;
-            int sec = pp.pageTime.Second;
+            // 本地 上报 29分25秒之后的价格
+            if (isLegalMinte(pp.pageTime) && pp.pageTime.Second > 15)
+            {
+                AsyncReportPriceShow(pp, DateTime.Now);
+            }
 
-            if (hour != 11 || minute != 29)
+            AfterSuccessDetect(pp);
+        }
+
+
+        private bool isLegalMinte(DateTime dt)
+        {
+            return dt.Hour == 11 || dt.Minute != 29;
+        }
+
+        public void AfterSuccessDetect(PagePrice pp)
+        {
+            if (!isLegalMinte(pp.pageTime))
+            {
+                return;
+            }
+
+            // 如果该秒已经计算过
+            if (!biddingContext.TryStartPagePrice(pp))
             {
                 return;
             }
@@ -329,8 +350,8 @@ namespace Radar.Bidding
             long s1 = KK.CurrentMills();
             
             DateTime now = DateTime.Now;
-            
-            biddingContext.AddPrice(sec, pp.basePrice);
+
+            biddingContext.AddPrice(pp);
 
             var req = biddingPriceManager.Calcs(pp);
 
@@ -351,7 +372,7 @@ namespace Radar.Bidding
                 biddingPriceManager.CancelnOutOfDateRequest(req.StrategySecond);
 
                 //
-                AsyncReportPriceOffered(pp, req.TargetPrice);
+                AsyncReportPriceOffered(pp, req.TargetPrice, DateTime.Now);
             }
 
             if (req.CanSubmit)
@@ -420,25 +441,39 @@ namespace Radar.Bidding
             return 0;
         }
 
-        private void AsyncReportPriceSubbmitted(BiddingPriceRequest req, DateTime occurTime, string memo)
+        private void AsyncReportPrice(PriceAction act, int screenPrice, int targetPrice, DateTime screenTime, DateTime occurTime, string memo, int usedDelayMills = 0)
         {
-            DateTime pageTime = req.SubmittedScreenTime;
-            int screenPrice = req.SubmittedScreenPrice;
-            int offeredPrice = req.TargetPrice;
-            int usedDelayMills = req.ComputedDelayMills;
             ThreadUtils.StartNewTaskSafe(() => {
-                priceActionService.ReportPriceSubbmitted(screenPrice, offeredPrice, pageTime, usedDelayMills, occurTime, memo);
+                if (act == PriceAction.PRICE_OFFER)
+                {
+                    priceActionService.ReportPriceOffered(screenPrice, targetPrice, screenTime, occurTime, memo);
+                }
+                else if (act == PriceAction.PRICE_SUBMIT)
+                {
+                    priceActionService.ReportPriceSubbmitted(screenPrice, targetPrice, screenTime, usedDelayMills, occurTime, memo);
+                }
+                else if (act == PriceAction.PRICE_SHOW)
+                {
+                    priceActionService.ReportPriceShowed(screenPrice, screenTime, occurTime, memo);
+                }
+                
             });
+
         }
 
-        private void AsyncReportPriceOffered(PagePrice pp, int offeredPrice)
+        private void AsyncReportPriceSubbmitted(BiddingPriceRequest req, DateTime occurTime, string memo)
         {
-            DateTime pageTime = pp.pageTime;
-            int screenPrice = pp.basePrice;
-            DateTime occurTime = DateTime.Now;
-            ThreadUtils.StartNewTaskSafe(() => {
-                priceActionService.ReportPriceOffered(screenPrice, offeredPrice, pageTime, occurTime, "offer");
-            });
+            AsyncReportPrice(PriceAction.PRICE_SUBMIT, req.SubmittedScreenPrice, req.TargetPrice, req.SubmittedScreenTime, occurTime, memo, req.ComputedDelayMills);
+        }
+
+        private void AsyncReportPriceOffered(PagePrice pp, int offeredPrice, DateTime occurTime)
+        {
+            AsyncReportPrice(PriceAction.PRICE_OFFER, pp.basePrice, offeredPrice,  pp.pageTime, occurTime,  "offer");
+        }
+
+        private void AsyncReportPriceShow(PagePrice pp, DateTime occurTime)
+        {
+            AsyncReportPrice(PriceAction.PRICE_SHOW, pp.basePrice, 0, pp.pageTime, occurTime, "show");
         }
 
         private void ProcessErrorDetect(PageTimePriceResult ret)

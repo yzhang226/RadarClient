@@ -224,6 +224,7 @@
     <Compile Include="Bidding\Model\Dto\Phase1PriceSubmitRequest.cs" />
     <Compile Include="Bidding\Model\Dto\PriceActionRequest.cs" />
     <Compile Include="Bidding\Model\Dto\ScreenImageUploadResponse.cs" />
+    <Compile Include="Bidding\Model\MintePriceDetail.cs" />
     <Compile Include="Bidding\Service\PriceActionService.cs" />
     <Compile Include="Bidding\SubmitStrategyManager.cs" />
     <Compile Include="Common\Enums\PriceAction.cs" />

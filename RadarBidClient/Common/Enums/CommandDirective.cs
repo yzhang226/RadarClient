@@ -76,9 +76,9 @@ namespace Radar.Common.Enums
         DIRECTIVE_SCRIPT = 90400,
 
         /// <summary>
-        /// 通知客户端价格
+        /// 通知竞拍价格
         /// </summary>
-        CLIENT_PRICE_TELL = 90500,
+        PRICE_TELL = 90500,
 
 
         /// <summary>

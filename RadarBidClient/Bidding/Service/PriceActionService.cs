@@ -59,13 +59,13 @@ namespace Radar.Bidding.Service
             req.ScreenPrice = screenPrice;
             req.TargetPrice = targetPrice;
 
-            JsonCommand comm = JsonCommands.OK(CommandDirective.CLIENT_PRICE_TELL, req);
+            JsonCommand comm = JsonCommands.OK(CommandDirective.PRICE_TELL, req.ToLine());
 
             RawMessage msg = MessageUtils.BuildJsonMessage(clientService.AssignedClientNo, comm);
 
             socketClient.Send(msg);
 
-            logger.InfoFormat("report price#{0}#{1}action#{2} at screenTime#{3} occurTime{4}", screenPrice, targetPrice, action, screenTime, req.OccurTime);
+            logger.InfoFormat("report price#{0}#{1}action#{2} at screenTime#{3} occurTime{4}, usedDelayMills#{5}", screenPrice, targetPrice, action, screenTime, req.OccurTime, usedDelayMills);
         }
 
     }

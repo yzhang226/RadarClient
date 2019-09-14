@@ -15,34 +15,63 @@ namespace Radar.Bidding.Model
 
         private Dictionary<DateTime, PagePrice> priceMap = new Dictionary<DateTime, PagePrice>();
 
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        // private Dictionary<int, int> PriceAfter29 = new Dictionary<int, int>();
-
         private ClientMinutePrice m29 = new ClientMinutePrice();
+        private int[] flags = new int[60];
 
         private Dictionary<int, PriceStrategyOperate> submitOperateMap = new Dictionary<int, PriceStrategyOperate>();
 
         private static Dictionary<string, PriceStrategyOperate> uuidOfsubmitOperateMap = new Dictionary<string, PriceStrategyOperate>();
 
-        public void AddPrice(int sec, int basePrice)
+        public BiddingContext()
         {
-            //PriceAfter29[sec] = basePrice;
-            m29.AddSecPrice(sec, basePrice);
+            for (int i=0; i<60; i++)
+            {
+                flags[i] = 0;
+            }
+        }
+
+        public void AddPrice(PagePrice pr)
+        {
+            m29.AddPriceIfNotSet(pr);
         }
 
         public int GetPrice(int sec)
         {
-            return m29.GetSecPrice(sec);
-            //if (!PriceAfter29.ContainsKey(sec))
-            //{
-            //    return -1;
-            //}
+            var pp = m29.GetSecPrice(sec);
+            
+            return pp != null ? pp.basePrice : 0;
+        }
 
-            //return PriceAfter29[sec];
+        /// <summary>
+        /// 该秒 是否 已被计算过 
+        /// </summary>
+        /// <param name="pr"></param>
+        /// <returns></returns>
+        public bool IsPagePriceCalced(PagePrice pr)
+        {
+            return flags[pr.pageTime.Second] == 1;
+        }
+
+        /// <summary>
+        ///  尝试对 该秒 计算 
+        ///  如果 该秒 当前已被计算过，则返回 false
+        ///  如果 该秒 当前未被计算过，则返回 true, 且设置 该秒 已被计算过
+        /// </summary>
+        /// <param name="pr"></param>
+        /// <returns></returns>
+        public bool TryStartPagePrice(PagePrice pr)
+        {
+            lock (logger)
+            {
+                if (IsPagePriceCalced(pr))
+                {
+                    return false;
+                }
+
+                flags[pr.pageTime.Second] = 1;
+
+                return true;
+            }
         }
 
         public PriceStrategyOperate AddPriceSetting(SubmitPriceSetting settting)

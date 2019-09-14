@@ -12,50 +12,44 @@ namespace Radar.Bidding.Model
 
         private static readonly ILog logger = LogManager.GetLogger(typeof(ClientMinutePrice));
 
-        private int[] prices;
+        private PagePrice[] prices;
 
         public ClientMinutePrice()
         {
-            prices = new int[60];
-            for (int i = 0; i < 60; i++)
-            {
-                prices[i] = 0;
-            }
+            prices = new PagePrice[60];
+            ReInit();
         }
 
-        public void AddSecPrice(int sec, int price)
+        public void AddPriceIfNotSet(DateTime dt, int basePrice)
         {
-            if (KK.IsNotSecond(sec))
+            AddPriceIfNotSet(new PagePrice(dt, basePrice, basePrice - 300, basePrice + 300));
+        }
+
+        /// <summary>
+        /// 如果未设置, 则设置该秒价格
+        /// </summary>
+        /// <param name="pr"></param>
+        public void AddPriceIfNotSet(PagePrice pr)
+        {
+            if (GetSecPrice(pr.pageTime.Second) != null)
             {
-                logger.ErrorFormat("illegal second#{0}", sec);
+                logger.InfoFormat("pageTime#{0} already setted ", pr);
                 return;
             }
 
-            // 已经存在, 则不需要
-            if (prices[sec] > 0)
-            {
-
-                return;
-            }
-
-            prices[sec] = price;
+            prices[pr.pageTime.Second] = pr;
         }
 
-        public int GetSecPrice(int sec)
+        public PagePrice GetSecPrice(int sec)
         {
-            if (KK.IsNotSecond(sec))
-            {
-                logger.ErrorFormat("illegal second#{0}", sec);
-                return -1;
-            }
             return prices[sec];
         }
 
-        public void Clear()
+        public void ReInit()
         {
             for (int i = 0; i < 60; i++)
             {
-                prices[i] = 0;
+                prices[i] = null;
             }
         }
 

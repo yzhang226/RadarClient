@@ -34,6 +34,14 @@ namespace Radar.Bidding.Model
             this.basePrice = basePrice;
         }
 
+        public PagePrice(DateTime occur, int basePrice, int low, int high)
+        {
+            this.pageTime = occur;
+            this.basePrice = basePrice;
+            this.low = low;
+            this.high = high;
+        }
+
         public override bool Equals(object objx)
         {
             PagePrice obj = (PagePrice)objx;
