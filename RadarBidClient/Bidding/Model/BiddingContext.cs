@@ -70,17 +70,23 @@ namespace Radar.Bidding.Model
                     return false;
                 }
 
-                if (pr.pageTime.Second < lastCalcedSec)
+                if (pr.pageTime.Second < lastCalcedSec || pr.pageTime.Hour != 11 || pr.pageTime.Minute != 29)
                 {
-                    logger.WarnFormat("price#{0} less then last-calc-sec#{1}, is not legal", pr, lastCalcedSec);
+                    logger.WarnFormat("price#{0}, last-calc-sec#{1}, is not legal", pr, lastCalcedSec);
                     return false;
                 }
 
                 flags[pr.pageTime.Second] = 1;
                 lastCalcedSec = pr.pageTime.Second;
+                logger.DebugFormat("at {0}, set lastCalcedSec to {1}  ", pr, lastCalcedSec);
 
                 return true;
             }
+        }
+
+        public int GetLastCalcedSec()
+        {
+            return lastCalcedSec;
         }
 
         public PriceStrategyOperate AddPriceSetting(SubmitPriceSetting settting)
@@ -116,9 +122,10 @@ namespace Radar.Bidding.Model
             return false;
         }
 
-        public void CleanSubmitOperate()
+        public void Clean()
         {
             submitOperateMap.Clear();
+            lastCalcedSec = 0;
         }
 
         public static PriceStrategyOperate GetSubmitOperateByUuid(string uuid)

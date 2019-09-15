@@ -91,18 +91,23 @@ namespace Radar.Bidding
 
         public void ResetContext()
         {
-            RefreshBiddingPage();
 
             biddingContext = new BiddingContext();
+            logger.InfoFormat("ResetContext last-sec is {0}", biddingContext.GetLastCalcedSec());
+
             ResetStrategyByReload();
+
+            RefreshBiddingPage();
 
             IsPreviewDone = false;
             IsOneRoundStarted = false;
+
+            logger.InfoFormat("ResetContext done");
         }
 
         public void ResetStrategyByReload()
         {
-            biddingContext.CleanSubmitOperate();
+            biddingContext.Clean();
 
             biddingPriceManager = new BiddingPriceManager(strategyManager, biddingContext, CancelStrategyRequest);
 
@@ -331,7 +336,7 @@ namespace Radar.Bidding
 
         private bool isLegalMinte(DateTime dt)
         {
-            return dt.Hour == 11 || dt.Minute != 29;
+            return dt.Hour == 11 && dt.Minute == 29;
         }
 
         public void AfterSuccessDetect(PagePrice pp)
