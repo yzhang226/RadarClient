@@ -4,6 +4,7 @@ using Radar.Bidding.Service;
 using Radar.Common;
 using Radar.Common.Enums;
 using Radar.Common.Model;
+using Radar.Common.Times;
 using Radar.IoC;
 using System;
 using System.Collections.Generic;
@@ -31,9 +32,17 @@ namespace Radar.Bidding.Command
 
         protected override JsonCommand DoExecute(BidderRegisterResponse req)
         {
-            logger.InfoFormat("Response of ClientLogin: clientNo is {0}", req.clientNo);
+            logger.InfoFormat("Response of ClientLogin: clientNo is {0}", req.ClientNo);
 
-            clientService.AssignedClientNo = req.clientNo;
+            clientService.AssignedClientNo = req.ClientNo;
+
+            if (req.ServerTime != null)
+            {
+                TimeSynchronizer.SyncDateTime(req.ServerTime);
+                logger.InfoFormat("in register command - set machine time to {0}", req.ServerTime);
+            }
+
+            
 
             return null;
         }

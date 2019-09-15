@@ -158,9 +158,10 @@ namespace Radar.Bidding
             }
 
             if (UsePriceMatchRule(pp, req) 
-                || UseFinalRule(pp, req) 
                 || UseBack2PriceRule(pp, req) 
-                || UseBack3PriceRule(pp, req))
+                || UseBack3PriceRule(pp, req)
+                || UseFinalRule(pp, req)
+                )
             {
                 return req;
             }
@@ -237,14 +238,34 @@ namespace Radar.Bidding
         private bool UseFinalRule(PagePrice pp, BiddingPriceRequest req)
         {
             if (pp.pageTime.Hour >= FinalTime.Hour
-            && pp.pageTime.Minute >= FinalTime.Minute
-            && pp.pageTime.Second >= FinalTime.Second)
+                    && pp.pageTime.Minute >= FinalTime.Minute
+                    && pp.pageTime.Second >= FinalTime.Second
+                )
             {
+                var priceAt53 = biddingContext.GetPrice(53);
+                var priceAt54 = biddingContext.GetPrice(54);
+                var priceAt55 = biddingContext.GetPrice(55);
+                var priceAt56 = biddingContext.GetPrice(56);
+
+                int delay;
+                string memo;
+
+                // 并且53秒到56秒之间价格未变动，则随机延迟700到1500毫秒之后提交，否则随机延迟200到1200毫秒之后提交。
+                if (priceAt53 == priceAt54 && priceAt54 == priceAt55 && priceAt55 == priceAt56)
+                {
+                    delay = KK.RandomInt(ForceStart1, ForceEnd1);
+                    memo = "Final Rule NoChange";
+                } 
+                else
+                {
+                    delay = KK.RandomInt(ForceStart, ForceEnd);
+                    memo = "Final Rule";
+                }
+
                 DateTime occurTime = DateTime.Now;
-                int delay = KK.RandomInt(ForceStart, ForceEnd);
                 req.CanSubmit = true;
                 req.ComputedDelayMills = delay;
-                req.SubmitMemo = "Final Rule";
+                req.SubmitMemo = memo;
 
                 return true;
             }
@@ -362,6 +383,9 @@ namespace Radar.Bidding
 
         private static readonly int ForceStart = 200;
         private static readonly int ForceEnd = 1200;
+
+        private static readonly int ForceStart1 = 700;
+        private static readonly int ForceEnd1 = 1500;
 
     }
 }

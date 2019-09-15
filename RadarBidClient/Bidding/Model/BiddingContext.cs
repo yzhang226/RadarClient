@@ -22,6 +22,8 @@ namespace Radar.Bidding.Model
 
         private static Dictionary<string, PriceStrategyOperate> uuidOfsubmitOperateMap = new Dictionary<string, PriceStrategyOperate>();
 
+        private int lastCalcedSec;
+
         public BiddingContext()
         {
             for (int i=0; i<60; i++)
@@ -68,7 +70,14 @@ namespace Radar.Bidding.Model
                     return false;
                 }
 
+                if (pr.pageTime.Second < lastCalcedSec)
+                {
+                    logger.WarnFormat("price#{0} less then last-calc-sec#{1}, is not legal", pr, lastCalcedSec);
+                    return false;
+                }
+
                 flags[pr.pageTime.Second] = 1;
+                lastCalcedSec = pr.pageTime.Second;
 
                 return true;
             }

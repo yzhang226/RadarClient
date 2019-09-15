@@ -16,5 +16,15 @@ namespace Radar.Common.Times
             return SystemTimeUpdater.SetDate(serverDt);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        public static bool SyncDateTime(DateTime dt)
+        {
+            return SystemTimeUpdater.SetDate(dt);
+        }
+
     }
 }

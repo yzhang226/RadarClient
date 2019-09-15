@@ -7,8 +7,15 @@ namespace Radar.Bidding.Model.Dto
 {
     public class BidderRegisterResponse
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        public int ClientNo { get; set; }
 
-        public int clientNo;
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime ServerTime { get; set; }
 
     }
 }

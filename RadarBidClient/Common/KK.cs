@@ -160,10 +160,31 @@ namespace Radar.Common
             return CapturesDir() + "\\Screen";
         }
 
+        /// <summary>
+        /// Operating system			Version number
+        /// Windows 10					10.0
+        /// Windows Server 2016			10.0
+        /// Windows 8.1					6.3
+        /// Windows Server 2012 R2		6.3
+        /// Windows 8					6.2
+        /// Windows Server 2012			6.2
+        /// Windows 7					6.1
+        /// Windows Server 2008 R2		6.1
+        /// Windows Server 2008			6.0
+        /// Windows Vista				6.0
+        /// Windows Server 2003 R2		5.2
+        /// Windows Server 2003			5.2
+        /// Windows XP 64-Bit Edition	5.2
+        /// Windows XP					5.1
+        /// Windows 2000				5.0
+        /// ²Î¿¼ http://csharphelper.com/blog/2017/10/get-the-computers-operating-system-in-c/
+        /// </summary>
+        /// <returns></returns>
         public static string GetFitOSName()
         {
             string osName = "";
-            switch (string.Format("{0}.{1}", Environment.OSVersion.Version.Major, Environment.OSVersion.Version.Minor))
+            var osVersion = string.Format("{0}.{1}", Environment.OSVersion.Version.Major, Environment.OSVersion.Version.Minor);
+            switch (osVersion)
             {
                 case Windows2000:
                     osName = "win2000";
@@ -178,6 +199,7 @@ namespace Radar.Common
                     osName = "win2008";
                     break;
                 case Windows7:
+                    // 
                     osName = "win7";
                     break;
                 case Windows8OrWindows81:

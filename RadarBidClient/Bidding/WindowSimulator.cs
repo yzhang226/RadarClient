@@ -103,7 +103,7 @@ namespace Radar
         {
             long s1 = KK.CurrentMills();
             string ret = this.OcrEx(x1, y1, x1 + width, y1 + height, colorForamt, 0.8);
-            logger.DebugFormat("Search {0} OCR 识别的内容是 {1}, {2}. elapsed {3}ms, ret is {4}", width, x1, y1, KK.CurrentMills() - s1, ret);
+            logger.DebugFormat("Search {0} OCR 识别的内容是 {1}, {2}. elapsed {3}ms, ret is {4}.", width, x1, y1, KK.CurrentMills() - s1, ret);
 
             CoordPoint point = new CoordPoint();
 
