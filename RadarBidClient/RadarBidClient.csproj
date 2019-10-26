@@ -203,6 +203,7 @@
     <Compile Include="Bidding\Command\SystemTimeSyncCommand.cs" />
     <Compile Include="Bidding\DM\DMCRef.cs" />
     <Compile Include="Bidding\Messages\IMessageProcessor.cs" />
+    <Compile Include="Bidding\Messages\PingCommandMessageProcessor.cs" />
     <Compile Include="Bidding\Model\BidAccountInfo.cs" />
     <Compile Include="Bidding\Model\BiddingContext.cs" />
     <Compile Include="Bidding\Model\BiddingPriceRequest.cs" />
@@ -225,6 +226,9 @@
     <Compile Include="Bidding\Model\Dto\PriceActionRequest.cs" />
     <Compile Include="Bidding\Model\Dto\ScreenImageUploadResponse.cs" />
     <Compile Include="Bidding\Model\MintePriceDetail.cs" />
+    <Compile Include="Bidding\Net\ConnectStatusEnum.cs" />
+    <Compile Include="Bidding\Net\KeepAliveManager.cs" />
+    <Compile Include="Bidding\Net\PingPongCounter.cs" />
     <Compile Include="Bidding\Service\PriceActionService.cs" />
     <Compile Include="Bidding\SubmitStrategyManager.cs" />
     <Compile Include="Common\Enums\PriceAction.cs" />

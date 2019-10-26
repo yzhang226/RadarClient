@@ -22,7 +22,7 @@ namespace Radar.Bidding.Messages
 
         private static readonly Dictionary<int, IMessageProcessor> processors = new Dictionary<int, IMessageProcessor>();
 
-        public static readonly MessageDispatcher me = new MessageDispatcher();
+        public static readonly MessageDispatcher ME = new MessageDispatcher();
 
         private MessageDispatcher()
         {

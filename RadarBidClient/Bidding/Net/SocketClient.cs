@@ -12,6 +12,7 @@ using System.Threading;
 using Radar.Common.Threads;
 using Radar.Common.Raw;
 using Radar.Bidding.Messages;
+using Radar.Common.Enums;
 
 namespace Radar.Bidding.Net
 {
@@ -43,7 +44,7 @@ namespace Radar.Bidding.Net
         /// 10 - 正常
         /// 100 - 异常
         /// </summary>
-        private int connectStatus = 0;
+        private ConnectStatusEnum connectStatus = ConnectStatusEnum.NONE;
         // private static ManualResetEvent receiveDone = new ManualResetEvent(false);
 
         // The response from the remote device.  
@@ -84,7 +85,7 @@ namespace Radar.Bidding.Net
 
             socketStarting = true;
             working = true;
-            connectStatus = 1;
+            connectStatus = ConnectStatusEnum.CONNECTING;
             try
             {
                 IPAddress ipAddr = IPAddress.Parse(ip);
@@ -95,11 +96,11 @@ namespace Radar.Bidding.Net
 
                 // Connect to the remote endpoint.  
                 _client.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), _client);
-                while (connectStatus == 1)
+                while (connectStatus == ConnectStatusEnum.CONNECTING)
                 {
                     KK.Sleep(100);
 
-                    if (connectStatus == 100)
+                    if (connectStatus == ConnectStatusEnum.CONNECT_FAILED)
                     {
                         break;
                     }
@@ -121,18 +122,19 @@ namespace Radar.Bidding.Net
             }
 
 
+            // 无论何种情况，都应开启守护
             if (EnableSocketGuard)
             {
-                StartSocketGuardIfNotExist();
+                KeepAliveManager.ME.RestartGuard(this);
             }
 
         }
 
         private void InvokeAfterSuccessConnected()
         {
-            if (connectStatus != 10)
+            if (connectStatus != ConnectStatusEnum.CONNECTED)
             {
-                logger.WarnFormat("connectStatus is not success, so DONOT Invoke AfterSuccessConnected");
+                logger.ErrorFormat("connectStatus is not success, so DONOT Invoke AfterSuccessConnected");
                 return;
             }
 
@@ -150,7 +152,7 @@ namespace Radar.Bidding.Net
 
         }
 
-        private void RestartClient()
+        public void RestartClient()
         {
             logger.InfoFormat("begin RestartClient");
             lock (START_LOCK)
@@ -179,12 +181,13 @@ namespace Radar.Bidding.Net
 
                 logger.InfoFormat("Socket connected to {0}", client.RemoteEndPoint.ToString());
 
-                connectStatus = 10;
+                connectStatus = ConnectStatusEnum.CONNECTED;
+
             }
             catch (Exception e)
             {
                 logger.Error("ConnectCallback error.", e);
-                connectStatus = 100;
+                connectStatus = ConnectStatusEnum.CONNECT_FAILED;
             }
         }
 
@@ -201,9 +204,12 @@ namespace Radar.Bidding.Net
                     ByteUtils.arraycopy(bytes, 0, data, 0, bytesRec);
 
                     RawMessage raw = RawMessageEncoder.me.decode(data);
-                    logger.InfoFormat("receive data is {0}, {1}, {2}", raw.totalLength, raw.messageType, raw.bodyText);
-
-                    MessageDispatcher.me.Dispatch(raw);
+                    if (raw.getMessageType() != (int) RawMessageType.PING_COMMAND)
+                    {
+                        logger.InfoFormat("receive data is {0}, {1}, {2}", raw.totalLength, raw.messageType, raw.bodyText);
+                    }
+                    
+                    MessageDispatcher.ME.Dispatch(raw);
 
                     this.anotherRecvCallback?.Invoke(raw);
 
@@ -261,7 +267,8 @@ namespace Radar.Bidding.Net
 
                 // Complete sending the data to the remote device.  
                 int bytesSent = client.EndSend(ar);
-                logger.InfoFormat("Sent {0} bytes to server.", bytesSent);
+
+                logger.DebugFormat("Sent {0} bytes to server.", bytesSent);
 
                 // Signal that all bytes have been sent.  
                 sendDone.Set();
@@ -308,178 +315,21 @@ namespace Radar.Bidding.Net
 
         }
 
-        private void StartSocketGuardIfNotExist()
-        {
-            if (socketWatchThrad != null)
-            {
-                return;
-            }
-
-            logger.InfoFormat("begin StartSocketClientGuard");
-            watching = true;
-            socketWatchThrad = ThreadUtils.StartNewBackgroudThread(WatchSocketClient);
-        }
-
-        /// <summary>
-        /// 连续 未连接 次数
-        /// </summary>
-        private int continuousDisconnectedCount = 0;
-
-        /// <summary>
-        /// 连续 连接 次数
-        /// </summary>
-        private int continuousConnectedCount = 0;
-
-        private static readonly int RESTART_THRESHOLD = 1;
-
-        private static readonly int DETECT_INTERVAL_MILLS = 2000;
-
-        private static readonly int AGAIN_CHECK_INTERVAL_MILLS = DETECT_INTERVAL_MILLS * 30;
-
-        private static readonly int AGAIN_CHECK_THRESHOLD = AGAIN_CHECK_INTERVAL_MILLS / DETECT_INTERVAL_MILLS;
-
-        private void WatchSocketClient()
-        {
-            KK.Sleep(5 * 1000);
-
-
-            while (watching)
-            {
-                KK.Sleep(DETECT_INTERVAL_MILLS);
-
-                if (socketStarting)
-                {
-                    logger.InfoFormat("socket is starting");
-                    continue;
-                }
-
-                try
-                {
-
-                    bool connected = _client != null && IsConnected(_client);
-                    DateTime dt = DateTime.Now;
-
-                    // logger.InfoFormat("socket connected#{0}", connected);
-
-                    if (dt.Minute > 57 && dt.Second % 8 == 0)
-                    {
-                        logger.InfoFormat("dice socket connected#{0}", connected);
-                    }
-
-                    if (!connected)
-                    {
-                        continuousConnectedCount = 0;
-                        continuousDisconnectedCount++;
-                        logger.InfoFormat("socket connected is false, count#{0}", continuousDisconnectedCount);
-                    }
-                    else
-                    {
-                        continuousConnectedCount++;
-                        continuousDisconnectedCount = 0;
-                    }
-
-                    if (continuousDisconnectedCount >= RESTART_THRESHOLD)
-                    {
-                        continuousConnectedCount = 0;
-                        continuousDisconnectedCount = 0;
-                        this.RestartClient();
-                    } 
-
-                } catch (Exception e)
-                {
-                    logger.Error("WatchSocketClient error", e);
-                } 
-                finally
-                {
-                    
-                }
-            }
-
-        }
-
         /// <summary>
         /// 
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
-        private bool IsConnected(Socket client)
+        public bool IsConnected()
         {
-            if (client == null || !client.Connected)
+            if (_client == null || !_client.Connected)
             {
                 return false;
             }
 
-            if ( (continuousConnectedCount % AGAIN_CHECK_THRESHOLD) == 0 )
-            {
-                return CheckConnectStateBySend(client);
-            }
-            else
-            {
-                return CheckConnectStateByPoll(client);
-            }
+            return true;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="s"></param>
-        /// <returns></returns>
-        private bool CheckConnectStateByPoll(Socket s)
-        {
-            bool part1 = s.Poll(1000, SelectMode.SelectRead);
-            bool part2 = (s.Available == 0);
-            if ((part1 && part2) || !s.Connected)
-                return false;
-            else
-                return true;
-        }
-
-        /// <summary>
-        /// Connected 当它返回false时Socket, 要么从未连接, 要么不再处于连接状态。
-        /// 
-        /// 参考 https://docs.microsoft.com/zh-cn/dotnet/api/system.net.sockets.socket.connected?redirectedfrom=MSDN&view=netframework-4.8#System_Net_Sockets_Socket_Connected
-        /// </summary>
-        /// <param name="client"></param>
-        /// <returns></returns>
-        private bool CheckConnectStateBySend(Socket client)
-        {
-            // This is how you can determine whether a socket is still connected.
-            bool blockingState = client.Blocking;
-            bool connected = false;
-            try
-            {
-                byte[] tmp = new byte[1];
-
-                client.Blocking = false;
-                client.Send(tmp, 0, 0);
-                connected = true;
-            }
-            catch (SocketException e)
-            {
-                // 10035 == WSAEWOULDBLOCK
-                if (e.NativeErrorCode.Equals(10035))
-                {
-                    logger.InfoFormat("Still Connected, but the Send would block");
-                }
-                else
-                {
-                    logger.ErrorFormat("Disconnected: error code {0}!", e.NativeErrorCode);
-                }
-            }
-            catch(Exception e)
-            {
-                connected = false;
-                logger.Error("CheckConnectStateBySend error", e);
-            }
-            finally
-            {
-                client.Blocking = blockingState;
-            }
-
-            logger.DebugFormat("Connected: {0}", connected);
-
-            return connected;
-        }
 
         public void Dispose()
         {

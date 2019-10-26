@@ -23,6 +23,11 @@ namespace Radar.Common.Raw
             return From(10002, clientNo, body);
         }
 
+        public static RawMessage BuildPingMessage(int clientNo)
+        {
+            return From(10101, clientNo, "ping");
+        }
+
         public static RawMessage From(int messageType, int clientNo, string body)
         {
             RawMessage msg = new RawMessage();

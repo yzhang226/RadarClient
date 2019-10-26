@@ -61,7 +61,7 @@ namespace Radar.Bidding.Service
 
             JsonCommand comm = JsonCommands.OK(CommandDirective.PRICE_TELL, req.ToLine());
 
-            RawMessage msg = MessageUtils.BuildJsonMessage(clientService.AssignedClientNo, comm);
+            RawMessage msg = MessageUtils.BuildJsonMessage(ClientService.AssignedClientNo, comm);
 
             socketClient.Send(msg);
 

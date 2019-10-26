@@ -39,6 +39,11 @@ namespace Radar.Bidding.Command
             logger.InfoFormat("Execute StrategySet: MachineCode is {0}, BidStrategies is {1}", req.MachineCode, req.BidStrategies);
 
             // submitStrategyManager.WriteNewStrategyToFile(req.BidStrategies);
+            var strategyText = req.BidStrategies;
+            if (strategyText.Contains("|"))
+            {
+                strategyText = strategyText.Replace("|", "\n");
+            }
 
             biddingScreen.RewriteAndResetStrategyFile(req.BidStrategies);
 

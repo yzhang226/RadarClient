@@ -20,7 +20,10 @@ namespace Radar.Bidding.Service
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(ClientService));
 
-        private int _clientNo;
+        /// <summary>
+        /// 一个应用实例仅有一个客户编号 
+        /// </summary>
+        private static int _clientNo;
 
 
         private SocketClient socketClient;
@@ -75,7 +78,7 @@ namespace Radar.Bidding.Service
             return _machineCode;
         }
 
-        public int AssignedClientNo
+        public static int AssignedClientNo
         {
             get
             {
@@ -85,7 +88,7 @@ namespace Radar.Bidding.Service
             {
                 logger.InfoFormat("Set AssignedClientNo is {0}", value);
 
-                this._clientNo = value;
+                _clientNo = value;
             }
         }
 

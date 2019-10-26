@@ -13,5 +13,10 @@ namespace Radar.Common.Enums
         /// </summary>
         JSON_COMMAND = 10002,
 
+        /// <summary>
+        /// ping命令
+        /// </summary>
+        PING_COMMAND = 10101,
+
     }
 }

@@ -42,7 +42,7 @@ namespace Radar.Bidding.Messages
         public void AfterPropertiesSet()
         {
             logger.InfoFormat("AfterPropertiesSet called");
-            MessageDispatcher.me.Register(this);
+            MessageDispatcher.ME.Register(this);
         }
 
     }

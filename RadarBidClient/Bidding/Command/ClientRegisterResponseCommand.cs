@@ -34,7 +34,7 @@ namespace Radar.Bidding.Command
         {
             logger.InfoFormat("Response of ClientLogin: clientNo is {0}", req.ClientNo);
 
-            clientService.AssignedClientNo = req.ClientNo;
+            ClientService.AssignedClientNo = req.ClientNo;
 
             if (req.ServerTime != null)
             {

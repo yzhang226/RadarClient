@@ -173,5 +173,14 @@ namespace Radar.Model
             return Properties.Settings.Default.ConfirmClickMode == 3;
         }
 
+        /// <summary>
+        /// 是否开启 socket 守护
+        /// </summary>
+        /// <returns></returns>
+        public bool EnableClientSocketGuard()
+        {
+            return true;
+        }
+
     }
 }

@@ -496,6 +496,11 @@ namespace Radar.Bidding
                 logger.InfoFormat("降级使用 - 屏幕分辨率 - {0}", re.ToString());
 
                 //bench.y = 79;
+                // 支持win7 
+                // 支持2008 R2 
+                // 支持的屏幕分辨率 
+                // 1280 * 800 基准点 297 * 22
+                // 1366 * 768 基准点 344 * 19
                 if (re.x > 1900)
                 {
                     // 不会有 scroll
@@ -503,11 +508,24 @@ namespace Radar.Bidding
                     bench.x = 672;
                     bench.y = 23;
                 }
-                else
+                // 1366
+                else if (re.x > 1340 && re.x < 1390)
                 {
                     // bench.x = (re.x - w - 15) / 2;
                     bench.x = 344;
                     bench.y = 19;
+                }
+                // 1280
+                else if (re.x > 1260 && re.x < 1299)
+                {
+                    bench.x = 297;
+                    bench.y = 22;
+                }
+                else
+                {
+                    // guess
+                    bench.x = (int) (re.x * 0.232);
+                    bench.y = 22;
                 }
 
                 // 内嵌模式

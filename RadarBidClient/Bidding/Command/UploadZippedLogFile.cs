@@ -46,7 +46,7 @@ namespace Radar.Bidding.Command
             }
 
 
-            int clientNo = clientService.AssignedClientNo;
+            int clientNo = ClientService.AssignedClientNo;
             string dt = DateTime.Now.ToString("yyyy-MM-dd");
 
             string zippedLogFile = "/temp/" + dt + "-" + clientNo + "-" + KK.CurrentMills() + "-info.log.gz";
