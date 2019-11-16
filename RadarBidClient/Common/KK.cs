@@ -10,6 +10,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Principal;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace Radar.Common
@@ -40,8 +41,10 @@ namespace Radar.Common
 
         public static long ToMills(DateTime dt)
         {
-            DateTime dtFrom = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-            return (dt.Ticks - dtFrom.Ticks) / 10000;
+            // 这里要考虑时区
+            DateTime startTime = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+            long timeStamp = (long)(dt - startTime).TotalMilliseconds;
+            return timeStamp;
         }
 
         // 
@@ -370,6 +373,17 @@ namespace Radar.Common
             }
             return seatNo;
         }
+
+        public static bool IsDigits(string value)
+        {
+            return Regex.IsMatch(value, @"^[+-]?\d*$");
+        }
+
+        public static bool IsIP(string ip)
+        {
+            return Regex.IsMatch(ip, @"^((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)$");
+        }
+
 
     }
 }

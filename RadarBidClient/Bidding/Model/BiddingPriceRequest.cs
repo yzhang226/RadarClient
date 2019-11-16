@@ -69,6 +69,11 @@ namespace Radar.Bidding.Model
         /// </summary>
         public string CanncelMemo { get; set; }
 
+        /// <summary>
+        /// 是否为 区间检测 触发的
+        /// </summary>
+        public bool IsRangeTriggered { get; set; }
+
 
     }
 }

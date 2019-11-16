@@ -41,6 +41,12 @@ namespace Radar.Common.Enums
         /// </summary>
         CANCELLED = 99,
 
+        /// <summary>
+        /// 需要重新出价，因为出价还未到达 策略预期
+        /// 1. 先取消原有的出价, 如果有前一个出价
+        /// 2. 再出价新的价格
+        /// </summary>
+        NEED_REOFFER_OF_PRICE_NOT_MATCH = 1000,
 
 
     }

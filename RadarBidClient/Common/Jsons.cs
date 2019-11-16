@@ -12,7 +12,8 @@ namespace Radar.Common
         static Jsons() {
             // 2019-07-17T00:22:04.401	
             jsonSettings = new JsonSerializerSettings();
-            jsonSettings.DateFormatString = "yyyy-MM-dd'T'HH:mm:ss.fff";
+            jsonSettings.DateFormatString = "yyyy-MM-dd'T'HH:mm:ss.fffK";
+            jsonSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
 
         }
 

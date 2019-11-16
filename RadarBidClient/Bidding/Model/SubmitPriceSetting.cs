@@ -4,16 +4,39 @@ using System.Linq;
 
 namespace Radar.Bidding.Model
 {
+    /// <summary>
+    /// 策略格式如下：
+    /// 检测秒数,匹配价格区间,加价
+    /// </summary>
     public class SubmitPriceSetting
     {
-        // 检测秒数
+        /// <summary>
+        /// 检测秒数
+        /// </summary>
         public int second { get; set; }
 
-        // 加价
+        /// <summary>
+        /// 价格匹配区间 开始
+        /// </summary>
+        public int RangeStartDelta { get; set; }
+
+        /// <summary>
+        /// 价格匹配区间 结束
+        /// </summary>
+        public int RangeEndDelta { get; set; }
+
+        /// <summary>
+        /// 加价
+        /// </summary>
         public int deltaPrice { get; set; }
 
         // 延迟提交毫秒数
         public int delayMills { get; set; }
+
+        /// <summary>
+        /// 是否未区间检测
+        /// </summary>
+        public bool IsRange { get; set; }
 
         // --------------------------------------------
 
@@ -49,11 +72,25 @@ namespace Radar.Bidding.Model
             {
                 return null;
             }
-            // 秒数,加价,延迟毫秒数(未使用)
-            SubmitPriceSetting sps = new SubmitPriceSetting();
-            sps.second = int.Parse(arr[0]);
-            sps.deltaPrice = int.Parse(arr[1]);
-            sps.delayMills = int.Parse(arr[2]);
+
+            // 检测秒数,匹配价格区间,加价
+            var sps = new SubmitPriceSetting();
+            sps.second = int.Parse(arr[0].Trim());
+            var range = arr[1];
+            if (range.Contains("-"))
+            {
+                sps.IsRange = true;
+                var a2 = range.Trim().Split('-');
+                sps.RangeStartDelta = int.Parse(a2[0]);
+                sps.RangeEndDelta = int.Parse(a2[1]);
+            }
+            else
+            {
+                sps.IsRange = false;
+            }
+
+            sps.deltaPrice = int.Parse(arr[2].Trim());
+            
 
             return sps;
         }

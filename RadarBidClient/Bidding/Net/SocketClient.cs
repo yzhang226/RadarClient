@@ -66,17 +66,32 @@ namespace Radar.Bidding.Net
 
         public SocketClient(string ip, int port)
         {
-            this.ip = ip;
+            this.ip = GetIP(ip);
             this.port = port;
         }
 
         public SocketClient(ProjectConfig conf)
         {
             var addr = conf.SaberServerAddress;
-            this.ip = addr.Split(':')[0];
+            this.ip = GetIP(addr.Split(':')[0]);
             this.port = int.Parse(addr.Split(':')[1]);
 
             this.conf = conf;
+        }
+
+        public string GetIP(string domain)
+        {
+            bool isIp = KK.IsIP(domain);
+            logger.InfoFormat("domain#{0} IsIP = {1}", domain, isIp);
+
+            if (isIp)
+            {
+                return domain;
+            }
+
+            IPHostEntry hostEntry = Dns.GetHostEntry(domain);
+            IPEndPoint ipEndPoint = new IPEndPoint(hostEntry.AddressList[0], 0);
+            return ipEndPoint.Address.ToString();
         }
 
         public void StartClient()

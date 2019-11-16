@@ -128,7 +128,7 @@ namespace Radar.Model
         {
             get
             {
-                return this.SaberWebAddressPrefix + "/v1/screen/upload"; ;
+                return this.SaberWebAddressPrefix + "/saber/v1/screen/upload"; ;
             }
         }
 

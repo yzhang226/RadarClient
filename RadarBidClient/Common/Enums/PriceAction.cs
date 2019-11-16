@@ -23,5 +23,10 @@ namespace Radar.Common.Enums
         /// </summary>
         PRICE_SUBMIT = 6,
 
+        /// <summary>
+        /// 价格 - 重新提交
+        /// </summary>
+        CANCEL_AND_REOFFER = 1000,
+
     }
 }

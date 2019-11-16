@@ -138,6 +138,35 @@ namespace Radar.Bidding
                 return null;
             }
 
+            // 检查是否 为 区间决策
+            if (strategy.IsRange)
+            {
+                /*
+                参考设置为50,700-1000,1200
+                   意思表示在时间点11:29:50判断当前的出价，
+                   如果当前没有任何出价，或者当前的出价<最低成交价+700，或者当前的出价>最低成交价+1000，则取消当前出价，重新出该时间点的最低成交价+1200。
+
+                */
+                var reqs = GetPreviousUnSubmitRequest(pp.pageTime.Second);
+                var last = reqs != null && reqs.Count > 0 ? reqs.Last() : null;
+                var currentOfferPrice = last != null ? last.TargetPrice : 0;
+
+                // 如果有前一个出价，且在区间内，则不操作
+                if (last != null 
+                    && currentOfferPrice >= pp.basePrice+strategy.RangeStartDelta 
+                    && currentOfferPrice <= pp.basePrice+strategy.RangeEndDelta)
+                {
+                    logger.InfoFormat("strategy#{0} is matched, currentOfferPrice#{1}, base#{2}, start#{3}, end#{4}",
+                            strategy.second, currentOfferPrice, pp.basePrice, strategy.RangeStartDelta, strategy.RangeEndDelta);
+                    return null;
+                }
+
+                logger.InfoFormat("strategy#{0} is not matched, currentOfferPrice#{1}, base#{2}, start#{3}, end#{4}",
+                            strategy.second, currentOfferPrice, pp.basePrice, strategy.RangeStartDelta, strategy.RangeEndDelta);
+
+                // 剩下的 区间策略 和 一般策略 无任何不同
+            }
+
             BiddingPriceRequest req = null;
             strategySecondRequests.TryGetValue(strategy.second, out req);
             if (req == null)
@@ -157,6 +186,7 @@ namespace Radar.Bidding
                 return null;
             }
 
+            // 检测 策略的出价是否符合提交规则
             if (UsePriceMatchRule(pp, req) 
                 || UseBack2PriceRule(pp, req) 
                 || UseBack3PriceRule(pp, req)
@@ -184,6 +214,7 @@ namespace Radar.Bidding
             req.StrategySecond = strategy.second;
             req.TargetPrice = strategy.deltaPrice + pp.basePrice;
             req.CaptchaUuid = "";
+            req.IsRangeTriggered = strategy.IsRange;
 
             return req;
         }
