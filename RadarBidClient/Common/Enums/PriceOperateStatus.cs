@@ -46,7 +46,7 @@ namespace Radar.Common.Enums
         /// 1. 先取消原有的出价, 如果有前一个出价
         /// 2. 再出价新的价格
         /// </summary>
-        NEED_REOFFER_OF_PRICE_NOT_MATCH = 1000,
+        STRATEGY_RANGE_MATCHED = 1000,
 
 
     }

@@ -115,6 +115,10 @@ namespace Radar
 
             biddingScreen.SetWebBrowser(this.webBro);
             biddingScreen.SetShowUpBlock(this.RecoBlock);
+            biddingScreen.StrategyBlock = this.StrategyBlock;
+            biddingScreen.ActionBlock = this.ActionBlock;
+
+            biddingScreen.SetStrategyText();
 
             if (conf.EnableSaberRobot)
             {

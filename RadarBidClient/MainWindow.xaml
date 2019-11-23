@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Radar"
         mc:Ignorable="d"
-        Title="雷达竞拍"  Icon="resource/icon-radar.ico">
+        Title="雷达竞拍"  Icon="resource/icon-radar.ico" d:DesignWidth="779" d:DesignHeight="636">
     <!-- Width="900" Height="806"  Left="50" Top="60" -->
     <!-- Width="Auto" Height="Auto" -->
 
@@ -32,49 +32,33 @@
             <Button x:Name="JustTestBtn" Content="测试专用" Canvas.Left="10" Canvas.Top="158" Width="151" Click="JustTest" Height="26" RenderTransformOrigin="0.564,4.212"/>
 
             <Button x:Name="StartAutoBiddingBtn" Content="开始自动竞拍" Canvas.Left="10" Canvas.Top="204" Width="151" Click="StartAutoBidding" Height="26" RenderTransformOrigin="0.564,4.212"/>
-            <Label x:Name="RecognizeLabel" Content="识别区：" Canvas.Left="10" Canvas.Top="344"/>
-            <TextBlock x:Name="RecoBlock" Canvas.Left="10" TextWrapping="Wrap" Text="oo" Canvas.Top="374" Width="146" Height="68"/>
-            <Label x:Name="VerNameLabel" Content="版本：" Canvas.Left="10" Canvas.Top="477" RenderTransformOrigin="0.375,-0.28"/>
-            <Label x:Name="VerLabel" Content="0.0.1" Canvas.Left="53" Canvas.Top="477" Width="55"/>
-            <Label x:Name="SeatNameLabel" Content="座位:" Canvas.Left="10" Canvas.Top="447" RenderTransformOrigin="0.675,0.52"/>
-            <Label x:Name="SeatNoLabel" Content="-1" Canvas.Left="53" Canvas.Top="447" Width="55"/>
+            <TextBlock x:Name="RecoBlock" Canvas.Left="10" TextWrapping="Wrap" Text="oo" Canvas.Top="264" Width="146" Height="55"/>
 
-            <!--<Label x:Name="label" Content="出价第二阶段设置：" Canvas.Left="10" Canvas.Top="85"/>-->
-            <!-- -->
-            <!--
-            <Label x:Name="label1" Content="第一次" Canvas.Left="10" Canvas.Top="127"/>
+            <TextBlock x:Name="StrategyBlock" Canvas.Left="10" TextWrapping="Wrap" Canvas.Top="328" Width="146" Height="63" Text="ss"/>
+            <TextBlock x:Name="ActionBlock" Canvas.Left="10" TextWrapping="Wrap" Canvas.Top="406" Width="146" Height="51" Text="aa"/>
 
-            <TextBox x:Name="timing021" Canvas.Left="56" TextWrapping="Wrap" Text="40" Canvas.Top="132" Height="20" Width="25"/>
-            <Label x:Name="label4" Content="秒" Canvas.Left="86" Canvas.Top="127"/>
-
-            <Label x:Name="label3" Content="加价" Canvas.Left="113" Canvas.Top="127" RenderTransformOrigin="0.059,0.12"/>
-            <TextBox x:Name="deltaPrice021" Canvas.Left="142" TextWrapping="Wrap" Canvas.Top="132" Text="100" Height="20" Width="50"/>
-
-            <Label x:Name="label2" Content="延迟毫秒" Canvas.Left="192" Canvas.Top="127"/>
-            <TextBox x:Name="delayMills021" Canvas.Left="250" TextWrapping="Wrap" Text="0" Canvas.Top="131" Height="20" Width="50"/>
-
-            -->
-            <!--  -->
-            <!--
-            <Label x:Name="label1_Copy" Content="第二次" Canvas.Left="10" Canvas.Top="171"/>
-
-            <TextBox x:Name="timing022" Canvas.Left="61" TextWrapping="Wrap" Text="55" Canvas.Top="176" Height="20" Width="25"/>
-            <Label x:Name="label4_Copy" Content="秒" Canvas.Left="86" Canvas.Top="173" RenderTransformOrigin="-0.182,0.6"/>
-
-            <Label x:Name="label3_Copy" Content="加价" Canvas.Left="108" Canvas.Top="171" RenderTransformOrigin="0.059,0.12"/>
-            <TextBox x:Name="deltaPrice022" Canvas.Left="142" TextWrapping="Wrap" Canvas.Top="175" Text="100" Height="20" Width="50"/>
-
-            <Label x:Name="label2_Copy" Content="延迟毫秒" Canvas.Left="192" Canvas.Top="173"/>
-            <TextBox x:Name="delayMills022" Canvas.Left="250" TextWrapping="Wrap" Text="0" Canvas.Top="176" Height="20" Width="50"/>
+            <Label x:Name="VerNameLabel" Content="版本：" Canvas.Left="5" Canvas.Top="546" RenderTransformOrigin="0.375,-0.28">
+                <Label.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform AngleX="-2.121"/>
+                        <RotateTransform/>
+                        <TranslateTransform X="1.185"/>
+                    </TransformGroup>
+                </Label.RenderTransform>
+            </Label>
+            <Label x:Name="VerLabel" Content="0.0.1" Canvas.Left="52" Canvas.Top="546" Width="55"/>
+            <Label x:Name="SeatNameLabel" Content="座位:" Canvas.Left="5" Canvas.Top="517" RenderTransformOrigin="0.675,0.52"/>
+            <Label x:Name="SeatNoLabel" Content="-1" Canvas.Left="52" Canvas.Top="517" Width="55"/>
 
 
-            <Button x:Name="saveSettingBtn" Content="保存设置" Canvas.Left="10" Canvas.Top="230" Width="86" Click="saveSetting" Height="26"/>-->
 
         </Canvas>
 
         <!--<WebBrowser Grid.Row="0" Grid.Column="1" Name="webBro" Navigating="webBroNav" HorizontalAlignment="Left" VerticalAlignment="Top"/>-->
         <!--  Width="Auto" Height="Auto" http://127.0.0.1:3456/bid.htm -->
         <WebBrowser Grid.Row="0" Grid.Column="1" Name="webBro" Height="{Binding Height, ElementName='row2'}" Width="{Binding Width, ElementName='clo2'}"  />
+
 
     </Grid>
 

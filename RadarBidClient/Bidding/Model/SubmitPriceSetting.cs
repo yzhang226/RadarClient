@@ -38,6 +38,11 @@ namespace Radar.Bidding.Model
         /// </summary>
         public bool IsRange { get; set; }
 
+        /// <summary>
+        /// 是否区间检测已经 执行过检查
+        /// </summary>
+        public bool IsRangeChecked { get; set; }
+
         // --------------------------------------------
 
         // 指定 分钟
@@ -46,10 +51,12 @@ namespace Radar.Bidding.Model
         // 计算好 到价
         public int basePrice;
 
-        // 格式: 秒数,加价,延迟提交毫秒数,
+
+
+        // 格式: 秒数,区间,加价,
         public string toLine()
         {
-            return second + "," + deltaPrice + "," + delayMills;
+            return second + "," + RangeStartDelta + (IsRange ? "-" + RangeEndDelta : "") + "," + deltaPrice;
         }
 
         /// <summary>
@@ -76,17 +83,18 @@ namespace Radar.Bidding.Model
             // 检测秒数,匹配价格区间,加价
             var sps = new SubmitPriceSetting();
             sps.second = int.Parse(arr[0].Trim());
-            var range = arr[1];
+            var range = arr[1].Trim();
             if (range.Contains("-"))
             {
                 sps.IsRange = true;
-                var a2 = range.Trim().Split('-');
+                var a2 = range.Split('-');
                 sps.RangeStartDelta = int.Parse(a2[0]);
                 sps.RangeEndDelta = int.Parse(a2[1]);
             }
             else
             {
                 sps.IsRange = false;
+                sps.RangeStartDelta = int.Parse(range);
             }
 
             sps.deltaPrice = int.Parse(arr[2].Trim());

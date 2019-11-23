@@ -50,6 +50,12 @@ namespace Radar.Bidding
         
         private TextBlock ShowUpBlock;
 
+        public TextBlock StrategyBlock { get; set; }
+
+        public TextBlock ActionBlock { get; set; }
+
+        private List<String> lastActions;
+
 
         private static readonly DateTime PreviewStartTime = new DateTime(2019, 08, 18, 11, 29, 15);
 
@@ -97,6 +103,9 @@ namespace Radar.Bidding
 
             ResetStrategyByReload();
 
+            lastActions = new List<string>();
+            SetLastAcionText();
+
             RefreshBiddingPage();
 
             IsPreviewDone = false;
@@ -109,13 +118,15 @@ namespace Radar.Bidding
         {
             biddingContext.Clean();
 
-            biddingPriceManager = new BiddingPriceManager(strategyManager, biddingContext, CancelStrategyRequest);
-
             List<SubmitPriceSetting> settings = this.strategyManager.LoadStrategies();
             foreach (SubmitPriceSetting sps in settings)
             {
                 biddingContext.AddPriceSetting(sps);
             }
+
+            biddingPriceManager = new BiddingPriceManager(strategyManager, biddingContext, CancelStrategyRequest);
+
+            SetStrategyText();
         }
 
         public void RewriteAndResetStrategyFile(string strategyText)
@@ -321,6 +332,8 @@ namespace Radar.Bidding
             if (!IsPreviewDone && pp.pageTime.TimeOfDay >= PreviewStartTime.TimeOfDay && pp.pageTime.TimeOfDay <= PreviewEndTime.TimeOfDay)
             {
                 PreviewPhase2Captcha(pp);
+                // 第一次时，也重新加载策略，防止策略被刷掉
+                this.ResetStrategyByReload();
                 return;
             }
 
@@ -353,7 +366,7 @@ namespace Radar.Bidding
             }
 
             long s1 = KK.CurrentMills();
-            
+
             DateTime now = DateTime.Now;
 
             biddingContext.AddPrice(pp);
@@ -366,18 +379,50 @@ namespace Radar.Bidding
                 return;
             }
 
-            if (req.OperateStatus == StrategyOperateStatus.NEED_OFFER_PRICE) // 1. 此处直接出价
+            if (req.OperateStatus == StrategyOperateStatus.NEED_OFFER_PRICE) 
             {
-                CaptchaAnswerImage ansImg = phase2Manager.OfferPrice(req.TargetPrice, true);
-                biddingContext.PutAwaitImage(ansImg, null);
 
-                req.CaptchaUuid = ansImg.Uuid;
-                req.OperateStatus = StrategyOperateStatus.CAPTCHA_AWAIT;
+                // 出价前 检查 距离上次 出价时间 是否在 6秒 内
+                // 如果在6秒内，则不能出价了，因为会报 操作频繁
+                List<BiddingPriceRequest> unSubmited = biddingPriceManager.GetPreviousUnSubmitRequest(pp.pageTime.Second);
+                bool canOffer = true;
+                if (unSubmited?.Count > 0)
+                {
+                    var last = unSubmited.Last();
+                    int duration = (int) (pp.pageTime - last.OfferedScreenTime).TotalSeconds;
+                    if (duration < 6)
+                    {
+                        canOffer = false;
+                    }
+                    logger.InfoFormat("unSubmited between now duration is {0}, canOffer is {1}", duration, canOffer);
+                }
 
-                biddingPriceManager.CancelnOutOfDateRequest(req.StrategySecond);
 
-                //
-                AsyncReportPriceOffered(pp, req.TargetPrice, DateTime.Now);
+                // 然后直接出价
+                if (canOffer)
+                {
+                    CaptchaAnswerImage ansImg = phase2Manager.OfferPrice(req.TargetPrice, true);
+                    biddingContext.PutAwaitImage(ansImg, null);
+
+                    req.CaptchaUuid = ansImg.Uuid;
+                    req.OperateStatus = StrategyOperateStatus.CAPTCHA_AWAIT;
+
+                    biddingPriceManager.CancelnOutOfDateRequest(req.StrategySecond);
+
+                    //
+                    AsyncReportPriceOffered(pp, req.TargetPrice, DateTime.Now);
+                } else
+                {
+                    // 不能出价时，则取消该策略
+                    logger.InfoFormat("strategy#{0} canOffer is false, need remove", req.StrategySecond);
+                    biddingPriceManager.RemoveStrategy(req.StrategySecond);
+                }
+            }
+            else if (req.OperateStatus == StrategyOperateStatus.STRATEGY_RANGE_MATCHED) {
+                // 命中区间策略
+                // 移除该策略
+                logger.InfoFormat("range strategy#{0} matched, need remove", pp.pageTime.Second);
+                biddingPriceManager.RemoveStrategy(pp.pageTime.Second);
             }
 
             if (req.CanSubmit)
@@ -386,9 +431,57 @@ namespace Radar.Bidding
                 req.SubmittedScreenPrice = pp.basePrice;
                 SubmitOfferedPrice(req);
             }
-            
-            logger.InfoFormat("afterDetect elapsed {0}ms", KK.CurrentMills() - s1);
 
+            logger.InfoFormat("afterDetect elapsed {0}ms", KK.CurrentMills() - s1);
+        }
+
+        private void AsyncSetStrategyAndActionText()
+        {
+            ThreadUtils.StartNewTaskSafe(() =>
+            {
+                SetStrategyText();
+                SetLastAcionText();
+            });
+        }
+
+        public void SetStrategyText()
+        {
+            if (StrategyBlock == null)
+            {
+                return;
+            }
+
+            var strategyInfoText = biddingPriceManager.GetStrategyInfo();
+
+            Action action1 = () =>
+            {
+
+                StrategyBlock.Text = strategyInfoText;
+            };
+
+            StrategyBlock.Dispatcher.BeginInvoke(action1);
+        }
+
+        private void SetLastAcionText()
+        {
+            if (ActionBlock == null || lastActions == null)
+            {
+                return;
+            }
+
+            var infoText = "";
+            lastActions.ForEach(x =>
+            {
+                infoText += x + "\n";
+            });
+
+
+            Action action1 = () =>
+            {
+                ActionBlock.Text = infoText;
+            };
+
+            ActionBlock.Dispatcher.BeginInvoke(action1);
         }
 
         // private int SubmitOfferedPrice(int fixSec, PriceStrategyOperate oper, string answer, PagePrice pp, int offeredPrice, int usedDelayMills, DateTime occurTime)
@@ -440,7 +533,6 @@ namespace Radar.Bidding
                 biddingPriceManager.RemoveStrategy(req.StrategySecond);
 
                 AsyncReportPriceSubbmitted(req, occurTime, memo);
-                
             }
             
             return 0;
@@ -449,17 +541,28 @@ namespace Radar.Bidding
         private void AsyncReportPrice(PriceAction act, int screenPrice, int targetPrice, DateTime screenTime, DateTime occurTime, string memo, int usedDelayMills = 0)
         {
             ThreadUtils.StartNewTaskSafe(() => {
+                string actionText = null;
                 if (act == PriceAction.PRICE_OFFER)
                 {
                     priceActionService.ReportPriceOffered(screenPrice, targetPrice, screenTime, occurTime, memo);
+                    actionText = screenTime.ToLongTimeString() + " - 出价: " + targetPrice;
                 }
                 else if (act == PriceAction.PRICE_SUBMIT)
                 {
                     priceActionService.ReportPriceSubbmitted(screenPrice, targetPrice, screenTime, usedDelayMills, occurTime, memo);
+                    actionText = screenTime + " - 提交";
                 }
                 else if (act == PriceAction.PRICE_SHOW)
                 {
                     priceActionService.ReportPriceShowed(screenPrice, screenTime, occurTime, memo);
+                }
+
+                if (actionText != null)
+                {
+                    SetStrategyText();
+
+                    lastActions.Add(actionText);
+                    SetLastAcionText();
                 }
                 
             });

@@ -22,6 +22,8 @@ namespace Radar.Bidding
         private FileSystemWatcher watcher = null;
         // BiddingScreen screen
 
+        public DateTime LoadedTime { get; set; }
+
         public SubmitStrategyManager()
         {
             // this.screen = screen;
@@ -29,7 +31,8 @@ namespace Radar.Bidding
 
         public void AfterPropertiesSet()
         {
-            this.WatchStragetyFile();
+            logger.InfoFormat("SubmitStrategyManager AfterPropertiesSet");
+            // this.WatchStragetyFile();
         }
 
         public List<SubmitPriceSetting> LoadStrategies()
@@ -53,6 +56,8 @@ namespace Radar.Bidding
                     settings.Add(sps);
                 }
             }
+
+            LoadedTime = DateTime.Now;
 
             return settings;
         }

@@ -131,6 +131,19 @@ namespace Radar.Bidding
             }
         }
 
+        public string GetStrategyInfo()
+        {
+            var text = strategyManager.LoadedTime + "";
+            var cnt = strategies.Count;
+            for (var i = 0; i < cnt; i++)
+            {
+                var stra = strategies[i];
+                text += "\n" + stra.toLine();
+            }
+
+            return text;
+        }
+
         public BiddingPriceRequest Calc(PagePrice pp, SubmitPriceSetting strategy)
         {
             if (pp.pageTime.Second < strategy.second)
@@ -138,8 +151,8 @@ namespace Radar.Bidding
                 return null;
             }
 
-            // 检查是否 为 区间决策
-            if (strategy.IsRange)
+            // 检查是否 为 区间决策 且 未执行过检查
+            if (strategy.IsRange && !strategy.IsRangeChecked)
             {
                 /*
                 参考设置为50,700-1000,1200
@@ -151,6 +164,8 @@ namespace Radar.Bidding
                 var last = reqs != null && reqs.Count > 0 ? reqs.Last() : null;
                 var currentOfferPrice = last != null ? last.TargetPrice : 0;
 
+                strategy.IsRangeChecked = true;
+
                 // 如果有前一个出价，且在区间内，则不操作
                 if (last != null 
                     && currentOfferPrice >= pp.basePrice+strategy.RangeStartDelta 
@@ -158,7 +173,9 @@ namespace Radar.Bidding
                 {
                     logger.InfoFormat("strategy#{0} is matched, currentOfferPrice#{1}, base#{2}, start#{3}, end#{4}",
                             strategy.second, currentOfferPrice, pp.basePrice, strategy.RangeStartDelta, strategy.RangeEndDelta);
-                    return null;
+                    BiddingPriceRequest reqx = new BiddingPriceRequest();
+                    reqx.OperateStatus = StrategyOperateStatus.STRATEGY_RANGE_MATCHED;
+                    return reqx;
                 }
 
                 logger.InfoFormat("strategy#{0} is not matched, currentOfferPrice#{1}, base#{2}, start#{3}, end#{4}",
@@ -199,12 +216,14 @@ namespace Radar.Bidding
             return req;
         }
 
-        public BiddingPriceRequest CheckPriceOffer(PagePrice pp, SubmitPriceSetting strategy)
+        public BiddingPriceRequest CheckPriceOffer(PagePrice pp, SubmitPriceSetting strategy, bool needCheckSecond = true)
         {
-            if (pp.pageTime.Second != strategy.second)
+            if (needCheckSecond && pp.pageTime.Second != strategy.second)
             {
                 return null;
             }
+
+            logger.InfoFormat("CheckPriceOffer sec#{0}, strategy is {1} ", strategy.second, strategy);
             
             BiddingPriceRequest req = new BiddingPriceRequest();
             req.OperateStatus = StrategyOperateStatus.NEED_OFFER_PRICE;

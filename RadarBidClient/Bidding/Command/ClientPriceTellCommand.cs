@@ -15,7 +15,7 @@ namespace Radar.Bidding.Command
     public class PriceTellCommand : BaseCommand<string>
     {
 
-        private static readonly ILog logger = LogManager.GetLogger(typeof(BidAccountLoginCommand));
+        private static readonly ILog logger = LogManager.GetLogger(typeof(PriceTellCommand));
 
         [Component]
         private BiddingScreen biddingScreen;
