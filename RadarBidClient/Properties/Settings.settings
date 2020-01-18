@@ -36,13 +36,16 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="SaberWebAddressPrefix" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">http://47.100.121.56</Value>
+      <Value Profile="(Default)">http://47.100.121.56/saber</Value>
     </Setting>
     <Setting Name="EnableCorrectNetTime" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="LoginAccountAfterAutoInput" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UseCaptchaTestMode" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

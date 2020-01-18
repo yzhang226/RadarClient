@@ -124,7 +124,7 @@ namespace Radar.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://47.100.121.56")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://47.100.121.56/saber")]
         public string SaberWebAddressPrefix {
             get {
                 return ((string)(this["SaberWebAddressPrefix"]));
@@ -146,6 +146,15 @@ namespace Radar.Properties {
         public bool LoginAccountAfterAutoInput {
             get {
                 return ((bool)(this["LoginAccountAfterAutoInput"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UseCaptchaTestMode {
+            get {
+                return ((bool)(this["UseCaptchaTestMode"]));
             }
         }
     }

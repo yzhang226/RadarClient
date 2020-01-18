@@ -32,7 +32,14 @@ namespace Radar.Model
         {
             get
             {
-                return this.CaptchaAddressPrefix + "/v1/biding/captcha-task"; ;
+                return this.CaptchaAddressPrefix + "/v1/biding/captcha-task";
+            }
+        }
+        public string GetCaptchaAnswerUrl
+        {
+            get
+            {
+                return this.CaptchaAddressPrefix + "/v1/biding/captcha-answer";
             }
         }
 
@@ -128,7 +135,7 @@ namespace Radar.Model
         {
             get
             {
-                return this.SaberWebAddressPrefix + "/saber/v1/screen/upload"; ;
+                return this.SaberWebAddressPrefix + "/v1/screen/upload"; ;
             }
         }
 
@@ -180,6 +187,11 @@ namespace Radar.Model
         public bool EnableClientSocketGuard()
         {
             return true;
+        }
+
+        public bool UseCaptchaTestMode()
+        {
+            return Properties.Settings.Default.UseCaptchaTestMode;
         }
 
     }

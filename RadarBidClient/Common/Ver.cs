@@ -7,7 +7,7 @@ namespace Radar.Common
 {
     public class Ver
     {
-        public static readonly string ver = "2.5.3";
+        public static readonly string ver = "2.5.8";
 
     }
 }

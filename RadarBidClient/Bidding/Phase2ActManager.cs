@@ -34,7 +34,7 @@ namespace Radar.Bidding
         /// 2. 点击出价按钮 - 移动到按钮位置，点击
         /// 3. 对验证码区域截图 且 上传
         /// </summary>
-        public CaptchaAnswerImage OfferPrice(int targetPrice, bool enableCancelFirst)
+        public void OfferPrice(int targetPrice, bool enableCancelFirst, Func<CaptchaAnswerImage, bool> callbackFunc = null)
         {
             // 0. 出价前，先尝试取消，防止上一步的可能的遮罩
             if (enableCancelFirst)
@@ -49,11 +49,21 @@ namespace Radar.Bidding
             actionManager.ClickButtonAtPoint(actionManager.AddDelta(800, 415), true, "第二阶段出价");
 
             // 2. 对验证码区域截屏且上传 
-            KK.Sleep(500);
-            CaptchaAnswerImage img = CaptureCaptchaImage();
-            UploadCaptchaImage(img);
+            // 这里尝试异步
+            ThreadUtils.StartNewTaskSafe(() =>
+            {
+                // 这里等待会阻塞进程
+                KK.Sleep(390);
+                CaptchaAnswerImage img = CaptureCaptchaImage();
+                UploadCaptchaImage(img);
 
-            return img;
+                callbackFunc?.Invoke(img);
+
+            }
+            );
+            
+
+            // return img;
         }
 
         private CaptchaAnswerImage CaptureCaptchaImage()
@@ -82,6 +92,7 @@ namespace Radar.Bidding
 
         private void UploadCaptchaImage(CaptchaAnswerImage img)
         {
+            long s1 = KK.CurrentMills();
             string url = conf.UploadCaptchaTaskUrl;
             CaptchaImageUploadRequest req = new CaptchaImageUploadRequest();
             req.token = "devJustTest";
@@ -89,11 +100,16 @@ namespace Radar.Bidding
             req.timestamp = KK.CurrentMills();
             req.from = "test";
 
+            if (conf.UseCaptchaTestMode())
+            {
+                req.useTestMode = true;
+            }
+
             int httpStatus;
             DataResult<CaptchaImageUploadResponse> dr = HttpClients
                 .PostWithFiles<DataResult<CaptchaImageUploadResponse>>(url, req, new List<string> { img.ImagePath1, img.ImagePath2 }, out httpStatus);
 
-            logger.InfoFormat("upload catpcha task#{0}, result is {1}", img.Uuid, Jsons.ToJson(dr));
+            logger.InfoFormat("upload catpcha task#{0}, result is {1}. elapsed {2}ms", img.Uuid, Jsons.ToJson(dr), KK.CurrentMills() - s1);
         }
 
         /// <summary>

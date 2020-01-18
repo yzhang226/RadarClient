@@ -22,5 +22,7 @@ namespace Radar.Bidding.Model
          */
         public int uploadType;
 
+        public bool useTestMode;
+
     }
 }

@@ -42,11 +42,17 @@ namespace Radar.Common.Enums
         CANCELLED = 99,
 
         /// <summary>
+        /// 出价中
+        /// </summary>
+        HANDLING = 100,
+
+        /// <summary>
         /// 需要重新出价，因为出价还未到达 策略预期
         /// 1. 先取消原有的出价, 如果有前一个出价
         /// 2. 再出价新的价格
         /// </summary>
         STRATEGY_RANGE_MATCHED = 1000,
+
 
 
     }

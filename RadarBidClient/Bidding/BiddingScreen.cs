@@ -379,57 +379,67 @@ namespace Radar.Bidding
                 return;
             }
 
-            if (req.OperateStatus == StrategyOperateStatus.NEED_OFFER_PRICE) 
-            {
+            logger.InfoFormat("req is {0}", Jsons.ToJson(req));
 
-                // 出价前 检查 距离上次 出价时间 是否在 6秒 内
-                // 如果在6秒内，则不能出价了，因为会报 操作频繁
-                List<BiddingPriceRequest> unSubmited = biddingPriceManager.GetPreviousUnSubmitRequest(pp.pageTime.Second);
-                bool canOffer = true;
-                if (unSubmited?.Count > 0)
+            // 这里存在，正在输入价格或上传验证码时，会有来自价格同步的触发，存在并发场景
+            // 所以先用了同步锁
+            lock (logger)
+            {
+                if (req.OperateStatus == StrategyOperateStatus.NEED_OFFER_PRICE) 
                 {
-                    var last = unSubmited.Last();
-                    int duration = (int) (pp.pageTime - last.OfferedScreenTime).TotalSeconds;
-                    if (duration < 6)
+                    // 出价前 检查 距离上次 出价时间 是否在 6秒 内
+                    // 如果在6秒内，则不能出价了，因为会报 操作频繁
+                    List<BiddingPriceRequest> unSubmited = biddingPriceManager.GetPreviousUnSubmitRequest(pp.pageTime.Second);
+                    bool canOffer = true;
+                    if (unSubmited?.Count > 0)
                     {
-                        canOffer = false;
+                        var last = unSubmited.Last();
+                        int duration = (int) (pp.pageTime - last.OfferedScreenTime).TotalSeconds;
+                        if (duration < 6)
+                        {
+                            canOffer = false;
+                        }
+                        logger.InfoFormat("unSubmited between now duration is {0}, canOffer is {1}", duration, canOffer);
                     }
-                    logger.InfoFormat("unSubmited between now duration is {0}, canOffer is {1}", duration, canOffer);
+
+                    // 然后直接出价
+                    if (canOffer)
+                    {
+                        // CaptchaAnswerImage ansImg = 
+                        phase2Manager.OfferPrice(req.TargetPrice, true, (ansImg) => {
+                            biddingContext.PutAwaitImage(ansImg, null);
+                            req.CaptchaUuid = ansImg.Uuid;
+                            return true;
+                        });
+                        
+                        req.OperateStatus = StrategyOperateStatus.CAPTCHA_AWAIT;
+
+                        biddingPriceManager.CancelnOutOfDateRequest(req.StrategySecond);
+
+                        //
+                        AsyncReportPriceOffered(pp, req.TargetPrice, DateTime.Now);
+                    }
+                    else
+                    {
+                        // 不能出价时，则取消该策略 TODO: 不能依赖 canOffer 做移除
+                        logger.InfoFormat("strategy#{0} canOffer is false, need remove", req.StrategySecond);
+                        biddingPriceManager.RemoveStrategy(req.StrategySecond);
+                    }
+                }
+                else if (req.OperateStatus == StrategyOperateStatus.STRATEGY_RANGE_MATCHED) {
+                    // 命中区间策略
+                    // 移除该策略
+                    logger.InfoFormat("range strategy#{0} matched, need remove", pp.pageTime.Second);
+                    biddingPriceManager.RemoveStrategy(pp.pageTime.Second);
                 }
 
-
-                // 然后直接出价
-                if (canOffer)
+                if (req.CanSubmit)
                 {
-                    CaptchaAnswerImage ansImg = phase2Manager.OfferPrice(req.TargetPrice, true);
-                    biddingContext.PutAwaitImage(ansImg, null);
-
-                    req.CaptchaUuid = ansImg.Uuid;
-                    req.OperateStatus = StrategyOperateStatus.CAPTCHA_AWAIT;
-
-                    biddingPriceManager.CancelnOutOfDateRequest(req.StrategySecond);
-
-                    //
-                    AsyncReportPriceOffered(pp, req.TargetPrice, DateTime.Now);
-                } else
-                {
-                    // 不能出价时，则取消该策略
-                    logger.InfoFormat("strategy#{0} canOffer is false, need remove", req.StrategySecond);
-                    biddingPriceManager.RemoveStrategy(req.StrategySecond);
+                    req.SubmittedScreenTime = pp.pageTime;
+                    req.SubmittedScreenPrice = pp.basePrice;
+                    SubmitOfferedPrice(req);
                 }
-            }
-            else if (req.OperateStatus == StrategyOperateStatus.STRATEGY_RANGE_MATCHED) {
-                // 命中区间策略
-                // 移除该策略
-                logger.InfoFormat("range strategy#{0} matched, need remove", pp.pageTime.Second);
-                biddingPriceManager.RemoveStrategy(pp.pageTime.Second);
-            }
 
-            if (req.CanSubmit)
-            {
-                req.SubmittedScreenTime = pp.pageTime;
-                req.SubmittedScreenPrice = pp.basePrice;
-                SubmitOfferedPrice(req);
             }
 
             logger.InfoFormat("afterDetect elapsed {0}ms", KK.CurrentMills() - s1);
@@ -607,26 +617,31 @@ namespace Radar.Bidding
 
 
 
-        public CaptchaAnswerImage PreviewPhase2Captcha(PagePrice pp)
+        public void PreviewPhase2Captcha(PagePrice pp)
         {
             // TODO: 这里使用异步处理，否则出现不能显示验证码。
             // TODO: 这里可以归为一类问题：模拟时，必须等到所有操作才能显示页面。需要解决。
 
             logger.InfoFormat("Execute PreviewPhase2Captcha @{0}", pp.pageTime);
 
-            CaptchaAnswerImage img = null;
-            ThreadUtils.StartNewTaskSafe(() =>
-            {
-                img = phase2Manager.OfferPrice(pp.basePrice + 1500, false);
-                phase2Manager.CancelOfferedPrice();
-
+            phase2Manager.OfferPrice(pp.basePrice + 1500, false, (img) => {
                 biddingContext.PutAwaitImage(img, null);
                 Phase2PreviewCaptcha = img;
+
+                phase2Manager.CancelOfferedPrice();
+                return true;
             });
+
+            // CaptchaAnswerImage img = null;
+            //ThreadUtils.StartNewTaskSafe(() =>
+            //{
+            //    img = phase2Manager.OfferPrice(pp.basePrice + 1500, false);
+            //    
+            //});
 
             IsPreviewDone = true;
 
-            return img;
+            //return img;
         }
 
 
